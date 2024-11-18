@@ -28,7 +28,10 @@ These users are those who propose content anonymously but they can also add thei
 - Received an email when their content is approved or rejected (If their email is provided)
 - (Maybe) create a draft content (must provide an email to identify them when they will come back to edit)
 - Create a badge dynamically when not listed in the proposition list
+- See all the content accepted
+- Filter content by group, name, most liked or disliked
 
 ### Other features
 
-A rejected content will be automatically deleted if not updated two days later.
+- A rejected content will be automatically deleted if not updated two days later.
+- If content reaches a certain number of dislikes, it will be deleted
