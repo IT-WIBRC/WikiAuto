@@ -12,6 +12,7 @@ We will have just one known user in this app.
 ### Admin
 
 This user will be responsible for filling the app with content and his main tasks will be:
+- Login to his account
 - Create badges (e.g.: signalization, fire, etc.)
 - Accepting propositions of content
 - Refusing content propositions
