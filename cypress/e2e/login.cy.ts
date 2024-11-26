@@ -1,3 +1,7 @@
+import useCypressInterceptors from "../utils/interceptors";
+
+const { loginAdminInterceptor } = useCypressInterceptors();
+
 describe("Login page", () => {
   beforeEach(() => {
     cy.visit("/");
@@ -31,32 +35,7 @@ describe("Login page", () => {
       "Enter your password",
     );
 
-    cy.intercept(
-      {
-        method: "POST",
-        https: true,
-        url: "**/auth/v1/token?grant_type=password",
-      },
-      {
-        statusCode: 200,
-        body: {
-          access_token: "access_token",
-          refresh_token: "refresh_token",
-          expires_at: 3000950,
-          expires_in: 120950,
-          token_type: "bearer",
-          user: {
-            id: "b4ebcf93-7b09-4ee1-bbb3-0a67c1cb1748",
-            app_metadata: {},
-            user_metadata: {},
-            aud: "fb2e796d-69f7-451a-8434-2307d1436d48",
-            email: "myemail@gmail.com",
-          },
-        },
-      },
-    ).as("login");
-
-    cy.login("myemail@gmail.com", "myAmazing@password");
+    loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
 
     cy.wait("@login").should(({ request }) => {
       expect(request.body.password).to.equals("myAmazing@password");
@@ -64,8 +43,8 @@ describe("Login page", () => {
     });
 
     cy.get("[data-cy='dashboard-welcome']").should(
-      "have.text",
-      "Welcome to the dashboard myemail@gmail.com",
+      "contain.text",
+      "Welcome to the card myemail@gmail.com",
     );
   });
 

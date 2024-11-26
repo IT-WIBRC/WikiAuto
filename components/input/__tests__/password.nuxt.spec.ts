@@ -1,7 +1,7 @@
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { VueWrapper } from "@vue/test-utils";
 import { IconEyeClosed, IconEyeOpen, InputPassword } from "#components";
+import type { VueWrapper } from "@vue/test-utils";
 
 describe("InputPassword", () => {
   let inputPasswordWrapper: VueWrapper;

@@ -10,7 +10,7 @@
         {{ t("_ttl") }}
       </h1>
       <p
-        class="text-sm md:text-base lg:text-lg xl:text-base font-light"
+        class="text-sm md:text-base lg:text-lg font-light xl:text-base"
         data-cy="login-description"
       >
         {{ t("_desc") }}
@@ -64,7 +64,6 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import i18Messages from "./i18n.json";
 

@@ -1,7 +1,7 @@
-import type { Session, User } from "@supabase/auth-js";
 import { authService } from "~/api/authService";
 import type { ApiResponseResult } from "~/api/types";
 import { GenericErrors } from "~/api/types";
+import type { Session, User } from "@supabase/auth-js";
 
 type AuthState = {
   session: Session | null;

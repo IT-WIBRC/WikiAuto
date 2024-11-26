@@ -1,6 +1,8 @@
 import { resolve } from "path";
 
 export default defineNuxtConfig({
+  compatibilityDate: "2024-04-03",
+  devtools: { enabled: true },
   modules: [
     "@nuxtjs/i18n",
     "@nuxt/test-utils/module",
@@ -8,24 +10,6 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@nuxt/eslint",
   ],
-  devtools: { enabled: true },
-  css: ["~/assets/css/main.css"],
-  runtimeConfig: {
-    public: {
-      supabaseUrl: "",
-      supabaseKey: "",
-    },
-  },
-  alias: {
-    "@": resolve(__dirname, "/"),
-  },
-  compatibilityDate: "2024-04-03",
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
-  },
   i18n: {
     vueI18n: "./i18n.config.ts",
     detectBrowserLanguage: {
@@ -44,5 +28,21 @@ export default defineNuxtConfig({
     ],
     fallbackLocale: "en",
     strategy: "no_prefix",
+  },
+  alias: {
+    "@": resolve(__dirname, "/"),
+  },
+  css: ["~/assets/css/main.css"],
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
+  runtimeConfig: {
+    public: {
+      supabaseUrl: "",
+      supabaseKey: "",
+    },
   },
 });
