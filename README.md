@@ -42,4 +42,4 @@ These users are those who propose content anonymously but they can also add thei
 
 ### ERD proposition
 
-<img src="./assets/images/erd-diagram.png" alt="ERD diagram" />
+<img src="./public/erd-diagram.png" alt="ERD diagram" />
