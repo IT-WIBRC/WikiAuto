@@ -10,6 +10,6 @@ describe("App", () => {
 
   it("should display the awaited content", async () => {
     const appWrapper = await mountSuspended(App);
-    expect(appWrapper.text()).toBe("Welcome to the starter page  Login");
+    expect(appWrapper.text()).toBe("Welcome to the starter page Login");
   });
 });

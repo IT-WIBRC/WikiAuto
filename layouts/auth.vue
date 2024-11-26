@@ -14,7 +14,6 @@
     </div>
   </div>
 </template>
-
 <style lang="css" scoped>
 .auth {
   background-image: url(~/assets/images/auth-car.png);

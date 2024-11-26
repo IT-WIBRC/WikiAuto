@@ -8,8 +8,8 @@ import {
   vi,
 } from "vitest";
 import { navigateTo } from "nuxt/app";
-import { createPinia, setActivePinia } from "pinia";
 import authMiddleware from "../auth.middleware";
+import { createPinia, setActivePinia } from "pinia";
 import { useAuthStore } from "../../stores/auth.store";
 
 vi.mock("nuxt/app", () => {
