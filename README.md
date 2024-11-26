@@ -5,7 +5,7 @@ Gain knowledge about the indications we used to see on the road and also some he
 ## Tech used
 
 - [Nuxtjs](https://nuxt.com/)
-- [Superbase](https://supabase.com/docs)
+- [Supabase](https://supabase.com/docs)
 
 ## Kind of specifications
 
@@ -42,4 +42,4 @@ These users are those who propose content anonymously but they can also add thei
 
 ### ERD proposition
 
-<img src="./assets/images/erd-diagram.png" alt="ERD diagram" />
+<img src="./public/erd-diagram.png" alt="ERD diagram" />
