@@ -15,14 +15,16 @@
                 <InputEmail 
                     :placeholder="t('email._ph')" 
                     :label="t('email._lbl')" 
-                    :error="credentials.email.error" 
+                    :error-message="credentials.email.error"
+                    :has-error="!!apiResponseError"
                     :isRequired="true" 
                     v-model="credentials.email.value"
                 />
                 <InputPassword 
                     :placeholder="t('password._ph')" 
                     :label="t('password._lbl')" 
-                    :error="credentials.password.error" 
+                    :error-message="credentials.password.error"
+                    :has-error="!!apiResponseError"
                     :isRequired="true" 
                     v-model="credentials.password.value" 
                 />

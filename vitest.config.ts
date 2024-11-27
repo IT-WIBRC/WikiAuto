@@ -2,7 +2,7 @@ import { defineVitestConfig } from '@nuxt/test-utils/config'
 
 export default defineVitestConfig({
     test: {
-        environment: "happy-dom",
+        environment: "nuxt",
         environmentOptions: {
           nuxt: {
             mock: {
@@ -15,10 +15,10 @@ export default defineVitestConfig({
             reporter: ["text", "json-summary", "json"],
             reportOnFailure: true,
             thresholds: {
-              lines: 50,
-              branches: 50,
-              functions: 50,
-              statements: 50,
+              lines: 70,
+              branches: 70,
+              functions: 70,
+              statements: 70,
             },
             cleanOnRerun: true,
             exclude: [

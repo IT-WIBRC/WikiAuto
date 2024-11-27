@@ -18,7 +18,7 @@
             :required="isRequired"
             :class="[
               'mt-1 block w-full px-5 font-Poppins py-3 border rounded-xl text-sm md:text-base shadow-sm focus:outline-none placeholder-slate-400 disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none',
-              error?.length || hasError
+              errorMessage?.length || hasError
                 ? 'bg-[#96001829] border-none'
                 : 'bg-white border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500',
             ]"
@@ -37,10 +37,10 @@
         </div>
         <p
           class="mt-2 text-pink-600 text-xs"
-          v-if="error"
+          v-if="errorMessage"
           data-test="error"
         >
-          {{ error }}
+          {{ errorMessage }}
         </p>
       </label>
     </div>
@@ -50,7 +50,7 @@
     label: string;
     placeholder: string;
     isRequired: boolean;
-    error?: string;
+    errorMessage?: string;
     hasError?: boolean;
   }>();
   
