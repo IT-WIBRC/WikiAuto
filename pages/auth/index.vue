@@ -33,7 +33,7 @@
                 <button 
                     type="submit"
                     :disabled="isLoggedInProcessing"
-                    class="text-center w-full rounded-lg py-2 lg:py-3.5 xl:py-3 bg-blue-800 disabled:bg-blue-800/60 disabled:cursor-not-allowed font-semibold text-white md:text-lg lg:text-xl flex items-center justify-center relative"
+                    class="text-center w-full cursor-pointer rounded-lg py-2 lg:py-3.5 xl:py-3 bg-blue-800 disabled:bg-blue-800/60 disabled:cursor-not-allowed font-semibold text-white md:text-lg lg:text-xl flex items-center justify-center relative"
                 >
                     <LoaderFade class="h-6 w-6 before:w-6 before:h-6 before:left-1/2" v-if="isLoggedInProcessing" />
                     <span v-else>{{ t("login_btn") }}</span>
@@ -43,43 +43,17 @@
         </div>
     </div>
 </template>
-<i18n lang="json">
-{
-    "en": {
-        "_ttl": "Welcome back!",
-        "_desc": "Enter your Credentials to access your account",
-        "email": {
-            "_lbl": "Email address",
-            "_ph": "Enter your email address"
-        },
-        "password": {
-            "_lbl": "Password",
-            "_ph": "Enter your password"
-        },
-        "login_btn": "Login"
-    },
-    "fr": {
-        "_ttl": "Bon retour parmi nous !",
-        "_desc": "Saisissez vos données d'identification pour accéder à votre compte",
-        "email": {
-            "_lbl": "Email",
-            "_ph": "Entrez votre adresse email"
-        },
-        "password": {
-            "_lbl": "Mot de passe",
-            "_ph": "Entrez votre mot de passe"
-        },
-        "login_btn": "Se connecter"
-    }
-}
-</i18n>
 <script setup lang="ts">
+import i18Messages from  "./i18n.json";
+
 definePageMeta({
   layout: "auth"
 });
 
 const { t } = useI18n({
-  useScope: 'local'
+  useScope: 'local',
+  inheritLocale: true,
+  messages: i18Messages,
 });
 
 
@@ -96,7 +70,19 @@ const credentials = reactive({
 
 const apiResponseError = ref("");
 const isLoggedInProcessing = ref(false);
+const authStore = useAuthStore();
 const login = async (): Promise<void> => {
-    console.log("login");
+  isLoggedInProcessing.value = true;
+  const { email: { value: email }, password: { value:password } } = credentials;
+
+    const response = await authStore.login(email, password);
+
+    if (response.status === "success") {
+      useUserStore().currentUser = response.user;
+      navigateTo("/dashboard");
+    } else {
+      apiResponseError.value = t(`generic_errors.${response.message}`);
+    }
+  isLoggedInProcessing.value = false;
 }
 </script>

@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 import { resolve } from "path";
 
 export default defineNuxtConfig({
@@ -6,9 +5,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/i18n',
-    '@nuxt/test-utils/module'
+    '@nuxt/test-utils/module',
+     '@pinia/nuxt',
+    "@nuxtjs/i18n"
   ],
   i18n: {
+    vueI18n: "./i18n.config.ts",
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: 'i18n_language',
@@ -29,15 +31,17 @@ export default defineNuxtConfig({
   alias: {
     "@": resolve(__dirname, "/"),
   },
-
   css: ['~/assets/css/main.css'],
-
   postcss: {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
   },
-
-  modules: ["@nuxtjs/i18n"],
+  runtimeConfig: {
+   public: {
+     supabaseUrl: "",
+     supabaseKey: "",
+   }
+  },
 })
