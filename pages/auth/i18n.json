@@ -1,0 +1,36 @@
+{
+  "en": {
+    "_ttl": "Welcome back!",
+    "_desc": "Enter your Credentials to access your account",
+    "email": {
+      "_lbl": "Email address",
+      "_ph": "Enter your email address"
+    },
+    "password": {
+      "_lbl": "Password",
+      "_ph": "Enter your password"
+    },
+    "login_btn": "Login",
+    "generic_errors": {
+      "BAD_REQUEST": "Incorrect email or password",
+      "NOT_FOUND": "User not found"
+    }
+  },
+  "fr": {
+    "_ttl": "Bon retour parmi nous !",
+    "_desc": "Saisissez vos données d'identification pour accéder à votre compte",
+    "email": {
+      "_lbl": "Email",
+      "_ph": "Entrez votre adresse email"
+    },
+    "password": {
+      "_lbl": "Mot de passe",
+      "_ph": "Entrez votre mot de passe"
+    },
+    "login_btn": "Se connecter",
+    "generic_errors": {
+      "BAD_REQUEST": "Email ou mot de passe incorrect",
+      "NOT_FOUND": "Utilisateur pas trouvee"
+    }
+  }
+}
