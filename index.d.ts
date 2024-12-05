@@ -1,9 +1,9 @@
-declare module 'nuxt/schema' {
-    interface RuntimeConfig {
-        supabaseUrl: string,
-        supabaseKey: string;
-    }
+declare module "nuxt/schema" {
+  interface RuntimeConfig {
+    supabaseUrl: string;
+    supabaseKey: string;
+  }
 
-    interface PublicRuntimeConfig {}
+  //interface PublicRuntimeConfig {}
 }
-export {}
+export {};

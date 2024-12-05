@@ -3,16 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
     "dev": "nuxt dev --dotenv .env",
-    "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
     "postinstall": "nuxt prepare",
     "test:e2e": "cypress open --e2e",
     "test:e2e:ci": "cypress run",
     "test:unit": "TZ=Africa vitest",
     "test:ci": "TZ=Africa vitest run",
-    "test:coverage": "TZ=Africa vitest run --coverage.enabled"
+    "test:coverage": "TZ=Africa vitest run --coverage.enabled",
+    "pre-commit": "lint-staged --allow-empty",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@nuxtjs/i18n": "^9.0.0-rc.2",
@@ -23,6 +26,7 @@
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^0.7.2",
     "@nuxt/test-utils": "^3.14.4",
     "@nuxtjs/supabase": "^1.4.3",
     "@pinia/testing": "^0.1.7",
@@ -30,9 +34,20 @@
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
     "cypress": "13.16.0",
+    "eslint": "^9.16.0",
     "happy-dom": "^15.11.6",
+    "lint-staged": "^15.2.10",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2",
     "vitest": "^2.1.6"
+  },
+  "lint-staged": {
+    "*.{json,ts,vue,mjs,cjs,json}": [
+      "npx prettier --write"
+    ],
+    "*.{js,ts,vue,mjs,cjs,mts,json}": [
+      "eslint"
+    ]
   }
 }
