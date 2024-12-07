@@ -9,7 +9,15 @@ module.exports = {
     "./error.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        "dm-sans": ["DM sans", "sans-serif", "system-ui"],
+      },
+      colors: {
+        primary: "#3A36DB",
+        "primary-text": "#06152B",
+      },
+    },
   },
   plugins: [],
 };

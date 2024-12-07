@@ -33,6 +33,7 @@ export default defineVitestConfig({
         "**/__tests__/**",
         "**/*.spec.ts",
         "**/cypress/**",
+        "**/skeleton/**",
       ],
     },
   },
