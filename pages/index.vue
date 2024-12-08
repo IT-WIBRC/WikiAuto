@@ -5,8 +5,7 @@
       to="/auth"
       class="underline text-blue-400 italic font-bold"
       data-cy="login-btn"
+      >Login</NuxtLink
     >
-      Login
-    </NuxtLink>
   </div>
 </template>

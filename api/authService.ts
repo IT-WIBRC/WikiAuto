@@ -5,7 +5,10 @@ const login = (
   email: string,
   password: string,
 ): Promise<AuthTokenResponsePassword> => {
-  return useSupabase().auth.signInWithPassword({ email, password });
+  return useSupabase().auth.signInWithPassword({
+    email,
+    password,
+  });
 };
 
 export const authService = {
