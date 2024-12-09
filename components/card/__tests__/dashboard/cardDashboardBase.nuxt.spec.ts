@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { CardDashboardBase } from "#components";
@@ -6,6 +6,7 @@ import { CardDashboardBase } from "#components";
 describe("CardDashboardBase", () => {
   let cardDashboardBase: VueWrapper;
   beforeAll(async () => {
+    vi.spyOn(console, "warn");
     cardDashboardBase = await mountSuspended(CardDashboardBase, {
       props: {
         value: "178+",

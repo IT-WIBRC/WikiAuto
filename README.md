@@ -43,3 +43,50 @@ These users are those who propose content anonymously but they can also add thei
 ### ERD proposition
 
 <img src="./public/erd-diagram.png" alt="ERD diagram" />
+
+### Make before use
+
+First you need to install the dependencies
+```bash
+bun install
+```
+
+Open the pre-commit script
+```bash
+nano .git/hooks/pre-commit
+```
+
+and then add the script after installation
+```bash
+#!/bin/sh
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
+[ -z "$FILES" ] && exit 0
+
+# Prettify all selected files
+echo "$FILES" | xargs ./node_modules/.bin/lint-staged --allow-empty
+
+# Add back the modified/prettified files to staging
+echo "$FILES" | xargs git add
+
+exit 0
+```
+
+Se also the script for the `pre-push`
+```bash
+nano .git/hooks/pre-push
+```
+
+And then add this script:
+```bash
+#!/bin/sh
+bun run test:coverage
+```
+
+Finally make the file executable:
+```bash
+# pre-push
+chmod 700 .git/hooks/pre-push
+
+# pre-commit
+chmod 700 .git/hooks/pre-commit
+```
