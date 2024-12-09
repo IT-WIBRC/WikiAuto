@@ -1,12 +1,15 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 import createSupabaseClient from "../supabaseInit";
-import { createClient } from "@supabase/supabase-js";
+
+const { mockClientCreation } = vi.hoisted(() => {
+  return { mockClientCreation: vi.fn((url: string, key: string) => url + key) };
+});
 
 vi.mock("@supabase/supabase-js", async () => {
-  const supabaseCreateClient = await vi.importActual("@supabase/supabase-js"); //useful if you want to mock module partially.
+  const supabaseCreateClient = await vi.importActual("@supabase/supabase-js");
   return {
     ...supabaseCreateClient,
-    createClient: vi.fn((url: string, key: string) => url + key),
+    createClient: mockClientCreation,
   };
 });
 
@@ -15,23 +18,23 @@ afterAll(() => {
 });
 
 describe("supabaseInit test", () => {
-  it("should create the client when called", () => {
-    const supabaseClient = createSupabaseClient();
-
-    expect(createClient).toHaveBeenCalledOnce();
-    expect(createClient).toHaveBeenCalledWith("myUrl", "eyJhbGciOi");
-    expect(supabaseClient).toBe("myUrleyJhbGciOi");
-  });
-
   it("should not create more than one instance", () => {
-    expect(createClient).toHaveBeenCalledTimes(1); //Due to the hoisting of `vi.mock` which cannot been reset ofr each test
+    expect(mockClientCreation).toHaveBeenCalledTimes(0);
     let supabaseClient = createSupabaseClient();
-    expect(createClient).toHaveBeenCalledTimes(1);
-    expect(createClient).toHaveBeenCalledWith("myUrl", "eyJhbGciOi");
+    expect(mockClientCreation).toHaveBeenCalledTimes(1);
+    expect(mockClientCreation).toHaveBeenCalledWith("myUrl", "eyJhbGciOi");
     expect(supabaseClient).toBe("myUrleyJhbGciOi");
 
     supabaseClient = createSupabaseClient();
-    expect(createClient).toHaveBeenCalledTimes(1);
+    expect(mockClientCreation).toHaveBeenCalledTimes(1);
+    expect(supabaseClient).toBe("myUrleyJhbGciOi");
+  });
+
+  it("should create the client when called", () => {
+    const supabaseClient = createSupabaseClient();
+
+    expect(mockClientCreation).toHaveBeenCalledOnce();
+    expect(mockClientCreation).toHaveBeenCalledWith("myUrl", "eyJhbGciOi");
     expect(supabaseClient).toBe("myUrleyJhbGciOi");
   });
 });
