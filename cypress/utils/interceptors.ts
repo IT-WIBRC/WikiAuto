@@ -33,7 +33,10 @@ export default function useCypressInterceptors() {
     cy.logout();
   };
 
-  const totalContentInterceptor = (): void => {
+  const totalContentInterceptor = (
+    value: number,
+    status: number = 200,
+  ): void => {
     cy.intercept(
       {
         method: "GET",
@@ -42,9 +45,29 @@ export default function useCypressInterceptors() {
       },
       {
         headers: {
-          "Content-Range": "*/0",
+          "Content-Range": `*/${value}`,
         },
-        statusCode: 200,
+        statusCode: status,
+        body: [],
+      },
+    ).as("totalValidatedContent");
+  };
+
+  const totalValidatedContentInterceptor = (
+    value: number,
+    status: number = 200,
+  ): void => {
+    cy.intercept(
+      {
+        method: "GET",
+        https: true,
+        url: "**/rest/v1/contents?select=content_id%2Cstatus&contents.status=eq.VALIDATED",
+      },
+      {
+        headers: {
+          "Content-Range": `*/${value}`,
+        },
+        statusCode: status,
         body: [],
       },
     ).as("totalContent");
@@ -54,5 +77,6 @@ export default function useCypressInterceptors() {
     loginAdminInterceptor,
     logoutAdminInterceptor,
     totalContentInterceptor,
+    totalValidatedContentInterceptor,
   };
 }

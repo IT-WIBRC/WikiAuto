@@ -13,8 +13,9 @@
           {{ t("ttl") }}
         </h1>
       </div>
-      <div class="flex">
+      <div class="flex gap-x-4">
         <CardDashboardTotalContent data-cy="total-content" />
+        <CardDashboardTotalValidatedContent data-cy="total-validated-content" />
       </div>
     </div>
   </div>

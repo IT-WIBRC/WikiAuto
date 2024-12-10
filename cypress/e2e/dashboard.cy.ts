@@ -1,6 +1,13 @@
 import useCypressInterceptors from "../utils/interceptors";
+import useCypressAssertions from "../utils/assertions";
 
-const { loginAdminInterceptor } = useCypressInterceptors();
+const {
+  loginAdminInterceptor,
+  totalContentInterceptor,
+  totalValidatedContentInterceptor,
+} = useCypressInterceptors();
+
+const { assertDashboardCardContentHas } = useCypressAssertions();
 
 describe("Dashboard", () => {
   beforeEach(() => {
@@ -15,56 +22,43 @@ describe("Dashboard", () => {
     cy.logout();
   });
 
-  it("display the number of content when there is no content", () => {
-    cy.intercept(
-      {
-        method: "GET",
-        https: true,
-        url: "**/rest/v1/contents?select=content_id",
-      },
-      {
-        headers: {
-          "Content-Range": "*/0",
-        },
-        statusCode: 200,
-        body: [],
-      },
-    ).as("totalContent");
+  it("display the total cards when there are empty", () => {
+    totalContentInterceptor(0);
+    totalValidatedContentInterceptor(0);
 
     cy.wait("@totalContent");
-    cy.get("[data-cy='total-content'] [data-cy='dashboard-card-value']").should(
-      "have.text",
-      "0",
-    );
+    cy.wait("@totalValidatedContent");
 
-    cy.get(
-      "[data-cy='total-content'] [data-cy='dashboard-card-description']",
-    ).should("have.text", "Total content");
+    assertDashboardCardContentHas({
+      selector: "total-content",
+      value: 0,
+      description: "Total content",
+    });
+
+    assertDashboardCardContentHas({
+      selector: "total-validated-content",
+      value: 0,
+      description: "Total validated content",
+    });
   });
 
-  it("display the number of content when there are many", () => {
-    cy.intercept(
-      {
-        method: "GET",
-        https: true,
-        url: "**/rest/v1/contents?select=content_id",
-      },
-      {
-        headers: {
-          "Content-Range": "*/178",
-        },
-        statusCode: 200,
-        body: [],
-      },
-    ).as("totalContent");
+  it("display the total cards when there are many", () => {
+    totalContentInterceptor(178);
+    totalValidatedContentInterceptor(150);
 
     cy.wait("@totalContent");
-    cy.get("[data-cy='total-content'] [data-cy='dashboard-card-value']").should(
-      "have.text",
-      "178",
-    );
-    cy.get(
-      "[data-cy='total-content'] [data-cy='dashboard-card-description']",
-    ).should("have.text", "Total content");
+    cy.wait("@totalValidatedContent");
+
+    assertDashboardCardContentHas({
+      selector: "total-content",
+      value: 178,
+      description: "Total content",
+    });
+
+    assertDashboardCardContentHas({
+      selector: "total-validated-content",
+      value: 150,
+      description: "Total validated content",
+    });
   });
 });

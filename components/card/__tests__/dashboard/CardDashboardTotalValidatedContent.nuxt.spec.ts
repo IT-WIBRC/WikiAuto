@@ -3,22 +3,22 @@ import type { VueWrapper } from "@vue/test-utils";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   CardDashboardBase,
-  CardDashboardTotalContent,
-  IconContent,
+  CardDashboardTotalValidatedContent,
+  IconValidated,
 } from "#components";
 import { createTestingPinia } from "@pinia/testing";
 import { useContentStore } from "~/stores/content.store";
 
-describe("CardDashboardTotalContent", () => {
+describe("CardDashboardTotalValidatedContent", () => {
   const pinia = createTestingPinia({
     createSpy: vi.fn,
     stubActions: true,
   });
 
   const contentStore = useContentStore(pinia);
-  contentStore.fetchTotalContent = vi.fn().mockReturnValue({
+  contentStore.fetchTotalContentValidated = vi.fn().mockReturnValue({
     status: "success",
-    data: 178,
+    data: 170,
   });
 
   mockNuxtImport("useI18n", () => {
@@ -27,10 +27,10 @@ describe("CardDashboardTotalContent", () => {
     });
   });
 
-  let cardDashboardTotalContent: VueWrapper;
+  let cardDashboardTotalValidatedContent: VueWrapper;
   beforeAll(async () => {
-    cardDashboardTotalContent = await mountSuspended(
-      CardDashboardTotalContent,
+    cardDashboardTotalValidatedContent = await mountSuspended(
+      CardDashboardTotalValidatedContent,
       {
         global: {
           plugins: [pinia],
@@ -44,15 +44,15 @@ describe("CardDashboardTotalContent", () => {
   });
 
   it("should render correctly", () => {
-    expect(cardDashboardTotalContent.exists()).toBe(true);
+    expect(cardDashboardTotalValidatedContent.exists()).toBe(true);
   });
 
   it("should render the base dashboard card with awaited attributes", () => {
     const cardDashboardBase =
-      cardDashboardTotalContent.findComponent(CardDashboardBase);
+      cardDashboardTotalValidatedContent.findComponent(CardDashboardBase);
     expect(cardDashboardBase.exists()).toBe(true);
-    expect(cardDashboardBase.props().value).toBe("178");
-    expect(cardDashboardBase.props().description).toBe("total");
-    expect(cardDashboardBase.findComponent(IconContent).exists()).toBe(true);
+    expect(cardDashboardBase.props().value).toBe("170");
+    expect(cardDashboardBase.props().description).toBe("totalValidated");
+    expect(cardDashboardBase.findComponent(IconValidated).exists()).toBe(true);
   });
 });

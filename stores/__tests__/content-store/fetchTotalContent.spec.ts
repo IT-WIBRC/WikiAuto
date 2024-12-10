@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useContentStore } from "../content.store";
-import { contentService } from "../../api/contentService";
+import { useContentStore } from "../../content.store";
+import { contentService } from "../../../api/contentService";
 
 describe("ContentStore", () => {
   beforeEach(() => {
