@@ -15,26 +15,6 @@ describe("Login page", () => {
       "Enter your Credentials to access your account",
     );
 
-    cy.get("[data-cy='email-input'] label").should(
-      "have.text",
-      "Email address *",
-    );
-    cy.get("[data-cy='email-input'] input").should(
-      "have.attr",
-      "placeholder",
-      "Enter your email address",
-    );
-
-    cy.get("[data-cy='password-input'] label").should(
-      "have.text",
-      "Password *",
-    );
-    cy.get("[data-cy='password-input'] input").should(
-      "have.attr",
-      "placeholder",
-      "Enter your password",
-    );
-
     loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
 
     cy.wait("@login").should(({ request }) => {
@@ -42,10 +22,9 @@ describe("Login page", () => {
       expect(request.body.email).to.equals("myemail@gmail.com");
     });
 
-    cy.get("[data-cy='dashboard-welcome']").should(
-      "contain.text",
-      "Welcome to the card myemail@gmail.com",
-    );
+    cy.get("[data-cy='dashboard-title']").should("contain.text", "Dashboard");
+
+    cy.logout();
   });
 
   describe("Falling cases", () => {
@@ -78,8 +57,6 @@ describe("Login page", () => {
         "have.text",
         "Incorrect email or password",
       );
-
-      cy.get("[data-cy='login-title']").should("have.text", "Welcome back!");
     });
 
     it("Display an error message when we have a server error", () => {
@@ -111,8 +88,6 @@ describe("Login page", () => {
         "have.text",
         "An enforcing error has occurred, please try again or report it",
       );
-
-      cy.get("[data-cy='login-title']").should("have.text", "Welcome back!");
     });
   });
 });

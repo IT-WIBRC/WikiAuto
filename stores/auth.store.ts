@@ -46,5 +46,19 @@ export const useAuthStore = defineStore("auth", {
         }
       }
     },
+    async logout(): Promise<ApiResponseResult<undefined>> {
+      const response = await authService.logout();
+
+      if (!response.error) {
+        return {
+          status: "success",
+        };
+      } else {
+        return {
+          status: "error",
+          message: GenericErrors.SERVER_ERROR,
+        };
+      }
+    },
   },
 });

@@ -11,6 +11,10 @@ describe("Dashboard", () => {
     cy.wait("@login");
   });
 
+  afterEach(() => {
+    cy.logout();
+  });
+
   it("display the number of content when there is no content", () => {
     cy.intercept(
       {
