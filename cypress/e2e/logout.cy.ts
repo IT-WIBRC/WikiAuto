@@ -15,7 +15,7 @@ describe("User Logout", () => {
   it("Logout successfully", () => {
     cy.get("[data-cy='login-title']").should("have.text", "Welcome back!");
 
-    totalContentInterceptor();
+    totalContentInterceptor(10);
     loginAdminInterceptor("mylogoutemail@gmail.com", "myAmazing@password");
 
     cy.wait("@login");

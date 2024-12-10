@@ -79,7 +79,7 @@ nano .git/hooks/pre-push
 And then add this script:
 ```bash
 #!/bin/sh
-bun run test:coverage
+bun run test:coverage && rm -rf coverage
 ```
 
 Finally make the file executable:

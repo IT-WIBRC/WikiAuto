@@ -29,5 +29,31 @@ export const useContentStore = defineStore("content", {
         }
       }
     },
+    async fetchTotalContentValidated(): Promise<ApiResponseResult<number>> {
+      const response =
+        await contentService.statistics.getTotalContentWithStatus("VALIDATED");
+
+      if (!response.error) {
+        return {
+          status: "success",
+          data: response.count,
+        };
+      } else {
+        switch (response.error.code) {
+          case "NoSuchKey":
+          case "InvalidKey": {
+            return {
+              status: "error",
+              message: GenericErrors.BAD_REQUEST,
+            };
+          }
+          default:
+            return {
+              status: "error",
+              message: GenericErrors.UNKNOWN_ERROR,
+            };
+        }
+      }
+    },
   },
 });
