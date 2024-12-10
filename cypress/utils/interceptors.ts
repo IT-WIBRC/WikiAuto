@@ -18,7 +18,41 @@ export default function useCypressInterceptors() {
     cy.login(email, password);
   };
 
+  const logoutAdminInterceptor = (): void => {
+    cy.intercept(
+      {
+        method: "POST",
+        https: true,
+        url: "**/auth/v1/logout?scope=global",
+      },
+      {
+        statusCode: 204,
+      },
+    ).as("logout");
+
+    cy.logout();
+  };
+
+  const totalContentInterceptor = (): void => {
+    cy.intercept(
+      {
+        method: "GET",
+        https: true,
+        url: "**/rest/v1/contents?select=content_id",
+      },
+      {
+        headers: {
+          "Content-Range": "*/0",
+        },
+        statusCode: 200,
+        body: [],
+      },
+    ).as("totalContent");
+  };
+
   return {
     loginAdminInterceptor,
+    logoutAdminInterceptor,
+    totalContentInterceptor,
   };
 }

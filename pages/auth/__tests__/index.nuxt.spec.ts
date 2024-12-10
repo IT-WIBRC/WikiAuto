@@ -1,19 +1,28 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import type { VueWrapper } from "@vue/test-utils";
+import { flushPromises } from "@vue/test-utils";
 import AuthPage from "../index.vue";
 import InputEmail from "~/components/input/email.vue";
 import InputPassword from "~/components/input/password.vue";
 import AlertError from "~/components/alert/error.vue";
 import { createTestingPinia } from "@pinia/testing";
 import { useAuthStore } from "~/stores/auth.store";
-import { useUserStore } from "../../../stores/user.store";
+import { useUserStore } from "~/stores/user.store";
 
 describe("AuthPage", () => {
   mockNuxtImport("useI18n", () => {
     return () => ({
       t: vi.fn((msg: string) => msg),
     });
+  });
+
+  const { mockNavigateTo } = vi.hoisted(() => {
+    return { mockNavigateTo: vi.fn() };
+  });
+
+  mockNuxtImport("navigateTo", () => {
+    return mockNavigateTo;
   });
 
   let authPage: VueWrapper;
@@ -134,11 +143,14 @@ describe("AuthPage", () => {
     expect(alertMessage.exists()).toBe(false);
 
     await authPageCustom.find("[data-cy='login-submit']").trigger("submit");
+    await flushPromises();
 
     alertMessage = authPageCustom.findComponent(AlertError);
     expect(alertMessage.exists()).toBe(false);
 
     expect(userStore.currentUser).toEqual(userData);
+    expect(mockNavigateTo).toHaveBeenCalledTimes(1);
+    expect(mockNavigateTo).toHaveBeenCalledWith("/dashboard");
 
     vi.resetAllMocks();
   });

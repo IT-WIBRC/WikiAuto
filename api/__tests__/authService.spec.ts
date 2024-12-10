@@ -5,6 +5,7 @@ import { authService } from "~/api/authService";
 const mockSignInWithPassword = vi.hoisted(() => ({
   auth: {
     signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
   },
 }));
 
@@ -27,6 +28,20 @@ describe("Auth services", () => {
       expect(useSupabaseInstance.auth.signInWithPassword).toHaveBeenCalledWith({
         email: "email",
         password: "password",
+      });
+    });
+  });
+
+  describe("Logout", () => {
+    afterAll(() => {
+      vi.doUnmock("~/api/supabaseInit");
+    });
+
+    it("should sign in the user with password", async () => {
+      await authService.logout();
+      expect(useSupabaseInstance.auth.signOut).toHaveBeenCalledTimes(1);
+      expect(useSupabaseInstance.auth.signOut).toHaveBeenCalledWith({
+        scope: "global",
       });
     });
   });

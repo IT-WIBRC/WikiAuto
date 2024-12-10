@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from "pinia";
 import { useAuthStore } from "../auth.store";
 import { authService } from "../../api/authService";
 import { GenericErrors } from "../../api/types";
+import { AuthError } from "@supabase/auth-js";
 
 describe("AuthStore", () => {
   beforeEach(() => {
@@ -103,6 +104,32 @@ describe("AuthStore", () => {
         expect(authStore.session).toBeNull();
         expect(responseError.message).toBe(GenericErrors.UNKNOWN_ERROR);
       });
+    });
+  });
+
+  describe("Logout", () => {
+    it("should return success when the logout is successful", async () => {
+      const authStore = useAuthStore();
+
+      vi.spyOn(authService, "logout").mockImplementationOnce(() =>
+        Promise.resolve({ error: null }),
+      );
+
+      const responseOk = await authStore.logout();
+      expect(responseOk.status).toBe("success");
+      expect(responseOk.data).toBeUndefined();
+    });
+
+    it("should return server error when the logout has failed", async () => {
+      const authStore = useAuthStore();
+
+      vi.spyOn(authService, "logout").mockImplementationOnce(() =>
+        Promise.resolve({ error: new AuthError("Session error") }),
+      );
+
+      const responseOk = await authStore.logout();
+      expect(responseOk.status).toBe("error");
+      expect(responseOk.message).toBe("SERVER_ERROR");
     });
   });
 });

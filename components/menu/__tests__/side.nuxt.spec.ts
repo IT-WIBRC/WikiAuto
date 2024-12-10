@@ -4,15 +4,26 @@ import { mountSuspended, mockNuxtImport } from "@nuxt/test-utils/runtime";
 import {
   BaseImage,
   IconExpandRightDouble,
+  IconLogOut,
   MenuItem,
   MenuSide,
 } from "#components";
+import { createTestingPinia } from "@pinia/testing";
+import { useAuthStore } from "~/stores/auth.store";
 
 describe("MenuSide", () => {
   mockNuxtImport("useI18n", () => {
     return () => ({
       t: vi.fn((msg: string) => msg),
     });
+  });
+
+  const { mockNavigateTo } = vi.hoisted(() => {
+    return { mockNavigateTo: vi.fn() };
+  });
+
+  mockNuxtImport("navigateTo", () => {
+    return mockNavigateTo;
   });
 
   const { mockedUseRouteHoisted } = vi.hoisted(() => {
@@ -58,36 +69,98 @@ describe("MenuSide", () => {
     expect(toggleExpandButton.exists()).toBe(true);
     const expandIcon = toggleExpandButton.findComponent(IconExpandRightDouble);
     expect(expandIcon.exists()).toBe(true);
-    expect(expandIcon.attributes().class).toContain("h-4 w-4");
+    expect(expandIcon.attributes().class).toContain("stroke-gray-900 h-4 w-4");
     expect(toggleExpandButton.element.title).toContain("expand");
   });
 
+  it("should render the logout icon button", () => {
+    const logOutButton = menuSide.find("[data-cy='logout-btn']");
+    expect(logOutButton.exists()).toBe(true);
+    const logOutIcon = logOutButton.findComponent(IconLogOut);
+    expect(logOutIcon.exists()).toBe(true);
+    expect(logOutIcon.attributes().class).toContain("h-4 w-4");
+    expect(logOutButton.element.title).toContain("logout");
+  });
+
+  it("should have the awaited style on the  logout button icon when expanded", async () => {
+    expect(
+      menuSide.find("[data-cy='logout-btn']").attributes().class,
+    ).not.toContain("gap-x-2");
+
+    const menuSideCustom = await mountSuspended(MenuSide);
+
+    await menuSide.find("[data-cy='toggle-expand-btn']").trigger("click");
+
+    expect(
+      menuSideCustom.find("[data-cy='logout-btn']").attributes().class,
+    ).not.toContain("gap-x-2");
+  });
+
   it("should have the awaited style when the menu is expanded", async () => {
+    menuSide = await mountSuspended(MenuSide);
     expect(menuSide.find("nav").attributes().class).toContain("ml-4 my-4");
     expect(menuSide.findComponent(BaseImage).attributes().class).toContain(
       "h-12 w-12",
     );
+    expect(
+      menuSide.find("[data-cy='toggle-expand-btn']").attributes().class,
+    ).not.toContain("gap-x-2");
+    expect(
+      menuSide.findComponent(IconExpandRightDouble).attributes().class,
+    ).toContain("h-4 w-4");
 
-    const menuSideCustom = await mountSuspended(MenuSide);
-    let toggleExpandButton = menuSideCustom.find(
-      "[data-cy='toggle-expand-btn']",
-    );
+    let toggleExpandButton = menuSide.find("[data-cy='toggle-expand-btn']");
+    expect(toggleExpandButton.attributes().title).toBe("expand");
 
     await toggleExpandButton.trigger("click");
+    toggleExpandButton = menuSide.find("[data-cy='toggle-expand-btn']");
+    expect(toggleExpandButton.attributes().class).toContain("gap-x-2");
 
-    toggleExpandButton = menuSideCustom.find("[data-cy='toggle-expand-btn']");
-
-    expect(menuSideCustom.find("nav").attributes().class).not.toContain(
-      "ml-4 my-4",
+    expect(menuSide.find("nav").attributes().class).not.toContain("ml-4 my-4");
+    expect(toggleExpandButton.attributes().title).toBe("");
+    expect(toggleExpandButton.text()).toBe("abate");
+    expect(menuSide.findComponent(BaseImage).attributes().class).toContain(
+      "h-[5.3rem]",
     );
-    expect(toggleExpandButton.attributes().title).toBe("abate");
-    expect(
-      menuSideCustom.findComponent(BaseImage).attributes().class,
-    ).toContain("h-[5.3rem]");
     expect(
       toggleExpandButton.findComponent(IconExpandRightDouble).attributes()
         .class,
     ).toContain("translate rotate-180 h-5 w-5");
+  });
+
+  it("should navigate to `/auth` when we click on the logout button", async () => {
+    const pinia = createTestingPinia({
+      createSpy: vi.fn,
+      stubActions: true,
+    });
+    const authStore = useAuthStore(pinia);
+    authStore.logout = vi.fn().mockReturnValueOnce({
+      status: "success",
+    });
+    const menuSideCustom = await mountSuspended(MenuSide);
+    const logOutButton = menuSideCustom.find("[data-cy='logout-btn']");
+    expect(logOutButton.exists()).toBe(true);
+    await logOutButton.trigger("click");
+    expect(mockNavigateTo).toHaveBeenCalledTimes(1);
+    expect(mockNavigateTo).toHaveBeenCalledWith("/auth");
+  });
+
+  it("should toast an error when the logout failed", async () => {
+    const pinia = createTestingPinia({
+      createSpy: vi.fn,
+      stubActions: true,
+    });
+    const authStore = useAuthStore(pinia);
+    authStore.logout = vi.fn().mockReturnValueOnce({
+      status: "error",
+    });
+    useToast.error = vi.fn();
+    const menuSideCustom = await mountSuspended(MenuSide);
+    const logOutButton = menuSideCustom.find("[data-cy='logout-btn']");
+    expect(logOutButton.exists()).toBe(true);
+    await logOutButton.trigger("click");
+    expect(useToast.error).toHaveBeenCalledTimes(1);
+    expect(useToast.error).toHaveBeenCalledWith("failed_logout");
   });
 
   describe("Menu items", () => {
@@ -99,7 +172,8 @@ describe("MenuSide", () => {
       },
     ];
 
-    it("should render the menu items", () => {
+    it("should render the menu items", async () => {
+      menuSide = await mountSuspended(MenuSide);
       const menuItems = menuSide.findAllComponents(MenuItem);
       expect(menuItems.length).toBe(1);
       menuItems.forEach((menuItem, index) => {

@@ -5,3 +5,7 @@ Cypress.Commands.add("login", (email: string, password: string) => {
 
   cy.get("form[data-cy='login-form']").submit();
 });
+
+Cypress.Commands.add("logout", () => {
+  cy.get("[data-cy='logout-btn']").click();
+});
