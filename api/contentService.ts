@@ -16,7 +16,7 @@ const getTotalContentWithStatus = (
   return useSupabase()
     .from("contents")
     .select("content_id, status", { count: "exact" })
-    .eq("contents.status", status);
+    .eq("status", status);
 };
 
 export const contentService = {

@@ -61,7 +61,7 @@ export default function useCypressInterceptors() {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus&contents.status=eq.VALIDATED",
+        url: "**/rest/v1/contents?select=content_id%2Cstatus&status=eq.VALIDATED",
       },
       {
         headers: {

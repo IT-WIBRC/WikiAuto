@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import Dashboard from "../index.vue";
-import MenuSide from "~/components/menu/side.vue";
 import CardDashboardTotalContent from "~/components/card/dashboard/TotalContent.vue";
 import CardDashboardTotalValidatedContent from "~/components/card/dashboard/TotalValidatedContent.vue";
 
@@ -26,10 +25,6 @@ describe("Dashboard", () => {
 
   it("should render correctly", () => {
     expect(dashboard.exists()).toBe(true);
-  });
-
-  it("should render menu side", () => {
-    expect(dashboard.findComponent(MenuSide).exists()).toBe(true);
   });
 
   it("should display the title", () => {

@@ -8,7 +8,7 @@
         loading="eager"
       />
     </div>
-    <menu class="menus">
+    <menu class="menus space-y-2">
       <MenuItem
         v-for="{ title, icon, path } in menus"
         :key="title"
@@ -81,6 +81,7 @@ const { t } = useI18n({
   messages: {
     en: {
       dashboard: "dashboard",
+      content: "content",
       expand: "expand",
       abate: "reduce",
       logout: "logout",
@@ -88,6 +89,7 @@ const { t } = useI18n({
     },
     fr: {
       dashboard: "dashboard",
+      content: "contenu",
       expand: "agrandir",
       abate: "réduire",
       logout: "se déconnecter",
@@ -102,6 +104,11 @@ const menus: Menu[] = [
     title: t("dashboard"),
     icon: "DASHBOARD",
     path: "/dashboard",
+  },
+  {
+    title: t("content"),
+    icon: "CONTENT",
+    path: "/content",
   },
 ];
 

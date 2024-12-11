@@ -170,12 +170,17 @@ describe("MenuSide", () => {
         icon: "DASHBOARD",
         path: "/dashboard",
       },
+      {
+        title: "content",
+        icon: "CONTENT",
+        path: "/content",
+      },
     ];
 
     it("should render the menu items", async () => {
       menuSide = await mountSuspended(MenuSide);
       const menuItems = menuSide.findAllComponents(MenuItem);
-      expect(menuItems.length).toBe(1);
+      expect(menuItems.length).toBe(2);
       menuItems.forEach((menuItem, index) => {
         expect(menuItem.props()).toEqual({
           title: menus[index].title,
@@ -194,7 +199,7 @@ describe("MenuSide", () => {
         .find("[data-cy='toggle-expand-btn']")
         .trigger("click");
       const menuItems = menuSideCustom.findAllComponents(MenuItem);
-      expect(menuItems.length).toBe(1);
+      expect(menuItems.length).toBe(2);
       menuItems.forEach((menuItem, index) => {
         expect(menuItem.props()).toEqual({
           title: menus[index].title,
@@ -206,7 +211,7 @@ describe("MenuSide", () => {
       });
     });
 
-    it("should render the menu with awaited props `isSelected` as true when we are on the designated menu", async () => {
+    it("should render the menu `/dashboard` with awaited props `isSelected` as true when we are on the designated menu", async () => {
       mockedUseRouteHoisted.mockRestore();
       const currentRoutePath = "/dashboard";
       mockedUseRouteHoisted.mockImplementation(() => {
@@ -215,9 +220,33 @@ describe("MenuSide", () => {
         };
       });
 
-      const menuSideCustom = await mountSuspended(MenuSide);
-      const menuItems = menuSideCustom.findAllComponents(MenuItem);
-      expect(menuItems.length).toBe(1);
+      const menuSideCustomForDashboard = await mountSuspended(MenuSide);
+      const menuItems = menuSideCustomForDashboard.findAllComponents(MenuItem);
+      expect(menuItems.length).toBe(2);
+      menuItems.forEach((menuItem, index) => {
+        expect(menuItem.props()).toEqual({
+          title: menus[index].title,
+          icon: menus[index].icon,
+          path: menus[index].path,
+          isOpened: false,
+          isSelected: menus[index].path === currentRoutePath,
+        });
+      });
+      mockedUseRouteHoisted.mockRestore();
+    });
+
+    it("should render the menu `/content` with awaited props `isSelected` as true when we are on the designated menu", async () => {
+      mockedUseRouteHoisted.mockRestore();
+      const currentRoutePath = "/content";
+      mockedUseRouteHoisted.mockImplementation(() => {
+        return {
+          path: "/content",
+        };
+      });
+
+      const menuSideCustomForContent = await mountSuspended(MenuSide);
+      const menuItems = menuSideCustomForContent.findAllComponents(MenuItem);
+      expect(menuItems.length).toBe(2);
       menuItems.forEach((menuItem, index) => {
         expect(menuItem.props()).toEqual({
           title: menus[index].title,
