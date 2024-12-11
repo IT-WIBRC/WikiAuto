@@ -11,9 +11,7 @@ const { assertDashboardCardContentHas } = useCypressAssertions();
 
 describe("Dashboard", () => {
   beforeEach(() => {
-    cy.viewport(1024, 600);
-    cy.visit("/");
-    cy.get("[data-cy='login-btn']").click();
+    cy.goToLogin();
     loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
     cy.wait("@login");
   });

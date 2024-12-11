@@ -2,21 +2,21 @@
   <NuxtLink
     :to="path"
     :class="[
-      'flex items-center gap-x-1.5 relative py-2',
-      { 'text-[#3A36DB] rounded-sm px-4': isSelected },
-      { 'text-[#3A36DB] rounded-sm pr-9': isOpened },
+      'flex rounded-sm items-center relative py-2 px-4',
+      { 'item-hover': !isSelected },
+      { 'pr-9 gap-x-1.5': isOpened },
     ]"
-    :data-cy="`item-${title}`"
+    :data-cy="`item-${title.toLowerCase()}`"
   >
     <span
       v-if="isSelected"
       :class="[{ selected: isSelected, opened: isOpened }]"
       data-cy="selected-style"
     />
-    <span class="inline-block w-1/2 relative">
+    <span class="inline-block relative">
       <component
         :is="MENU_ICONS[icon]"
-        :class="['h-5 w-5', isSelected ? 'fill-[#3A36DB]' : 'fill-gray-400']"
+        :class="['h-5 w-5', isSelected ? 'fill-primary' : 'fill-gray-400']"
         data-cy="menu-icon"
       />
     </span>
@@ -24,16 +24,18 @@
       v-if="isOpened"
       data-cy="menu-title"
       class="font-medium text-sm first-letter:uppercase"
+      :class="[isSelected ? 'text-primary' : 'text-gray-400']"
     >
       {{ title }}
     </span>
   </NuxtLink>
 </template>
 <script lang="ts">
-import { IconDashboard } from "#components";
+import { IconArticle, IconDashboard } from "#components";
 
 export const MENU_ICONS = {
   DASHBOARD: markRaw(IconDashboard),
+  CONTENT: markRaw(IconArticle),
 } as const;
 
 export default defineComponent({
@@ -71,10 +73,18 @@ export default defineComponent({
 </script>
 <style scoped>
 .selected {
-  @apply before:absolute before:content-[''] before:h-full before:w-7/12 before:left-0 before:inset-y-0 before:bg-[#788B9A]/20 before:rounded-r-[4.5px];
+  @apply absolute left-0 w-full h-full before:absolute before:content-[''] before:h-full before:w-7/12 before:left-0 before:inset-y-0 before:bg-[#788B9A]/20 before:rounded-r-[4.5px];
 }
 
 .opened {
   @apply before:w-1/5;
+}
+
+.item-hover:hover [data-cy="menu-title"] {
+  @apply text-primary/60;
+}
+
+.item-hover:hover [data-cy="menu-icon"] {
+  @apply fill-primary/60;
 }
 </style>

@@ -4,8 +4,7 @@ const { loginAdminInterceptor } = useCypressInterceptors();
 
 describe("Login page", () => {
   beforeEach(() => {
-    cy.visit("/");
-    cy.get("[data-cy='login-btn']").click();
+    cy.goToLogin();
   });
 
   it("Login successfully", () => {

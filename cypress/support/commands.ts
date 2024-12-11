@@ -9,3 +9,13 @@ Cypress.Commands.add("login", (email: string, password: string) => {
 Cypress.Commands.add("logout", () => {
   cy.get("[data-cy='logout-btn']").click();
 });
+
+Cypress.Commands.add("goToLogin", () => {
+  cy.viewport(1024, 600);
+  cy.visit("/");
+  cy.get("[data-cy='login-btn']").click();
+});
+
+Cypress.Commands.add("goToMenu", (item: "dashboard" | "content") => {
+  cy.get(`[data-cy='item-${item}']`).click();
+});

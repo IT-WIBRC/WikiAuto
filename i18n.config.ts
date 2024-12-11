@@ -11,6 +11,7 @@ export default defineI18nConfig(() => ({
         SERVER_ERROR: "Sorry we encountered a server problem, try again later!",
         NOT_FOUND: "Resource not found",
         BAD_REQUEST: "Bad request",
+        REQUEST_FAILED: "Request failed",
       },
     },
     fr: {
@@ -23,6 +24,7 @@ export default defineI18nConfig(() => ({
           "Désolé, nous avons rencontré un problème de serveur, réessayez plus tard !",
         NOT_FOUND: "Ressource non trouvée",
         BAD_REQUEST: "Mauvaise requête",
+        REQUEST_FAILED: "Échec de la requête",
       },
     },
   },

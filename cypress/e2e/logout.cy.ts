@@ -8,8 +8,7 @@ const {
 
 describe("User Logout", () => {
   beforeEach(() => {
-    cy.visit("/");
-    cy.get("[data-cy='login-btn']").click();
+    cy.goToLogin();
   });
 
   it("Logout successfully", () => {
