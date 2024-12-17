@@ -4,19 +4,28 @@ export const Content_Status = {
   VALIDATED: "VALIDATED",
 } as const;
 
-const getTotalContent = (): Promise<number> => {
+const getTotalContent = async () => {
   return useSupabase()
     .from("contents")
     .select("content_id", { count: "exact" });
 };
 
-const getTotalContentWithStatus = (
+const getTotalContentWithStatus = async (
   status: keyof typeof Content_Status,
-): Promise<number> => {
+) => {
   return useSupabase()
     .from("contents")
     .select("content_id, status", { count: "exact" })
-    .eq("contents.status", status);
+    .eq("status", status);
+};
+
+const getContentList = async () => {
+  return useSupabase().from("contents").select(`
+      content_id, status, title, user_email,
+      badges (
+        name
+      )
+    `);
 };
 
 export const contentService = {
@@ -24,4 +33,5 @@ export const contentService = {
     getTotalContent,
     getTotalContentWithStatus,
   },
+  getContentList,
 };

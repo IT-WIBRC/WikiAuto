@@ -141,6 +141,7 @@ export type Database = {
           image: string;
           status: string;
           user_email: string;
+          title: string;
         };
         Insert: {
           content_id?: string;
@@ -148,6 +149,7 @@ export type Database = {
           image: string;
           status: string;
           user_email: string;
+          title: string;
         };
         Update: {
           content_id?: string;
@@ -155,6 +157,7 @@ export type Database = {
           image?: string;
           status?: string;
           user_email?: string;
+          title?: string;
         };
         Relationships: [
           {

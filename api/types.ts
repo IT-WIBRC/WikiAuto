@@ -1,3 +1,5 @@
+import type { Tables } from "~/api/wikiAutoType";
+
 export type Primitive =
   | string
   | number
@@ -19,6 +21,7 @@ export const GenericErrors = {
   SERVER_ERROR: "SERVER_ERROR",
   NOT_FOUND: "NOT_FOUND",
   BAD_REQUEST: "BAD_REQUEST",
+  REQUEST_FAILED: "REQUEST_FAILED",
 } as const;
 
 type FormError<K> = {
@@ -47,3 +50,8 @@ export type ApiResponseResultWitForm<T, K = keyof T> =
   | ResponseErrorOnForm<K>;
 
 export type ApiResponseResult<T> = ResponseOnError | ResponseOnSuccess<T>;
+
+export type GetContentListType = Omit<
+  Tables<"contents">,
+  "explanation" | "image"
+> & { badges: Omit<Tables<"badges">, "badge_id" | "description">[] };

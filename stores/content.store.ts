@@ -1,4 +1,4 @@
-import type { ApiResponseResult } from "~/api/types";
+import type { ApiResponseResult, GetContentListType } from "~/api/types";
 import { GenericErrors } from "~/api/types";
 import { contentService } from "~/api/contentService";
 
@@ -53,6 +53,22 @@ export const useContentStore = defineStore("content", {
               message: GenericErrors.UNKNOWN_ERROR,
             };
         }
+      }
+    },
+
+    async fetchContentList(): Promise<ApiResponseResult<GetContentListType[]>> {
+      const response = await contentService.getContentList();
+
+      if (!response.error) {
+        return {
+          status: "success",
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "error",
+          message: GenericErrors.REQUEST_FAILED,
+        };
       }
     },
   },

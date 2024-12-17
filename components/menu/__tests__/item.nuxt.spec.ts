@@ -37,7 +37,7 @@ describe("MenuItem", () => {
 
     expect(
       menuItem.find("[data-cy='item-dashboard']").attributes().class,
-    ).not.toContain("text-[#3A36DB] rounded-sm pr-9");
+    ).not.toContain("pr-9 gap-x-1.5");
 
     const menuItemCustom = await mountSuspended(MenuItem, {
       props: {
@@ -53,13 +53,13 @@ describe("MenuItem", () => {
     expect(menuTitle.text()).toBe("dashboard");
     expect(
       menuItemCustom.find("[data-cy='item-dashboard']").attributes().class,
-    ).toContain("text-[#3A36DB] rounded-sm pr-9");
+    ).toContain("pr-9 gap-x-1.5");
   });
 
   it("should have the awaited style when the menu item is selected", async () => {
     expect(
       menuItem.find("[data-cy='item-dashboard']").attributes().class,
-    ).not.toContain("text-[#3A36DB] rounded-sm px-4");
+    ).toContain("item-hover");
     expect(menuItem.find("[data-cy='selected-style']").exists()).toBe(false);
     expect(menuItem.findComponent(IconDashboard).attributes().class).toBe(
       "h-5 w-5 fill-gray-400",
@@ -76,12 +76,12 @@ describe("MenuItem", () => {
 
     expect(
       menuItemCustom.find("[data-cy='item-dashboard']").attributes().class,
-    ).toContain("text-[#3A36DB] rounded-sm px-4");
+    ).not.toContain("item-hover");
     expect(menuItemCustom.find("[data-cy='selected-style']").exists()).toBe(
       true,
     );
     expect(menuItemCustom.findComponent(IconDashboard).attributes().class).toBe(
-      "h-5 w-5 fill-[#3A36DB]",
+      "h-5 w-5 fill-primary",
     );
   });
 });
