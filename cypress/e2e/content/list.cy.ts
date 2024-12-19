@@ -20,7 +20,7 @@ describe("Display content list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cbadges%28name%29",
+        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
       },
       {
         statusCode: 200,
@@ -41,7 +41,7 @@ describe("Display content list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cbadges%28name%29",
+        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
       },
       {
         statusCode: 404,
@@ -75,7 +75,7 @@ describe("Display content list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cbadges%28name%29",
+        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
       },
       {
         statusCode: 200,
@@ -90,6 +90,7 @@ describe("Display content list", () => {
                 name: "badge 1",
               },
             ],
+            updated_at: "2024-12-14 18:45:28"
           },
           {
             content_id: "b3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
@@ -107,6 +108,7 @@ describe("Display content list", () => {
                 name: "badge 12",
               },
             ],
+            updated_at: "2024-12-18 13:25:08"
           },
         ],
       },

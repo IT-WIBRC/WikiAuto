@@ -137,27 +137,33 @@ export type Database = {
       contents: {
         Row: {
           content_id: string;
+          created_at: string;
           explanation: string | null;
           image: string;
           status: string;
+          title: string | null;
+          updated_at: string | null;
           user_email: string;
-          title: string;
         };
         Insert: {
           content_id?: string;
+          created_at?: string;
           explanation?: string | null;
           image: string;
           status: string;
+          title?: string | null;
+          updated_at?: string | null;
           user_email: string;
-          title: string;
         };
         Update: {
           content_id?: string;
+          created_at?: string;
           explanation?: string | null;
           image?: string;
           status?: string;
+          title?: string | null;
+          updated_at?: string | null;
           user_email?: string;
-          title?: string;
         };
         Relationships: [
           {
