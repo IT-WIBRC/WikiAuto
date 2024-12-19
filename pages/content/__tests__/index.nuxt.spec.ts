@@ -8,6 +8,8 @@ import IconBlankContent from "~/components/icon/BlankContent.vue";
 import DataTable, { type DataItem } from "~/components/DataTable.vue";
 import type { GetContentListType } from "../../../api/types";
 import BadgeStatus from "~/components/badge/Status.vue";
+import BaseButtonIcon from "~/components/base/button/icon.vue";
+import AddIcon from "~/components/icon/add.vue";
 import Badge from "~/components/badge/index.vue";
 import useToast from "~/utils/use-toast";
 
@@ -95,10 +97,10 @@ describe("ContentList", () => {
         user_email: "email@email.com",
         badges: [
           {
-            name: "badge 1",
+            name: "badge-service 1",
           },
         ],
-        updated_at: "2024-12-14 18:45:28"
+        updated_at: "2024-12-14 18:45:28",
       },
       {
         content_id: "123456",
@@ -107,16 +109,16 @@ describe("ContentList", () => {
         user_email: "email2@email.com",
         badges: [
           {
-            name: "badge 10",
+            name: "badge-service 10",
           },
           {
-            name: "badge 11",
+            name: "badge-service 11",
           },
           {
-            name: "badge 12",
+            name: "badge-service 12",
           },
         ],
-        updated_at: "2024-12-18 13:25:08"
+        updated_at: "2024-12-18 13:25:08",
       },
     ];
     const mountWithData = async (isMontageShallow = true) => {
@@ -219,6 +221,24 @@ describe("ContentList", () => {
           text: contents[index].status,
         });
       });
+    });
+  });
+
+  describe("Content create", () => {
+    it("should render the button to go the content create page", () => {
+      const contentCreateButton =
+        contentListWrapper.findComponent(BaseButtonIcon);
+      expect(contentCreateButton.exists()).toBe(true);
+      expect(contentCreateButton.props().text).toBe("add_btn");
+      expect(contentCreateButton.findComponent(AddIcon).exists()).toBe(true);
+    });
+
+    it.skip("should go to the content create page when we click on the button", async () => {
+      expect(mockNavigateTo).toHaveBeenCalledTimes(0);
+      await contentListWrapper.findComponent(BaseButtonIcon).trigger("click");
+
+      expect(mockNavigateTo).toHaveBeenCalledTimes(1);
+      expect(mockNavigateTo).toHaveBeenCalledWith("content/create");
     });
   });
 });

@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@nuxtjs/i18n",
     "@nuxt/eslint",
+    "@vee-validate/nuxt",
   ],
   i18n: {
     vueI18n: "./i18n.config.ts",
@@ -28,6 +29,9 @@ export default defineNuxtConfig({
     ],
     fallbackLocale: "en",
     strategy: "no_prefix",
+  },
+  veeValidate: {
+    autoImports: true,
   },
   alias: {
     "@": resolve(__dirname, "/"),

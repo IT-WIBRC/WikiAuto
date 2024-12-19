@@ -1,0 +1,32 @@
+[
+  {
+    "content_id": "426121c5-099e-4918-a551-a7289642e130",
+    "status": "Validated",
+    "title": "My title",
+    "user_email": "email@email.com",
+    "badges": [
+      {
+        "name": "badge 1"
+      }
+    ],
+    "updated_at": "2024-12-14 18:45:28"
+  },
+  {
+    "content_id": "a3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
+    "status": "Validated",
+    "title": "My title 2",
+    "user_email": "email2@email.com",
+    "badges": [
+      {
+        "name": "badge 10"
+      },
+      {
+        "name": "badge 11"
+      },
+      {
+        "name": "badge 12"
+      }
+    ],
+    "updated_at": "2024-12-18 13:25:08"
+  }
+]

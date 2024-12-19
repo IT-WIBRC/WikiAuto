@@ -117,7 +117,7 @@ describe("InputPassword", () => {
     expect(hidePassword.exists()).toBe(false);
   });
 
-  it.skip("should emit the value typed", async () => {
+  it("should emit the value typed", async () => {
     inputPasswordWrapper = await mountSuspended(InputPassword, {
       props: {
         label: "Password",

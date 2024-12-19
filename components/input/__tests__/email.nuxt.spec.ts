@@ -90,7 +90,7 @@ describe("InputEmail", () => {
     expect(wildcards.text()).toBe("*");
   });
 
-  it.skip("should emit the value typed", async () => {
+  it("should emit the value typed", async () => {
     inputEmailWrapper = await mountSuspended(InputEmail, {
       props: {
         label: "Email",

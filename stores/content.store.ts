@@ -1,6 +1,12 @@
-import type { ApiResponseResult, GetContentListType } from "~/api/types";
+import type {
+  ApiResponseResult,
+  ContentCreation,
+  GetContentListType,
+} from "~/api/types";
 import { GenericErrors } from "~/api/types";
 import { contentService } from "~/api/contentService";
+import { imageService } from "~/api/imageService";
+import { useAuthStore } from "~/stores/auth.store";
 
 export const useContentStore = defineStore("content", {
   actions: {
@@ -70,6 +76,45 @@ export const useContentStore = defineStore("content", {
           message: GenericErrors.REQUEST_FAILED,
         };
       }
+    },
+
+    async create(content: ContentCreation): Promise<ApiResponseResult<never>> {
+      const { illustration, title, explanation, badges } = content;
+
+      const fileExt = illustration.name.split(".").pop();
+      const filePath = `${Math.random()}.${fileExt}`;
+
+      const illustrationCreationResponse = await imageService.uploadFile(
+        illustration,
+        filePath,
+      );
+
+      if (illustrationCreationResponse.error) {
+        return {
+          status: "error",
+          message: GenericErrors.REQUEST_FAILED,
+        };
+      }
+
+      const contentCreated = await contentService.create(
+        {
+          title,
+          explanation,
+          badges,
+          illustration: illustrationCreationResponse.data.path,
+        },
+        useAuthStore().session?.user?.email ?? "",
+      );
+
+      if (contentCreated.status === "completed") {
+        return {
+          status: "success",
+        };
+      }
+      return {
+        status: "error",
+        message: GenericErrors.REQUEST_FAILED,
+      };
     },
   },
 });

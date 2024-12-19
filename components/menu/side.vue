@@ -16,7 +16,7 @@
         :icon="icon"
         :path="path"
         :is-opened="isMenuExpanded"
-        :is-selected="route.path === path"
+        :is-selected="route.path.includes(path)"
       />
     </menu>
     <div class="more text-center flex flex-col items-center gap-y-4">
