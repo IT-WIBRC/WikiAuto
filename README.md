@@ -47,16 +47,19 @@ These users are those who propose content anonymously but they can also add thei
 ### Make before use
 
 First you need to install the dependencies
+
 ```bash
 bun install
 ```
 
 Open the pre-commit script
+
 ```bash
 nano .git/hooks/pre-commit
 ```
 
 and then add the script after installation
+
 ```bash
 #!/bin/sh
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
@@ -72,17 +75,20 @@ exit 0
 ```
 
 Se also the script for the `pre-push`
+
 ```bash
 nano .git/hooks/pre-push
 ```
 
 And then add this script:
+
 ```bash
 #!/bin/sh
 bun run test:coverage && rm -rf coverage
 ```
 
 Finally make the file executable:
+
 ```bash
 # pre-push
 chmod 700 .git/hooks/pre-push

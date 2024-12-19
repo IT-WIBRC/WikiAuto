@@ -98,6 +98,7 @@ describe("ContentList", () => {
             name: "badge 1",
           },
         ],
+        updated_at: "2024-12-14 18:45:28"
       },
       {
         content_id: "123456",
@@ -115,6 +116,7 @@ describe("ContentList", () => {
             name: "badge 12",
           },
         ],
+        updated_at: "2024-12-18 13:25:08"
       },
     ];
     const mountWithData = async (isMontageShallow = true) => {

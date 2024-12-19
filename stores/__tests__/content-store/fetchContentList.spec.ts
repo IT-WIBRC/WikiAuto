@@ -26,6 +26,7 @@ describe("ContentStore", () => {
               name: "badge 1",
             },
           ],
+          updated_at: "2024-12-14 13:25:08"
         },
       ];
       const getContentListMock = vi.fn(() => {

@@ -15,12 +15,14 @@
     "test:coverage": "TZ=Africa vitest run --coverage.enabled",
     "pre-commit": "lint-staged --allow-empty",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "bunx prettier . -w"
   },
   "dependencies": {
     "@nuxtjs/i18n": "^9.0.0-rc.2",
     "@pinia/nuxt": "^0.7.0",
     "@supabase/supabase-js": "2.46.2",
+    "dayjs": "^1.11.13",
     "nuxt": "^3.14.159",
     "vue": "latest",
     "vue-router": "latest"

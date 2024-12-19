@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import type { DataHeader, DataItem } from "~/components/DataTable.vue";
 import type { GetContentListType } from "~/api/types";
+import useDate from "~/utils/useDate";
 
 definePageMeta({
   layout: "admin",
@@ -141,7 +142,11 @@ const contentList = ref<GetContentListType[]>([]);
 onBeforeMount(async () => {
   const contents = await useContentStore().fetchContentList();
   if (contents.status === "success") {
-    contentList.value = contents.data;
+    contentList.value = contents.data
+      .sort(
+        (firstContent, secondContent) =>
+          useDate.difference(secondContent.updated_at, firstContent.updated_at)
+      );
     return;
   }
   useToast.setDuration(15).error(t(`generic_errors.${t(contents.message)}`));

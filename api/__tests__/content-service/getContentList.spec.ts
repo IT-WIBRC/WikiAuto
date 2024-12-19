@@ -31,7 +31,7 @@ describe("Get content List", () => {
       data: [],
     });
     expect(mockGetContentList.select).toHaveBeenCalledWith(`
-      content_id, status, title, user_email,
+      content_id, status, title, user_email, updated_at,
       badges (
         name
       )
@@ -51,6 +51,7 @@ describe("Get content List", () => {
             name: "badge 1",
           },
         ],
+        updated_at: "2024-12-14 13:25:08"
       },
     ];
     mockGetContentList.select.mockImplementation(() => {

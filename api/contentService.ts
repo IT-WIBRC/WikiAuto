@@ -21,7 +21,7 @@ const getTotalContentWithStatus = async (
 
 const getContentList = async () => {
   return useSupabase().from("contents").select(`
-      content_id, status, title, user_email,
+      content_id, status, title, user_email, updated_at,
       badges (
         name
       )
