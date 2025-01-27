@@ -30,7 +30,6 @@ const { t } = useI18n({
 });
 
 const totalValidatedContent = ref("0");
-
 const isTotalValidatedContentLoading = ref(false);
 const getTotalValidatedContent = async (): Promise<void> => {
   isTotalValidatedContentLoading.value = true;

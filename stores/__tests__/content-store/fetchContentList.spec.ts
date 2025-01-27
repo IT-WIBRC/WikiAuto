@@ -23,10 +23,10 @@ describe("ContentStore", () => {
           user_email: "email@email.com",
           badges: [
             {
-              name: "badge 1",
+              name: "badge-service 1",
             },
           ],
-          updated_at: "2024-12-14 13:25:08"
+          updated_at: "2024-12-14 13:25:08",
         },
       ];
       const getContentListMock = vi.fn(() => {

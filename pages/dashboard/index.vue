@@ -18,6 +18,7 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "admin",
+  middleware: ["auth-middleware"],
 });
 
 const { t } = useI18n({

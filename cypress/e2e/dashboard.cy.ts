@@ -1,15 +1,13 @@
 import useCypressInterceptors from "../utils/interceptors";
 import useCypressAssertions from "../utils/assertions";
 
-const {
-  loginAdminInterceptor,
-  totalContentInterceptor,
-  totalValidatedContentInterceptor,
-} = useCypressInterceptors();
+const { loginAdminInterceptor, content } = useCypressInterceptors();
 
 const { assertDashboardCardContentHas } = useCypressAssertions();
 
 describe("Dashboard", () => {
+  const Content = content();
+
   beforeEach(() => {
     cy.goToLogin();
     loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
@@ -21,8 +19,8 @@ describe("Dashboard", () => {
   });
 
   it("display the total cards when there are empty", () => {
-    totalContentInterceptor(0);
-    totalValidatedContentInterceptor(0);
+    Content.totalInterceptor(0);
+    Content.totalValidatedInterceptor(0);
 
     cy.wait("@totalContent");
     cy.wait("@totalValidatedContent");
@@ -41,8 +39,8 @@ describe("Dashboard", () => {
   });
 
   it("display the total cards when there are many", () => {
-    totalContentInterceptor(178);
-    totalValidatedContentInterceptor(150);
+    Content.totalInterceptor(178);
+    Content.totalValidatedInterceptor(150);
 
     cy.wait("@totalContent");
     cy.wait("@totalValidatedContent");

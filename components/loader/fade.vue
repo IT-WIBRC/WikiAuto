@@ -1,6 +1,6 @@
 <template>
   <div
-    class="loader before:content-[''] before:absolute before:rounded-[50%] before:border-t-2 before:border-t-white before:border-r-2 before:border-r-transparent"
+    class="loader before:content-[''] before:absolute before:rounded-[50%] before:border-t-2 before:border-r-2 before:border-r-transparent"
   />
 </template>
 <style scoped>

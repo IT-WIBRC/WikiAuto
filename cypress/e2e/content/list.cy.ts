@@ -1,9 +1,11 @@
 import useCypressInterceptors from "../../utils/interceptors";
 import useCypressAssertions from "../../utils/assertions";
 
-const { loginAdminInterceptor } = useCypressInterceptors();
-const { assertTableHeadersAre, assertTableRowHas } = useCypressAssertions();
+const { loginAdminInterceptor, content } = useCypressInterceptors();
+const { assertTableHeadersAre, assertTableRowHas, assertToastMessageIs } =
+  useCypressAssertions();
 
+const Content = content();
 describe("Display content list", () => {
   beforeEach(() => {
     cy.goToLogin();
@@ -20,7 +22,7 @@ describe("Display content list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
+        url: Content.GET_LIST_URL,
       },
       {
         statusCode: 200,
@@ -41,7 +43,7 @@ describe("Display content list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
+        url: Content.GET_LIST_URL,
       },
       {
         statusCode: 404,
@@ -59,60 +61,11 @@ describe("Display content list", () => {
       .should("be.visible")
       .should("have.text", "No content created yet.");
 
-    cy.clock();
-    cy.tick(5000);
-
-    cy.get("[data-test='message']")
-      .should("be.visible")
-      .should("have.text", "Request to retrieve list of contents failed.");
-
-    cy.tick(15000);
-    cy.clock().invoke("restore");
+    assertToastMessageIs("Request to retrieve list of contents failed.");
   });
 
   it("should display the list of content when presents", () => {
-    cy.intercept(
-      {
-        method: "GET",
-        https: true,
-        url: "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29",
-      },
-      {
-        statusCode: 200,
-        body: [
-          {
-            content_id: "326121c5-099e-4918-a551-a7289642e130",
-            status: "Validated",
-            title: "My title",
-            user_email: "email@email.com",
-            badges: [
-              {
-                name: "badge 1",
-              },
-            ],
-            updated_at: "2024-12-14 18:45:28"
-          },
-          {
-            content_id: "b3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
-            status: "Validated",
-            title: "My title 2",
-            user_email: "email2@email.com",
-            badges: [
-              {
-                name: "badge 10",
-              },
-              {
-                name: "badge 11",
-              },
-              {
-                name: "badge 12",
-              },
-            ],
-            updated_at: "2024-12-18 13:25:08"
-          },
-        ],
-      },
-    ).as("content-list");
+    Content.getListSuccessfullyInterceptor();
 
     cy.goToMenu("content");
     cy.wait("@content-list");
@@ -123,7 +76,7 @@ describe("Display content list", () => {
     assertTableHeadersAre(["Title", "Email", "Badges", "Status"]);
 
     assertTableRowHas({
-      id: "326121c5-099e-4918-a551-a7289642e130",
+      id: "426121c5-099e-4918-a551-a7289642e130",
       badges: ["badge 1"],
       email: "email@email.com",
       title: "My title",
@@ -131,7 +84,7 @@ describe("Display content list", () => {
     });
 
     assertTableRowHas({
-      id: "b3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
+      id: "a3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
       badges: ["badge 10", "badge 11", "badge 12"],
       email: "email2@email.com",
       title: "My title 2",

@@ -1,13 +1,14 @@
 type POSITION = "top left" | "top right" | "bottom left" | "bottom right";
 
 export default {
-  targetToAttachTo: document.body,
+  targetToAttachTo: null,
   timeOut: 0,
   container: null,
   testMessage: null,
   progressBar: null,
   duration: 10,
   initialize() {
+    this.targetToAttachTo = document.body;
     const isContainerExist = document.querySelector("[data-test='container']");
     if (isContainerExist) {
       document.body.removeChild(isContainerExist);
@@ -31,6 +32,15 @@ export default {
         min-width: 200px;
         justify-content: center;
       }
+      
+      @keyframes move { 
+         from {
+           width: 0;
+         }
+        to {
+          width: 100%;
+        }
+      }
     `;
     this.container.append(baseStyle);
 
@@ -38,21 +48,13 @@ export default {
 
     this.progressBar.style.height = "4px";
     this.progressBar.style.width = "100%";
-    this.progressBar.animate(
-      [
-        {
-          width: "0",
-        },
-      ],
-      {
-        duration: this.duration * 1_000,
-        fill: "forwards",
-      },
-    );
+    this.progressBar.style.animation = `${this.duration}s linear forwards move`;
 
     this.container.className = "toast";
   },
   setPosition(position: POSITION) {
+    this.initialize();
+
     this.container.style.bottom = 0;
     this.container.style.top = 0;
     this.container.style.left = 0;
