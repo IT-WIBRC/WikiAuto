@@ -35,6 +35,7 @@ export default function useCypressAssertions() {
     email: string;
     status: string;
     badges: string[];
+    remaining?: string;
   }): void => {
     cy.get(`[data-cy-id='${row.id}']`).within(() => {
       cy.get("td").eq(0).should("have.text", row.title);
@@ -42,6 +43,12 @@ export default function useCypressAssertions() {
       cy.get("td")
         .eq(2)
         .within(() => {
+          if (row.remaining) {
+            cy.get("[data-cy='remainingBadges']").should(
+              "include.text",
+              row.remaining,
+            );
+          }
           row.badges.forEach((badge) => {
             cy.get(`[data-cy='${badge}']`).should("have.text", badge);
           });

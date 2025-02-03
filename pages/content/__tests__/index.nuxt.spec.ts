@@ -10,8 +10,9 @@ import type { GetContentListType } from "../../../api/types";
 import BadgeStatus from "~/components/badge/Status.vue";
 import BaseButtonIcon from "~/components/base/button/icon.vue";
 import AddIcon from "~/components/icon/add.vue";
-import Badge from "~/components/badge/index.vue";
+import BadgeList from "~/components/badge/list.vue";
 import useToast from "~/utils/use-toast";
+import ContentCreate from "~/components/content/create.vue";
 
 describe("ContentList", () => {
   mockNuxtImport("useI18n", () => {
@@ -32,7 +33,6 @@ describe("ContentList", () => {
   let contentListWrapper: VueWrapper;
   beforeAll(async () => {
     contentListWrapper = await mountSuspended(ContentList, {
-      shallow: true,
       global: {
         plugins: [pinia],
       },
@@ -196,7 +196,7 @@ describe("ContentList", () => {
       );
     });
 
-    it("should display the row content", async () => {
+    it("should display the content correctly", async () => {
       const isMontageShallow = false;
       await mountWithData(isMontageShallow);
       const rowItems = contentListWrapper.findAll("[data-cy='table-row']");
@@ -205,16 +205,24 @@ describe("ContentList", () => {
         const tableData = rowItem.findAll("td");
         expect(tableData.length).toBe(4);
         expect(tableData[0].text()).toBe(contents[index].title);
-        expect(tableData[1].text()).toBe(contents[index].user_email);
+        const emailRow = tableData[1];
+        const emailValue = contents[index].user_email;
+        expect(emailRow.find("a").attributes().href).toBe(
+          `mailto:${emailValue}`,
+        );
+        expect(tableData[1].text()).toBe(emailValue);
 
-        const badgesComponents = tableData[2].findAllComponents(Badge);
+        const badgesListComponent = tableData[2].findComponent(BadgeList);
         const badgesList = contents[index].badges;
-        expect(badgesComponents.length).toBe(badgesList.length);
-        badgesComponents.forEach((badge, badgeIndex) => {
-          expect(badge.props().text).toBe(badgesList[badgeIndex].name);
+        expect(badgesListComponent.props()).toEqual({
+          badges: badgesList.map((badge) => badge.name),
+          badgeLengthOnLG: 2,
+          badgeLengthOnXL: 4,
+          badgeLengthOnMoreThanXL: 5,
         });
 
         const status = tableData[3].findComponent(BadgeStatus);
+        expect(status.exists()).toBe(true);
         expect(status.exists()).toBe(true);
         expect(status.props()).toEqual({
           theme: contents[index].status.toLowerCase(),
@@ -233,12 +241,14 @@ describe("ContentList", () => {
       expect(contentCreateButton.findComponent(AddIcon).exists()).toBe(true);
     });
 
-    it.skip("should go to the content create page when we click on the button", async () => {
-      expect(mockNavigateTo).toHaveBeenCalledTimes(0);
+    it("should open the content create form when we click on the create button", async () => {
+      expect(contentListWrapper.findComponent(ContentCreate).exists()).toBe(
+        false,
+      );
       await contentListWrapper.findComponent(BaseButtonIcon).trigger("click");
-
-      expect(mockNavigateTo).toHaveBeenCalledTimes(1);
-      expect(mockNavigateTo).toHaveBeenCalledWith("content/create");
+      expect(contentListWrapper.findComponent(ContentCreate).exists()).toBe(
+        true,
+      );
     });
   });
 });

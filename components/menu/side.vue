@@ -1,5 +1,10 @@
 <template>
-  <nav :class="['bg-white space-y-4 pt-2', { 'ml-4 my-4': !isMenuExpanded }]">
+  <nav
+    :class="[
+      'bg-white space-y-4 pt-2 sticky top-0',
+      { 'ml-4 my-4 top-4': !isMenuExpanded },
+    ]"
+  >
     <div class="logo px-1">
       <BaseImage
         name="wikiAuto.png"
