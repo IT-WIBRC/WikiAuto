@@ -114,10 +114,28 @@ export default function useCypressInterceptors() {
     ).as("badge-list");
   };
 
+  const totalBadgeInterceptor = (value: number, status: number = 200): void => {
+    cy.intercept(
+      {
+        method: "GET",
+        https: true,
+        url: "**/rest/v1/badges?select=badge_id",
+      },
+      {
+        headers: {
+          "Content-Range": `*/${value}`,
+        },
+        statusCode: status,
+        body: [],
+      },
+    ).as("totalBadges");
+  };
+
   return {
     loginAdminInterceptor,
     logoutAdminInterceptor,
     content,
     getBadgeList,
+    totalBadgeInterceptor,
   };
 }

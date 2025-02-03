@@ -11,7 +11,14 @@ const create = async (name: string, description: string) => {
   });
 };
 
+const getTotalBadge = async () => {
+  return useSupabase().from("badges").select("badge_id", { count: "exact" });
+};
+
 export const badgeService = {
   getBadgeListForOptions,
   create,
+  statistics: {
+    getTotalBadge,
+  },
 };

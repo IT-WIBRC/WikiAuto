@@ -4,6 +4,7 @@ import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import Dashboard from "../index.vue";
 import CardDashboardTotalContent from "~/components/card/dashboard/TotalContent.vue";
 import CardDashboardTotalValidatedContent from "~/components/card/dashboard/TotalValidatedContent.vue";
+import CardDashboardTotalBadge from "~/components/card/dashboard/TotalBadge.vue";
 
 describe("Dashboard", () => {
   mockNuxtImport("useI18n", () => {
@@ -41,5 +42,11 @@ describe("Dashboard", () => {
     expect(
       dashboard.findComponent(CardDashboardTotalValidatedContent).exists(),
     ).toBe(true);
+  });
+
+  it("should render the card containing the total badge in the system", () => {
+    expect(dashboard.findComponent(CardDashboardTotalBadge).exists()).toBe(
+      true,
+    );
   });
 });
