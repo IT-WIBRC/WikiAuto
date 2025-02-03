@@ -38,5 +38,30 @@ export const useBadgeStore = defineStore("badge", {
         };
       }
     },
+    async fetchTotalBadges(): Promise<ApiResponseResult<number>> {
+      const response = await badgeService.statistics.getTotalBadge();
+
+      if (!response.error) {
+        return {
+          status: "success",
+          data: response.count,
+        };
+      } else {
+        switch (response.error.code) {
+          case "NoSuchKey":
+          case "InvalidKey": {
+            return {
+              status: "error",
+              message: GenericErrors.BAD_REQUEST,
+            };
+          }
+          default:
+            return {
+              status: "error",
+              message: GenericErrors.UNKNOWN_ERROR,
+            };
+        }
+      }
+    },
   },
 });

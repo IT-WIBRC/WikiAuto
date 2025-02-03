@@ -11,6 +11,7 @@
     <div class="flex gap-x-4">
       <CardDashboardTotalContent data-cy="total-content" />
       <CardDashboardTotalValidatedContent data-cy="total-validated-content" />
+      <CardDashboardTotalBadge data-cy="total-badge" />
     </div>
   </div>
 </template>
