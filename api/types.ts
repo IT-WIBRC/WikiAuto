@@ -59,9 +59,16 @@ export type GetContentListType = Omit<
 export type Badge = Tables<"badges">;
 export type GetBadgeListTypeForOption = Omit<Badge, "description">;
 
+export const CONTENT_STATUS = {
+  VALIDATED: "VALIDATED",
+  DRAFT: "DRAFT",
+  PENDING: "PENDING",
+} as const;
+
 export type ContentCreation = {
   title: string;
   explanation: string;
   illustration: File;
   badges: Badge[];
+  status: keyof typeof CONTENT_STATUS;
 };

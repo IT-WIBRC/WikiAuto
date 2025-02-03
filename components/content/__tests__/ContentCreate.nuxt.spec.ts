@@ -16,10 +16,11 @@ import {
   InputFileImage,
   InputRichText,
   InputText,
+  SelectCustomForContentStatus,
   SelectMultipleForBadge,
 } from "#components";
 import { createTestingPinia } from "@pinia/testing";
-import { GenericErrors } from "~/api/types";
+import { CONTENT_STATUS, GenericErrors } from "~/api/types";
 
 describe("ContentCreate", () => {
   mockNuxtImport("useI18n", () => {
@@ -112,6 +113,18 @@ describe("ContentCreate", () => {
     });
   });
 
+  it("should render the field to select the content status", () => {
+    const explanationField = contentCreate.findComponent(
+      SelectCustomForContentStatus,
+    );
+    expect(explanationField.exists()).toBe(true);
+    expect(explanationField.props()).toEqual({
+      label: "fields.status_lbl",
+      modelValue: "DRAFT",
+      isRequired: true,
+    });
+  });
+
   it("should render the button to create the content", () => {
     const createContentBtn = contentCreate.find("[data-cy='create-btn']");
     expect(createContentBtn.exists()).toBe(true);
@@ -149,6 +162,7 @@ describe("ContentCreate", () => {
       await flushPromises();
       await flushPromises();
       await flushPromises();
+      await nextTick();
 
       expect(
         contentCreate.findComponent(InputFileImage).props().errorMessage,
@@ -262,6 +276,7 @@ describe("ContentCreate", () => {
         await flushPromises();
         await flushPromises();
         await flushPromises();
+        await nextTick();
 
         illustration = contentCreate.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_size");
@@ -344,6 +359,7 @@ describe("ContentCreate", () => {
         explanation: "<p>This is useful when we cant to deal with police</p>",
         illustration: imageTestFile,
         badges: [...selectedBadges],
+        status: CONTENT_STATUS.DRAFT,
       });
       vi.clearAllMocks();
     });
@@ -387,6 +403,8 @@ describe("ContentCreate", () => {
       await contentCreate
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
+
+      await contentCreate.find("[data-cy-id='pending']").trigger("click");
       await contentCreate
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
@@ -407,6 +425,7 @@ describe("ContentCreate", () => {
         explanation: "<p>This is useful when we cant to deal with police</p>",
         illustration: imageFile,
         badges: [...selectedBadges],
+        status: CONTENT_STATUS.PENDING,
       });
 
       expect(contentCreate.emitted()).toHaveProperty("created");
@@ -451,6 +470,7 @@ describe("ContentCreate", () => {
         explanation: "<p>This is useful when we cant to deal with police</p>",
         illustration: imageFile,
         badges: [...selectedBadges],
+        status: CONTENT_STATUS.DRAFT,
       });
 
       expect(contentCreate.emitted()).toHaveProperty("created");
