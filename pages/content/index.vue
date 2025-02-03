@@ -17,7 +17,7 @@
         </template>
       </BaseButtonIcon>
     </div>
-    <div class="pr-8">
+    <div class="pr-8 scroll-height scroll">
       <template v-if="isContentListLoading">
         <div class="relative h-full">
           <LoaderFade
@@ -39,18 +39,26 @@
               />
             </td>
             <td v-else-if="header.key === 'badges'">
-              <div class="flex items-center h-full gap-x-3">
-                <Badge
-                  v-for="badge in item.getTextFor(header.key)"
-                  :key="badge"
-                  :text="badge"
-                  :data-cy="badge"
+              <div
+                class="flex items-center h-full gap-x-3 w-[250px] 2xl:w-[400px]"
+              >
+                <BadgeList
+                  :badges="item.getTextFor(header.key)"
+                  :badge-length-on-l-g="2"
+                  :badge-length-on-x-l="4"
+                  :badge-length-on-more-than-x-l="5"
+                  data-cy="badge-list"
                 />
               </div>
             </td>
             <td v-else-if="header.key === 'email'">
               <address>
-                {{ item.getTextFor(header.key) }}
+                <a
+                  :href="'mailto:' + item.getTextFor(header.key)"
+                  class="underline text-primary/90 font-bold"
+                >
+                  {{ item.getTextFor(header.key) }}
+                </a>
               </address>
             </td>
             <td v-else class="pl-4 py-5">
@@ -222,6 +230,10 @@ const closeContentCreationForm = (): void => {
   max-height: calc(100svh - 2rem);
 }
 
+.scroll-height {
+  max-height: calc(100svh - 140px);
+}
+
 .nested-enter-active,
 .nested-leave-active {
   transition: opacity 0.5s ease;
@@ -249,6 +261,6 @@ const closeContentCreationForm = (): void => {
 </style>
 <style>
 table tbody tr td:first-child p {
-  @apply w-[400px] xl:w-[500px] 2xl:w-[500px] truncate;
+  @apply w-[300px] xl:w-[500px] 2xl:w-[600px] truncate;
 }
 </style>

@@ -98,7 +98,9 @@ describe("MenuSide", () => {
 
   it("should have the awaited style when the menu is expanded", async () => {
     menuSide = await mountSuspended(MenuSide);
-    expect(menuSide.find("nav").attributes().class).toContain("ml-4 my-4");
+    expect(menuSide.find("nav").attributes().class).toContain(
+      "ml-4 my-4 top-4",
+    );
     expect(menuSide.findComponent(BaseImage).attributes().class).toContain(
       "h-12 w-12",
     );

@@ -85,7 +85,8 @@ describe("Display content list", () => {
 
     assertTableRowHas({
       id: "a3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
-      badges: ["badge 10", "badge 11", "badge 12"],
+      badges: ["badge 10", "badge 11"],
+      remaining: "+1",
       email: "email2@email.com",
       title: "My title 2",
       status: "Validated",
