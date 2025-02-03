@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
-import { Content_Status, contentService } from "../../contentService";
+import { contentService } from "../../contentService";
+import { CONTENT_STATUS } from "~/api/types";
 
 const mockCreateContent = vi.hoisted(() => ({
   insert: vi
@@ -45,6 +46,7 @@ describe("Create content", () => {
         explanation: "explanation",
         badges: [{ badge_id: "123546" }, { badge_id: "1235468" }],
         illustration: "0.2541654.png",
+        status: CONTENT_STATUS.PENDING,
       },
       "user@gmail.com",
     );
@@ -53,9 +55,9 @@ describe("Create content", () => {
     expect(mockCreateContent.insert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation",
-      status: Content_Status.VALIDATED,
       user_email: "user@gmail.com",
       image: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
     });
 
     expect(mockCreateContent.insert).toHaveBeenLastCalledWith([
@@ -105,6 +107,7 @@ describe("Create content", () => {
         explanation: "explanation0",
         badges: [{ badge_id: "123546" }],
         illustration: "0.2541654.png",
+        status: CONTENT_STATUS.VALIDATED,
       },
       "user@gmail.com",
     );
@@ -113,9 +116,9 @@ describe("Create content", () => {
     expect(mockCreateContent.insert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation0",
-      status: Content_Status.VALIDATED,
       user_email: "user@gmail.com",
       image: "0.2541654.png",
+      status: CONTENT_STATUS.VALIDATED,
     });
 
     expect(mockCreateContent.insert).toHaveBeenLastCalledWith([
@@ -158,6 +161,7 @@ describe("Create content", () => {
         explanation: "explanation1",
         badges: [{ badge_id: "123546" }],
         illustration: "0.2541654.png",
+        status: CONTENT_STATUS.VALIDATED,
       },
       "user@gmail.com",
     );
@@ -166,9 +170,9 @@ describe("Create content", () => {
     expect(mockCreateContent.insert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation1",
-      status: Content_Status.VALIDATED,
       user_email: "user@gmail.com",
       image: "0.2541654.png",
+      status: CONTENT_STATUS.VALIDATED,
     });
 
     expect(badgeResponse).toEqual({

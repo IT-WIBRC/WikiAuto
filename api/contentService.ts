@@ -1,9 +1,5 @@
 import useSupabase from "~/api/supabaseInit";
-import type { ContentCreation } from "~/api/types";
-
-export const Content_Status = {
-  VALIDATED: "VALIDATED",
-} as const;
+import type { ContentCreation, CONTENT_STATUS } from "~/api/types";
 
 const getTotalContent = async () => {
   return useSupabase()
@@ -12,7 +8,7 @@ const getTotalContent = async () => {
 };
 
 const getTotalContentWithStatus = async (
-  status: keyof typeof Content_Status,
+  status: keyof typeof CONTENT_STATUS,
 ) => {
   return useSupabase()
     .from("contents")
@@ -50,7 +46,7 @@ const create = async (
   status: "incomplete" | "completed" | "failed";
   error?: unknown;
 }> => {
-  const { title, explanation, illustration, badges } = content;
+  const { title, explanation, illustration, badges, status } = content;
 
   const contentCreated = await useSupabase()
     .from("contents")
@@ -58,7 +54,7 @@ const create = async (
       title,
       explanation,
       user_email: userEmail,
-      status: Content_Status.VALIDATED,
+      status,
       image: illustration,
     })
     .select("content_id")

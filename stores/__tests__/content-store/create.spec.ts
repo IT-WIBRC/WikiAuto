@@ -12,7 +12,7 @@ import { useContentStore } from "../../content.store";
 import { contentService } from "../../../api/contentService";
 import { imageService } from "../../../api/imageService";
 import { useAuthStore } from "../../auth.store";
-import { GenericErrors } from "../../../api/types";
+import { CONTENT_STATUS, GenericErrors } from "../../../api/types";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -77,6 +77,7 @@ describe("ContentStore", () => {
         badges,
         explanation: "<p>My explanation</p>",
         illustration: new File([""], "image.png", { type: "image/png" }),
+        status: "PENDING",
       });
 
       expect(uploadFileMock).toHaveBeenCalledTimes(1);
@@ -95,6 +96,7 @@ describe("ContentStore", () => {
           explanation: "<p>My explanation</p>",
           badges,
           illustration: "0.284815154.png",
+          status: CONTENT_STATUS.PENDING,
         },
         "test@gmail.com",
       );
@@ -130,6 +132,7 @@ describe("ContentStore", () => {
         badges,
         explanation: "<p>My explanation</p>",
         illustration: new File([""], "image.png", { type: "image/png" }),
+        status: CONTENT_STATUS.PENDING,
       });
 
       expect(uploadFileMock).toHaveBeenCalledTimes(1);
@@ -185,6 +188,7 @@ describe("ContentStore", () => {
         badges,
         explanation: "<p>My explanation</p>",
         illustration: new File([""], "image.png", { type: "image/png" }),
+        status: CONTENT_STATUS.PENDING,
       });
 
       expect(uploadFileMock).toHaveBeenCalledTimes(1);
@@ -203,6 +207,7 @@ describe("ContentStore", () => {
           explanation: "<p>My explanation</p>",
           badges,
           illustration: "0.294815154.png",
+          status: CONTENT_STATUS.PENDING,
         },
         "test9@gmail.com",
       );

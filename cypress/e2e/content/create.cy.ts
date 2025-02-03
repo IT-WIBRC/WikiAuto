@@ -78,7 +78,7 @@ describe("Create content", () => {
       expect(request.body.explanation).to.equals(
         "<p>my amazing explanation about this subject</p>",
       );
-      expect(request.body.status).to.equals("VALIDATED");
+      expect(request.body.status).to.equals("PENDING");
       expect(request.body.image).to.match(/^0\.(\d+)\.[a-z]{3,4}$/);
     });
 
@@ -259,5 +259,7 @@ describe("Create content", () => {
     cy.get("[data-cy='explanation-input'] div[contenteditable=true]").type(
       "my amazing explanation about this subject",
     );
+
+    cy.get("[data-cy-id='pending']").click();
   };
 });

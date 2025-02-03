@@ -33,6 +33,7 @@
             data-cy="illustration-input"
             :error-message="contentToCreateErrors.illustration"
           />
+
           <InputText
             v-model="title"
             :label="t('fields.title.lbl')"
@@ -42,6 +43,7 @@
             data-cy="title-input"
             :error-message="contentToCreateErrors.title"
           />
+
           <SelectMultipleForBadge
             v-model="badges"
             :label="t('fields.badge.lbl')"
@@ -50,6 +52,13 @@
             data-cy="select-badge-input"
             :error-message="contentToCreateErrors.badges"
           />
+
+          <SelectCustomForContentStatus
+            v-model="status"
+            :label="t('fields.status_lbl')"
+            :is-required="true"
+          />
+
           <InputRichText
             v-model="explanation"
             :placeholder="t('fields.explanation.ph')"
@@ -95,8 +104,9 @@
 </template>
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/zod";
-import { array, object, string, custom } from "zod";
+import { array, object, string, custom, nativeEnum } from "zod";
 import type { Badge } from "~/api/types";
+import { CONTENT_STATUS } from "~/api/types";
 
 const emits = defineEmits<{
   (e: "close" | "created"): void;
@@ -132,6 +142,7 @@ const { t } = useI18n({
           lbl: "Topics",
           ph: "Select topics",
         },
+        status_lbl: "Status",
         button: {
           create: "Create",
           create_continue: "Create and continue",
@@ -169,6 +180,7 @@ const { t } = useI18n({
           lbl: "Sujets",
           ph: "Selectionnez vos sujets",
         },
+        status_lbl: "Status",
         button: {
           create: "Créer",
           create_continue: "créer et continue",
@@ -204,6 +216,7 @@ const validationSchema = toTypedSchema(
       (badges) => badges.length > 0,
       t("_min", { length: 1 }),
     ),
+    status: nativeEnum(CONTENT_STATUS).default(CONTENT_STATUS.DRAFT),
     illustration: custom<File>((file) => file instanceof File, t("_file"))
       .refine((file) => file.size > 0 && file.size <= MAX_FILE_SIZE, t("_size"))
       .refine(
@@ -223,6 +236,7 @@ const {
     explanation: "",
     badges: [],
     illustration: new File([], ""),
+    status: CONTENT_STATUS.DRAFT,
   },
 });
 
@@ -230,6 +244,7 @@ const { value: title } = useField("title");
 const { value: explanation } = useField("explanation");
 const { value: badges } = useField("badges");
 const { value: illustration } = useField("illustration");
+const { value: status } = useField("status");
 
 const handleFormValidation = async (): Promise<boolean> => {
   const { valid } = await validate();
@@ -246,6 +261,7 @@ const manageCreation = async (): Promise<"success" | "failed"> => {
     explanation: explanation.value,
     illustration: illustration.value,
     badges: badges.value,
+    status: status.value,
   });
 
   if (creationResponse.status === "success") {

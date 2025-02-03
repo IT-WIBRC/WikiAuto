@@ -79,7 +79,7 @@ export const useContentStore = defineStore("content", {
     },
 
     async create(content: ContentCreation): Promise<ApiResponseResult<never>> {
-      const { illustration, title, explanation, badges } = content;
+      const { illustration, title, explanation, badges, status } = content;
 
       const fileExt = illustration.name.split(".").pop();
       const filePath = `${Math.random()}.${fileExt}`;
@@ -102,6 +102,7 @@ export const useContentStore = defineStore("content", {
           explanation,
           badges,
           illustration: illustrationCreationResponse.data.path,
+          status,
         },
         useAuthStore().session?.user?.email ?? "",
       );

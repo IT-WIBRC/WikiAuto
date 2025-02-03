@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useContentStore } from "../../content.store";
-import { contentService, Content_Status } from "../../../api/contentService";
+import { CONTENT_STATUS } from "~/api/types";
+import { contentService } from "../../../api/contentService";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -31,7 +32,7 @@ describe("ContentStore", () => {
 
       expect(getTotalContentValidatedMock).toHaveBeenCalledTimes(1);
       expect(getTotalContentValidatedMock).toHaveBeenCalledWith(
-        Content_Status.VALIDATED,
+        CONTENT_STATUS.VALIDATED,
       );
       expect(totalContentResponse).toEqual({
         status: "success",
@@ -60,7 +61,7 @@ describe("ContentStore", () => {
 
       expect(getTotalContentValidatedMock).toHaveBeenCalledTimes(1);
       expect(getTotalContentValidatedMock).toHaveBeenCalledWith(
-        Content_Status.VALIDATED,
+        CONTENT_STATUS.VALIDATED,
       );
 
       expect(totalContentResponse).toEqual({
@@ -90,7 +91,7 @@ describe("ContentStore", () => {
 
       expect(getTotalContentValidatedMock).toHaveBeenCalledTimes(1);
       expect(getTotalContentValidatedMock).toHaveBeenCalledWith(
-        Content_Status.VALIDATED,
+        CONTENT_STATUS.VALIDATED,
       );
 
       expect(totalContentResponse).toEqual({
