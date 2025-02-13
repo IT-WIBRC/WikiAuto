@@ -8,7 +8,7 @@ describe("BaseImage", () => {
   beforeAll(async () => {
     baseImageWrapper = await mountSuspended(BaseImage, {
       props: {
-        name: "",
+        name: "wikiAuto",
       },
     });
   });
@@ -86,5 +86,17 @@ describe("BaseImage", () => {
       },
     });
     expect(baseImageWrapper.attributes("src")).toBeUndefined();
+  });
+
+  it("should have the awaited image src url when the `srcUrl` is provided", async () => {
+    baseImageWrapper = await mountSuspended(BaseImage, {
+      props: {
+        name: "wikiAuto",
+        srcUrl: "http://localhost/assets/images/wikiAuto",
+      },
+    });
+    expect(baseImageWrapper.attributes("src")).toBe(
+      "http://localhost/assets/images/wikiAuto",
+    );
   });
 });

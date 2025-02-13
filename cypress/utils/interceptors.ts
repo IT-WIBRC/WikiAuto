@@ -35,7 +35,7 @@ export default function useCypressInterceptors() {
 
   const content = () => {
     const GET_LIST_URL =
-      "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cbadges%28name%29";
+      "**/rest/v1/contents?select=content_id%2Cstatus%2Ctitle%2Cuser_email%2Cupdated_at%2Cimage%2Ccreated_at%2Cexplanation%2Cbadges%28name%2Cbadge_id%2Cdescription%29";
 
     const totalInterceptor = (value: number, status: number = 200): void => {
       cy.intercept(
@@ -90,11 +90,18 @@ export default function useCypressInterceptors() {
       ).as(alias);
     };
 
+    const getContentImageInterceptor = (path: string): void => {
+      cy.intercept(`**/storage/v1/object/public/wikiAuto_images/${path}`, {
+        fixture: "contentImage.png",
+      }).as(`image-${path}`);
+    };
+
     return {
       totalInterceptor,
       totalValidatedInterceptor,
       getListSuccessfullyInterceptor,
       GET_LIST_URL,
+      getContentImageInterceptor,
     };
   };
 

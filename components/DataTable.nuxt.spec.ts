@@ -26,7 +26,7 @@ const headers: DataHeader[] = [
 class DataForContent implements DataItem<string> {
   constructor(private content: unknown) {}
 
-  getTextFor(key: Keys): string | string[] | number {
+  getTextFor(key: string): string | string[] | number {
     switch (key) {
       case "title":
         return this.content.title;

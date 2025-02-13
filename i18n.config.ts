@@ -13,6 +13,9 @@ export default defineI18nConfig(() => ({
         BAD_REQUEST: "Bad request",
         REQUEST_FAILED: "Request failed",
       },
+      VALIDATED: "VALIDATED",
+      PENDING: "PENDING",
+      DRAFT: "DRAFT",
     },
     fr: {
       generic_errors: {
@@ -26,6 +29,9 @@ export default defineI18nConfig(() => ({
         BAD_REQUEST: "Mauvaise requête",
         REQUEST_FAILED: "Échec de la requête",
       },
+      VALIDATED: "VALIDÉE",
+      PENDING: "EN ATTENTE",
+      DRAFT: "BROUILLON",
     },
   },
 }));

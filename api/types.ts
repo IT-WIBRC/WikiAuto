@@ -56,6 +56,10 @@ export type GetContentListType = Omit<
   "explanation" | "image"
 > & { badges: Omit<Tables<"badges">, "badge_id" | "description">[] };
 
+export type GetContentDetailsType = Tables<"contents"> & {
+  badges: Tables<"badges">[];
+};
+
 export type Badge = Tables<"badges">;
 export type GetBadgeListTypeForOption = Omit<Badge, "description">;
 

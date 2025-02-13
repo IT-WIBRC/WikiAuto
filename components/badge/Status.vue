@@ -11,23 +11,37 @@
       ]"
       data-cy="badge-title"
     >
-      {{ text }}
+      {{ t(text) }}
     </div>
   </div>
 </template>
 <script setup lang="ts">
-type StatusTheme = "validated";
+import type { CONTENT_STATUS } from "~/api/types";
+type STATUS_KEYS = keyof typeof CONTENT_STATUS;
+type StatusTheme = Lowercase<STATUS_KEYS>;
 
 defineProps<{
-  text: string;
+  text: STATUS_KEYS;
   theme: StatusTheme;
 }>();
 
+const { t } = useI18n({
+  useScope: "global",
+});
+
 type Theme = Record<StatusTheme, { text: string; circle: string }>;
-const themes = reactive<Theme>({
+const themes: Theme = {
   validated: {
     text: "text-[#03A89E]/80",
     circle: "bg-[#03A89E]",
   },
-});
+  pending: {
+    text: "text-orange-400/80",
+    circle: "bg-orange-400",
+  },
+  draft: {
+    text: "text-yellow-500/80",
+    circle: "bg-yellow-400",
+  },
+};
 </script>

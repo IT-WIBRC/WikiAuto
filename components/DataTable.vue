@@ -3,35 +3,38 @@
     <table class="w-full">
       <thead>
         <tr class="bg-transparent">
-          <th
-            v-for="header in headers"
-            :key="header.key"
-            class="p-2 pl-4 leading-tight font-medium text-sm capitalize font-dm-sans"
-            data-cy="header"
-          >
-            {{ header.value }}
-          </th>
+          <slot name="header">
+            <th
+              v-for="header in headers"
+              :key="header.key"
+              class="p-2 pl-4 leading-tight font-medium text-sm capitalize font-dm-sans"
+              data-cy="header"
+            >
+              {{ header.value }}
+            </th>
+          </slot>
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="item in items"
-          :key="item.id"
-          class="rounded-2xl bg-white drop-shadow-sm duration-150 ease-linear hover:shadow-md font-dm-sans font-medium text-sm"
-          data-cy="table-row"
-          :data-cy-id="item.id"
-        >
-          <slot
-            v-for="header in headers"
-            :key="header.key"
-            :item="item"
-            :header="header"
-          >
-            <td data-cy="table-data" class="pl-4 py-5">
-              {{ item.getTextFor(header.key) }}
-            </td>
+        <template v-for="item in items" :key="item.id">
+          <slot :item="item" name="body">
+            <tr
+              class="rounded-2xl duration-150 ease-linear hover:bg-primary/10 font-dm-sans font-medium text-sm"
+              data-cy="table-row"
+              :data-cy-id="`row-${item.id}`"
+            >
+              <td
+                v-for="header in headers"
+                :key="header.key"
+                data-cy="table-data"
+                :data-cy-id="header"
+                class="pl-4 py-5"
+              >
+                {{ item.getTextFor(header.key) }}
+              </td>
+            </tr>
           </slot>
-        </tr>
+        </template>
       </tbody>
     </table>
   </div>
@@ -61,21 +64,20 @@ export default defineComponent({
   },
 });
 </script>
-<style scoped>
-table {
-  border-collapse: separate;
-  border-spacing: 0 1em;
-  -webkit-border-vertical-spacing: 0.5em;
-  -webkit-border-horizontal-spacing: 0;
+<style>
+table tbody tr {
+  @apply border-b;
 }
 
-table tbody tr td:first-child {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+table thead th {
+  @apply font-semibold font-dm-sans capitalize text-sm leading-tight bg-primary/10;
 }
 
-table tbody tr td:last-child {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+table thead tr th:first-child {
+  @apply rounded-tl-lg;
+}
+
+table thead tr th:last-child {
+  @apply rounded-tr-lg;
 }
 </style>

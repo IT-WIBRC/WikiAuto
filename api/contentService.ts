@@ -18,9 +18,11 @@ const getTotalContentWithStatus = async (
 
 const getContentList = async () => {
   return useSupabase().from("contents").select(`
-      content_id, status, title, user_email, updated_at,
+      content_id, status, title, user_email, updated_at, image, created_at, explanation,
       badges (
-        name
+        name,
+        badge_id,
+        description
       )
     `);
 };

@@ -73,14 +73,14 @@ describe("Display content list", () => {
     cy.get("[data-cy='no-content']").should("not.exist");
     cy.get("[data-cy='table-row']").should("have.length", 2);
 
-    assertTableHeadersAre(["Title", "Email", "Badges", "Status"]);
+    assertTableHeadersAre(["Title", "Created by", "Badges", "Status"], 5);
 
     assertTableRowHas({
       id: "426121c5-099e-4918-a551-a7289642e130",
       badges: ["badge 1"],
       email: "email@email.com",
-      title: "My title",
-      status: "Validated",
+      title: "Wear your seatbelt",
+      status: "VALIDATED",
     });
 
     assertTableRowHas({
@@ -88,8 +88,8 @@ describe("Display content list", () => {
       badges: ["badge 10", "badge 11"],
       remaining: "+1",
       email: "email2@email.com",
-      title: "My title 2",
-      status: "Validated",
+      title: "Avoid driving while tired",
+      status: "PENDING",
     });
   });
 });

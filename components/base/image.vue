@@ -1,6 +1,6 @@
 <template>
   <img
-    :src="useImageAsset(name)"
+    :src="srcUrl ? srcUrl : useImageAsset(name)"
     :alt="alt"
     :loading="loading"
     :fetchpriority="fetchPriority"
@@ -15,6 +15,11 @@ defineProps({
   name: {
     type: String,
     required: true,
+  },
+  // eslint-disable-next-line vue/require-default-prop
+  srcUrl: {
+    type: String,
+    required: false,
   },
   alt: {
     type: String,
