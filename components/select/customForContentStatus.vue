@@ -42,19 +42,7 @@ defineProps<{
 }>();
 
 const { t } = useI18n({
-  useScope: "local",
-  messages: {
-    en: {
-      VALIDATED: "VALIDATED",
-      PENDING: "PENDING",
-      DRAFT: "DRAFT",
-    },
-    fr: {
-      VALIDATED: "VALIDÉE",
-      PENDING: "EN ATTENTE",
-      DRAFT: "BROUILLON",
-    },
-  },
+  useScope: "global",
 });
 
 const model = defineModel({

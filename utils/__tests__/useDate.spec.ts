@@ -21,4 +21,10 @@ describe("useDate", () => {
       ).toBe(true);
     });
   });
+
+  describe("format", () => {
+    it("should return a formatted date to format 'YYYY/MM/DD HH:mm:ss'", () => {
+      expect(useDate.format("2024-12-16 18:45:28")).toBe("2024/12/16 18:45:28");
+    });
+  });
 });

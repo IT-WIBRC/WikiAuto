@@ -7,10 +7,11 @@ const uploadFile = async (file: File, path: string) => {
   });
 };
 
-// const downloadFile = async (path: string) => {
-//   return useSupabase().storage.from(BUCKET_NAME).download(path);
-// };
+const getPublicUrlFrom = async (path: string) => {
+  return useSupabase().storage.from(BUCKET_NAME).getPublicUrl(path);
+};
 
 export const imageService = {
   uploadFile,
+  getPublicUrlFrom,
 };

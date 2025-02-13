@@ -31,41 +31,78 @@
           :headers="headers"
           :items="getContents"
         >
-          <template #default="{ item, header }">
-            <td v-if="header.key === 'status'">
-              <BadgeStatus
-                :text="item.getTextFor(header.key)"
-                :theme="item.getTextFor(header.key).toLowerCase()"
-              />
-            </td>
-            <td v-else-if="header.key === 'badges'">
-              <div
-                class="flex items-center h-full gap-x-3 w-[250px] 2xl:w-[400px]"
-              >
-                <BadgeList
-                  :badges="item.getTextFor(header.key)"
-                  :badge-length-on-l-g="2"
-                  :badge-length-on-x-l="4"
-                  :badge-length-on-more-than-x-l="5"
-                  data-cy="badge-list"
+          <template #header>
+            <th class="py-4 pl-3" data-cy="header">
+              <IconKeyboardArrowDown class="-rotate-90 h-6 w-6" />
+            </th>
+            <th v-for="header in headers" :key="header.key" data-cy="header">
+              {{ header.value }}
+            </th>
+          </template>
+          <template #body="{ item }">
+            <tr
+              class="rounded-xl duration-150 ease-linear hover:bg-primary/15 font-dm-sans font-medium text-sm cursor-default"
+              data-cy="table-row"
+              :data-cy-id="`row-${item.id}`"
+              :class="{
+                'bg-primary/20 isOpened': currentContentOpened === item.id,
+              }"
+            >
+              <td class="pl-2 py-6" data-cy="table-data">
+                <IconKeyboardArrowDown
+                  :class="[
+                    'h-6 w-6 cursor-pointer duration-100 ease-linear rounded hover:shadow hover:shadow-primary/50',
+                    { '-rotate-90': !(currentContentOpened === item.id) },
+                  ]"
+                  data-cy="open-details-icon"
+                  @click.stop="setCurrentOpenedContentDetails(item.id)"
                 />
-              </div>
-            </td>
-            <td v-else-if="header.key === 'email'">
-              <address>
-                <a
-                  :href="'mailto:' + item.getTextFor(header.key)"
-                  class="underline text-primary/90 font-bold"
-                >
-                  {{ item.getTextFor(header.key) }}
-                </a>
-              </address>
-            </td>
-            <td v-else class="pl-4 py-5">
-              <p>
-                {{ item.getTextFor(header.key) }}
-              </p>
-            </td>
+              </td>
+              <template v-for="headerKey in headers" :key="headerKey.key">
+                <td v-if="headerKey.key === 'status'">
+                  <BadgeStatus
+                    :text="item.getTextFor('status')"
+                    :theme="item.getTextFor('status').toLowerCase()"
+                  />
+                </td>
+                <td v-else-if="headerKey.key === 'badges'">
+                  <div
+                    class="flex items-center h-full gap-x-3 w-[250px] xl:w-[400px]"
+                  >
+                    <BadgeList
+                      :badges="item.getTextFor('badges')"
+                      :badge-length-on-l-g="2"
+                      :badge-length-on-x-l="4"
+                      :badge-length-on-more-than-x-l="5"
+                      data-cy="badge-list"
+                    />
+                  </div>
+                </td>
+                <td v-else-if="headerKey.key === 'email'">
+                  <address>
+                    <a
+                      :href="'mailto:' + item.getTextFor('email')"
+                      class="underline text-primary/90 font-bold"
+                    >
+                      {{ item.getTextFor("email") }}
+                    </a>
+                  </address>
+                </td>
+                <td v-else>
+                  <p class="w-[300px] xl:w-[500px] 2xl:w-[600px] truncate">
+                    {{ item.getTextFor("title") }}
+                  </p>
+                </td>
+              </template>
+            </tr>
+            <client-only>
+              <Transition name="slide-fade">
+                <ContentRowDetails
+                  v-if="currentContentOpened === item.id"
+                  :id="item.id"
+                />
+              </Transition>
+            </client-only>
           </template>
         </DataTable>
         <div
@@ -104,7 +141,7 @@
 </template>
 <script setup lang="ts">
 import type { DataHeader, DataItem } from "~/components/DataTable.vue";
-import type { GetContentListType } from "~/api/types";
+import type { Badge, GetContentListType } from "~/api/types";
 
 definePageMeta({
   layout: "admin",
@@ -119,7 +156,7 @@ const { t } = useI18n({
       not_content: "No content created yet.",
       headers: {
         title_th: "Title",
-        email_th: "Email",
+        created_by_th: "Created by",
         status_th: "Status",
         badge_th: "Badges",
       },
@@ -133,7 +170,7 @@ const { t } = useI18n({
       not_content: "Pas encore de contenu cree",
       headers: {
         title_th: "Titre",
-        email_th: "Email",
+        created_by_th: "Créé par",
         status_th: "Status",
         badge_th: "Tags",
       },
@@ -146,7 +183,6 @@ const { t } = useI18n({
   },
 });
 
-type HeaderKeys = "title" | "email" | "status" | "badges";
 const headers: DataHeader<Keys>[] = Object.seal([
   {
     key: "title",
@@ -154,7 +190,7 @@ const headers: DataHeader<Keys>[] = Object.seal([
   },
   {
     key: "email",
-    value: t("headers.email_th"),
+    value: t("headers.created_by_th"),
   },
   {
     key: "badges",
@@ -166,10 +202,11 @@ const headers: DataHeader<Keys>[] = Object.seal([
   },
 ]) as const;
 
+type HeaderKeys = "title" | "email" | "badges" | "status";
 class DataForContent implements DataItem<HeaderKeys> {
   constructor(private content: GetContentListType) {}
 
-  getTextFor(key: Keys): string | string[] | number {
+  getTextFor(key: HeaderKeys): string | Badge[] | number {
     switch (key) {
       case "title":
         return this.content.title;
@@ -220,6 +257,15 @@ const openContentCreationForm = (): void => {
 const closeContentCreationForm = (): void => {
   isContentCreationFormOpened.value = false;
 };
+
+const currentContentOpened = shallowRef("");
+const setCurrentOpenedContentDetails = (contentId: string): void => {
+  if (currentContentOpened.value !== contentId) {
+    currentContentOpened.value = contentId;
+    return;
+  }
+  currentContentOpened.value = "";
+};
 </script>
 <style scoped>
 .custom-grid {
@@ -258,9 +304,22 @@ const closeContentCreationForm = (): void => {
 .nested-enter-active .inner {
   transition-delay: 0.25s;
 }
-</style>
-<style>
-table tbody tr td:first-child p {
-  @apply w-[300px] xl:w-[500px] 2xl:w-[600px] truncate;
+
+.isOpened {
+  @apply border-b-0;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-20%);
+  opacity: 0;
 }
 </style>

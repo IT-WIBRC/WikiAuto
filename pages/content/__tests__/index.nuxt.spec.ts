@@ -13,6 +13,8 @@ import AddIcon from "~/components/icon/add.vue";
 import BadgeList from "~/components/badge/list.vue";
 import useToast from "~/utils/use-toast";
 import ContentCreate from "~/components/content/create.vue";
+import IconKeyboardArrowDown from "~/components/icon/KeyboardArrowDown.vue";
+import ContentRowDetails from "~/components/content/rowDetails.vue";
 
 describe("ContentList", () => {
   mockNuxtImport("useI18n", () => {
@@ -121,7 +123,7 @@ describe("ContentList", () => {
         updated_at: "2024-12-18 13:25:08",
       },
     ];
-    const mountWithData = async (isMontageShallow = true) => {
+    const mountWithData = async (isMontageShallow = true): Promise<void> => {
       contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
         status: "success",
         data: contents,
@@ -130,6 +132,9 @@ describe("ContentList", () => {
         shallow: isMontageShallow,
         global: {
           plugins: [pinia],
+          stubs: {
+            rowDetails: true,
+          },
         },
       });
     };
@@ -179,7 +184,7 @@ describe("ContentList", () => {
         },
         {
           key: "email",
-          value: "headers.email_th",
+          value: "headers.created_by_th",
         },
         {
           key: "badges",
@@ -203,16 +208,21 @@ describe("ContentList", () => {
       expect(rowItems.length).toBe(2);
       rowItems.forEach((rowItem, index) => {
         const tableData = rowItem.findAll("td");
-        expect(tableData.length).toBe(4);
-        expect(tableData[0].text()).toBe(contents[index].title);
-        const emailRow = tableData[1];
+        expect(tableData.length).toBe(5);
+
+        expect(
+          tableData.at(0).findComponent(IconKeyboardArrowDown).exists(),
+        ).toBe(true);
+
+        expect(tableData[1].text()).toBe(contents[index].title);
+        const emailRow = tableData[2];
         const emailValue = contents[index].user_email;
         expect(emailRow.find("a").attributes().href).toBe(
           `mailto:${emailValue}`,
         );
-        expect(tableData[1].text()).toBe(emailValue);
+        expect(tableData[2].text()).toBe(emailValue);
 
-        const badgesListComponent = tableData[2].findComponent(BadgeList);
+        const badgesListComponent = tableData[3].findComponent(BadgeList);
         const badgesList = contents[index].badges;
         expect(badgesListComponent.props()).toEqual({
           badges: badgesList.map((badge) => badge.name),
@@ -221,7 +231,7 @@ describe("ContentList", () => {
           badgeLengthOnMoreThanXL: 5,
         });
 
-        const status = tableData[3].findComponent(BadgeStatus);
+        const status = tableData[4].findComponent(BadgeStatus);
         expect(status.exists()).toBe(true);
         expect(status.exists()).toBe(true);
         expect(status.props()).toEqual({
@@ -229,6 +239,27 @@ describe("ContentList", () => {
           text: contents[index].status,
         });
       });
+    });
+
+    it("should open the content details when we click on the open arrow icon", async () => {
+      const isMontageShallow = false;
+      await mountWithData(isMontageShallow);
+      expect(contentListWrapper.findComponent(ContentRowDetails).exists()).toBe(
+        false,
+      );
+
+      await contentListWrapper
+        .findAll("[data-cy='table-row']")[0]
+        .find("td")
+        .findComponent(IconKeyboardArrowDown)
+        .trigger("click");
+
+      expect(contentListWrapper.findComponent(ContentRowDetails).exists()).toBe(
+        true,
+      );
+      expect(
+        contentListWrapper.findComponent(ContentRowDetails).props().id,
+      ).toBe("123456");
     });
   });
 

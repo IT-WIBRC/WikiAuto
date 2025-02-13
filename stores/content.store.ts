@@ -8,7 +8,14 @@ import { contentService } from "~/api/contentService";
 import { imageService } from "~/api/imageService";
 import { useAuthStore } from "~/stores/auth.store";
 
+type ContentGetter = {
+  contentList: GetContentListType[];
+};
+
 export const useContentStore = defineStore("content", {
+  state: (): ContentGetter => ({
+    contentList: [],
+  }),
   actions: {
     async fetchTotalContent(): Promise<ApiResponseResult<number>> {
       const response = await contentService.statistics.getTotalContent();
@@ -66,6 +73,7 @@ export const useContentStore = defineStore("content", {
       const response = await contentService.getContentList();
 
       if (!response.error) {
+        this.contentList = response.data;
         return {
           status: "success",
           data: response.data,
@@ -116,6 +124,22 @@ export const useContentStore = defineStore("content", {
         status: "error",
         message: GenericErrors.REQUEST_FAILED,
       };
+    },
+
+    async getImageURLFrom(path: string): Promise<ApiResponseResult<string>> {
+      const response = await imageService.getPublicUrlFrom(path);
+
+      if (!response.error) {
+        return {
+          status: "success",
+          data: response.data.publicUrl,
+        };
+      } else {
+        return {
+          status: "error",
+          message: GenericErrors.REQUEST_FAILED,
+        };
+      }
     },
   },
 });

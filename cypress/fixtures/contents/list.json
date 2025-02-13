@@ -1,32 +1,46 @@
 [
   {
     "content_id": "426121c5-099e-4918-a551-a7289642e130",
-    "status": "Validated",
-    "title": "My title",
+    "status": "VALIDATED",
+    "explanation": "<p>Wear Your Seatbelt. Seatbelts decrease the chance of severe damage in an accident by <strong>distributing the</strong> power of the impact across your chest and pelvis</p>",
+    "title": "Wear your seatbelt",
     "user_email": "email@email.com",
+    "image": "0.028945.png",
     "badges": [
       {
+        "badge_id": "656121c5-099e-4918-a551-a7289642e130",
+        "description": "description 1111",
         "name": "badge 1"
       }
     ],
-    "updated_at": "2024-12-14 18:45:28"
+    "updated_at": "2024-12-14 18:45:28",
+    "created_at": "2024-11-14 12:45:28"
   },
   {
     "content_id": "a3cacd2b-7ee3-4c84-a6bf-52742de57ab0",
-    "status": "Validated",
-    "title": "My title 2",
+    "status": "PENDING",
+    "title": "Avoid driving while tired",
     "user_email": "email2@email.com",
+    "image": "0.021345.png",
+    "explanation": "<div>Wear Your Seat Belt. Worn properly, a seat belt prevents you from being tossed around inside of a crashing vehicle or, at worst, flung out through the</div>",
     "badges": [
       {
+        "badge_id": "356121c5-099e-4918-a551-a7289642e130",
+        "description": "description 1",
         "name": "badge 10"
       },
       {
+        "badge_id": "656191c5-099e-4918-a551-a7289642e130",
+        "description": "description 2",
         "name": "badge 11"
       },
       {
+        "badge_id": "656121c5-899e-4918-a551-a7289642e130",
+        "description": "description 3",
         "name": "badge 12"
       }
     ],
-    "updated_at": "2024-12-18 13:25:08"
+    "updated_at": "2024-11-18 13:25:08",
+    "created_at": "2024-12-18 10:25:08"
   }
 ]

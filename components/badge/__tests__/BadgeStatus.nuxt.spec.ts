@@ -1,14 +1,20 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
+import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import { BadgeStatus } from "#components";
 
 describe("BadgeStatus", () => {
   let badgeStatusWrapper: VueWrapper;
+  mockNuxtImport("useI18n", () => {
+    return () => ({
+      t: vi.fn((msg: string) => msg),
+    });
+  });
+
   beforeAll(async () => {
     badgeStatusWrapper = await mountSuspended(BadgeStatus, {
       props: {
-        text: "badge",
+        text: "VALIDATED",
         theme: "validated",
       },
     });
@@ -21,7 +27,7 @@ describe("BadgeStatus", () => {
   it("should display the text with awaited style", () => {
     const title = badgeStatusWrapper.find("[data-cy='badge-title']");
     expect(title.exists()).toBe(true);
-    expect(title.text()).toBe("badge");
+    expect(title.text()).toBe("VALIDATED");
     expect(title.attributes().class).toContain("text-[#03A89E]/80");
   });
 
