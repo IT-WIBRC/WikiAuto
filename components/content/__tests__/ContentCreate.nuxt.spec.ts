@@ -22,6 +22,29 @@ import {
 import { createTestingPinia } from "@pinia/testing";
 import { CONTENT_STATUS, GenericErrors } from "~/api/types";
 
+const badges = [
+  {
+    badge_id: 1,
+    name: "Radio",
+    description: "description",
+  },
+  {
+    badge_id: 2,
+    name: "Radio 2",
+    description: "description",
+  },
+  {
+    badge_id: 3,
+    name: "shoutcast",
+    description: "description",
+  },
+  {
+    badge_id: 4,
+    name: "icecast",
+    description: "description",
+  },
+] as const;
+
 describe("ContentCreate", () => {
   mockNuxtImport("useI18n", () => {
     return () => ({
@@ -33,9 +56,15 @@ describe("ContentCreate", () => {
     stubActions: true,
   });
 
+  const badgeSore = useBadgeStore(pinia);
+  badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValue({
+    status: "success",
+    data: badges,
+  });
+
   let contentCreate: VueWrapper;
   beforeAll(async () => {
-    vi.setSystemTime(new Date("2023-10-08"));
+    vi.setSystemTime(new Date(2023, 10, 8, 0, 0, 0, 0));
     contentCreate = await mountSuspended(ContentCreate, {
       global: {
         plugins: [pinia],
@@ -72,7 +101,7 @@ describe("ContentCreate", () => {
     expect(illustrationField.exists()).toBe(true);
     expect(illustrationField.props()).toEqual({
       label: "fields.illustration.lbl",
-      modelValue: new File([], "", { lastModified: 1696723200000 }),
+      modelValue: new File([], "", { lastModified: 1699401600000 }),
     });
   });
 
@@ -128,7 +157,7 @@ describe("ContentCreate", () => {
   it("should render the button to create the content", () => {
     const createContentBtn = contentCreate.find("[data-cy='create-btn']");
     expect(createContentBtn.exists()).toBe(true);
-    expect(createContentBtn.text()).toBe("fields.button.create");
+    expect(createContentBtn.text()).toBe("button.create");
   });
 
   it("should render the button to create the content and continue", () => {
@@ -136,9 +165,7 @@ describe("ContentCreate", () => {
       "[data-cy='create-continue-btn']",
     );
     expect(createContinueContentBtn.exists()).toBe(true);
-    expect(createContinueContentBtn.text()).toBe(
-      "fields.button.create_continue",
-    );
+    expect(createContinueContentBtn.text()).toBe("button.create_continue");
   });
 
   it("should emit the `close` event when we click on the close button", async () => {
@@ -156,20 +183,18 @@ describe("ContentCreate", () => {
         },
       });
 
-      await contentCreate.findComponent(InputFileImage).setValue(new Blob([]));
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
       await flushPromises();
       await flushPromises();
       await flushPromises();
-      await nextTick();
 
-      expect(
-        contentCreate.findComponent(InputFileImage).props().errorMessage,
-      ).toBe("_file");
       expect(contentCreate.findComponent(InputText).props().errorMessage).toBe(
         "_min",
       );
+      expect(
+        contentCreate.findComponent(InputFileImage).props().errorMessage,
+      ).toBe("_size");
       expect(
         contentCreate.findComponent(SelectMultipleForBadge).props()
           .errorMessage,
@@ -177,11 +202,13 @@ describe("ContentCreate", () => {
       expect(
         contentCreate.findComponent(InputRichText).props().errorMessage,
       ).toBe("_min");
+
+      vi.clearAllMocks();
     });
 
     describe("Field: Title", () => {
       afterEach(() => {
-        vi.restoreAllMocks();
+        vi.clearAllMocks();
       });
 
       it("should display an error message when the title entered has less than 10 characters", async () => {
@@ -221,7 +248,6 @@ describe("ContentCreate", () => {
         await flushPromises();
         await flushPromises();
         await flushPromises();
-        await flushPromises();
 
         title = contentCreate.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_max");
@@ -230,7 +256,7 @@ describe("ContentCreate", () => {
 
     describe("Field: Explanation", () => {
       afterEach(() => {
-        vi.restoreAllMocks();
+        vi.clearAllMocks();
       });
 
       it("should display an error message when the explanation entered has less than 20 characters", async () => {
@@ -256,7 +282,7 @@ describe("ContentCreate", () => {
 
     describe("Field: Illustration", () => {
       afterEach(() => {
-        vi.restoreAllMocks();
+        vi.clearAllTimers();
       });
 
       it("should display an error message when the illustration size is `0` or more than `200kb`", async () => {
@@ -295,7 +321,6 @@ describe("ContentCreate", () => {
         Object.defineProperty(fakeFile, "size", { value: 1024 * 100 });
 
         await illustration.setValue(fakeFile);
-
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
         await flushPromises();
@@ -322,19 +347,13 @@ describe("ContentCreate", () => {
 
       await contentCreate.findComponent(InputFileImage).setValue(imageTestFile);
       await contentCreate.findComponent(InputText).setValue("Driving licence");
-      const selectedBadges = [
-        {
-          badge_id: 3,
-          name: "shoutcast",
-        },
-        {
-          badge_id: 4,
-          name: "icecast",
-        },
-      ];
+      const selectedBadges = [badges[0], badges[1]];
       await contentCreate
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
+
+      await flushPromises();
+
       await contentCreate
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
@@ -367,10 +386,12 @@ describe("ContentCreate", () => {
 
   describe("Successful cases", () => {
     let contentStore: ReturnType<typeof useContentStore>;
-    const imageFile = new File([""], "image.png", { type: "image/png" });
-    Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
+    let imageFile = new File([""], "image.png", { type: "image/png" });
 
     beforeEach(async () => {
+      imageFile = new File([""], "image.png", { type: "image/png" });
+      Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
+
       contentStore = useContentStore(pinia);
       contentStore.create = vi.fn().mockReturnValue({
         status: "success",
@@ -384,25 +405,19 @@ describe("ContentCreate", () => {
     });
 
     afterEach(() => {
+      vi.clearAllTimers();
       vi.clearAllMocks();
     });
 
     it("should emit the awaited events when the creation is successful", async () => {
       await contentCreate.findComponent(InputText).setValue("Driving licence");
       await contentCreate.findComponent(InputFileImage).setValue(imageFile);
-      const selectedBadges = [
-        {
-          badge_id: 3,
-          name: "shoutcast",
-        },
-        {
-          badge_id: 4,
-          name: "icecast",
-        },
-      ];
+      const selectedBadges = [badges[0], badges[1]];
       await contentCreate
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
+
+      await flushPromises();
 
       await contentCreate.find("[data-cy-id='pending']").trigger("click");
       await contentCreate
@@ -435,19 +450,13 @@ describe("ContentCreate", () => {
     it("should emit the awaited events when we click on the `create and continue button`", async () => {
       await contentCreate.findComponent(InputFileImage).setValue(imageFile);
       await contentCreate.findComponent(InputText).setValue("Driving licence");
-      const selectedBadges = [
-        {
-          badge_id: 3,
-          name: "shoutcast",
-        },
-        {
-          badge_id: 4,
-          name: "icecast",
-        },
-      ];
+      const selectedBadges = [badges[0], badges[1]];
       await contentCreate
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
+
+      await flushPromises();
+
       await contentCreate
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
@@ -477,7 +486,7 @@ describe("ContentCreate", () => {
 
       expect(
         contentCreate.findComponent(InputFileImage).props().modelValue,
-      ).toEqual(new File([], "", { lastModified: 1696723200000 }));
+      ).toEqual(new File([], "", { lastModified: 1699401600000 }));
       expect(contentCreate.findComponent(InputText).props().modelValue).toBe(
         "",
       );

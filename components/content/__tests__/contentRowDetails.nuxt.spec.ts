@@ -7,7 +7,9 @@ import {
   BadgeStatus,
   BaseImage,
   ContentDetailWrapper,
+  ContentEdit,
   ContentRowDetails,
+  IconEdit,
 } from "#components";
 import type { VueWrapper } from "@vue/test-utils";
 
@@ -85,13 +87,16 @@ describe("ContentRowDetails", () => {
       },
       global: {
         plugins: [pinia],
+        stubs: {
+          edit: true,
+        },
       },
     });
   });
 
   afterAll(() => {
-    vi.clearAllMocks();
     vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should render correctly", () => {
@@ -199,5 +204,88 @@ describe("ContentRowDetails", () => {
     expect(contentExplanation.find("[data-cy='value']").text()).toBe(
       contents[1].explanation,
     );
+  });
+
+  describe("Edition", () => {
+    it("should render the button to edit the content", () => {
+      const editBtn = contentRowDetailsWrapper.find("[data-cy='edit-btn']");
+      expect(editBtn.exists()).toBe(true);
+      expect(editBtn.findComponent(IconEdit).exists()).toBe(true);
+    });
+
+    it("should open the content create form when we click on the create button", async () => {
+      let editContent = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContent.exists()).toBe(false);
+
+      await contentRowDetailsWrapper
+        .find("[data-cy='edit-btn']")
+        .trigger("click");
+
+      editContent = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContent.exists()).toBe(true);
+      expect(editContent.props().id).toBe(contents[1].content_id);
+    });
+
+    it("should close the edition component when we receive the `close` event", async () => {
+      contentRowDetailsWrapper = await mountSuspended(ContentRowDetails, {
+        props: {
+          id: "123456",
+        },
+        global: {
+          plugins: [pinia],
+          stubs: {
+            edit: true,
+          },
+        },
+      });
+
+      let editContentForm = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContentForm.exists()).toBe(false);
+
+      await contentRowDetailsWrapper
+        .find("[data-cy='edit-btn']")
+        .trigger("click");
+
+      editContentForm = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContentForm.exists()).toBe(true);
+
+      editContentForm.vm.$emit("close");
+      await nextTick();
+
+      editContentForm = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContentForm.exists()).toBe(false);
+    });
+
+    it("should emit the `edited` event with the edited content id when the edition is done", async () => {
+      const contentRowDetailsWrapper = await mountSuspended(ContentRowDetails, {
+        props: {
+          id: "123456",
+        },
+        global: {
+          plugins: [pinia],
+          stubs: {
+            edit: true,
+          },
+        },
+      });
+
+      let editContentForm2 =
+        contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContentForm2.exists()).toBe(false);
+
+      await contentRowDetailsWrapper
+        .find("[data-cy='edit-btn']")
+        .trigger("click");
+
+      editContentForm2 = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editContentForm2.exists()).toBe(true);
+
+      editContentForm2.vm.$emit("edited", 12345);
+      await nextTick();
+
+      expect(contentRowDetailsWrapper.emitted()).toHaveProperty("edited", [
+        [contents[1].content_id],
+      ]);
+    });
   });
 });

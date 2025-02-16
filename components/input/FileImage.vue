@@ -55,20 +55,37 @@ const updateImage = (image: Blob, file: File): void => {
   isPreviewReady.value = true;
 };
 
+const createUrlFromFile = (file: File): void => {
+  const fileReader = new FileReader();
+  fileReader.onload = (): void => {
+    updateImage(
+      new Blob([fileReader.result as ArrayBuffer], { type: file.type }),
+      file,
+    );
+  };
+  fileReader.readAsArrayBuffer(file);
+};
+
 const showPreview = (changeEvent: Event): void => {
   const files = (changeEvent.target as HTMLInputElement).files;
   if (files?.length) {
-    const fileReader = new FileReader();
-    fileReader.onload = (): void => {
-      updateImage(
-        new Blob([fileReader.result as ArrayBuffer], { type: files[0].type }),
-        files[0],
-      );
-    };
-    fileReader.readAsArrayBuffer(files[0]);
+    createUrlFromFile(files[0]);
   }
 };
+
 const chooseImage = (): void => {
   file.value?.click();
 };
+
+watch(
+  () => model.value,
+  (value) => {
+    if (!isPreviewReady.value && value.size > 0) {
+      createUrlFromFile(value);
+    }
+  },
+  {
+    immediate: true,
+  },
+);
 </script>

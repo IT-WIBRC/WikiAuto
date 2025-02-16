@@ -24,7 +24,9 @@
           <div
             class="w-full flex flex-col justify-between h-[276px] xl:h-[300px] divide-y border-b"
           >
-            <div class="flex gap-x-4 xl:gap-x-8 items-center h-1/5">
+            <div
+              class="flex gap-x-4 xl:gap-x-8 items-center h-1/5 relative w-full"
+            >
               <ContentDetailWrapper :label="t('status_lbl')" data-cy="status">
                 <template #content>
                   <BadgeStatus
@@ -69,13 +71,26 @@
                   </time>
                 </template>
               </ContentDetailWrapper>
+
+              <button
+                type="button"
+                data-cy="edit-btn"
+                @click.stop="openContentEditionForm"
+              >
+                <IconEdit
+                  class="h-5 w-5 fill-green-600 absolute right-[2%] top-0 cursor-pointer"
+                  title="edit"
+                />
+              </button>
             </div>
-            <div class="h-[38%] flex items-center">
-              <ContentDetailWrapper :label="t('title_lbl')" data-cy="title">
+            <div class="h-[38%] flex items-center w-full">
+              <ContentDetailWrapper
+                :label="t('title_lbl')"
+                data-cy="title"
+                class="w-full"
+              >
                 <template #content>
-                  <h1
-                    class="font-semibold text-base break-words 2xl:text-xl w-[98%]"
-                  >
+                  <h1 class="font-semibold text-base 2xl:text-xl w-[98%]">
                     {{ getCurrentContent.title }}
                   </h1>
                 </template>
@@ -111,11 +126,35 @@
         </ContentDetailWrapper>
       </div>
     </td>
+
+    <teleport to="body">
+      <Transition name="nested">
+        <section
+          v-if="isContentEditionFormOpened"
+          class="w-full bg-primary-text/30 shadow h-svh fixed top-0 left-0 z-20 flex"
+        >
+          <div
+            class="w-full h-full bg-transparent cursor-pointer"
+            data-cy="empty-space"
+            @click.stop="closeContentEditionForm"
+          />
+          <ContentEdit
+            :id="id"
+            class="w-[700px] bg-white h-full inner"
+            @close="closeContentEditionForm"
+            @edited="$emit('edited', id)"
+          />
+        </section>
+      </Transition>
+    </teleport>
   </tr>
 </template>
 <script lang="ts" setup>
 import type { GetContentDetailsType } from "~/api/types";
 
+defineEmits<{
+  (e: "edited", contentIdEdited: string): void;
+}>();
 const props = defineProps<{
   id: string;
 }>();
@@ -196,4 +235,16 @@ const { t } = useI18n({
     },
   },
 });
+
+const isContentEditionFormOpened = shallowRef(false);
+const contentToEditId = shallowRef("");
+const openContentEditionForm = (): void => {
+  isContentEditionFormOpened.value = true;
+  contentToEditId.value = props.id;
+};
+
+const closeContentEditionForm = (): void => {
+  isContentEditionFormOpened.value = false;
+  contentToEditId.value = "";
+};
 </script>
