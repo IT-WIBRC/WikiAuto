@@ -195,6 +195,18 @@ const multipleForBadge = ref<HTMLDivElement>();
 useDetectOutsideClick(multipleForBadge, () => {
   closeBadgeOptionList();
 });
+
+const unwatch = watchEffect(async () => {
+  if (model.value.length > 0 && selectedOpenOptionList.length === 0) {
+    await getBadgeList();
+    selectedOpenOptionList.push(
+      ...model.value.map((badge) => {
+        return new BadgeToOptionForList(badge, selectedOpenOptionList);
+      }),
+    );
+    unwatch();
+  }
+});
 </script>
 <style scoped>
 .bounce-enter-active {

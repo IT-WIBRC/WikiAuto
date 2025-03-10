@@ -1,6 +1,7 @@
 import type {
   ApiResponseResult,
   ContentCreation,
+  ContentEdition,
   GetContentListType,
 } from "~/api/types";
 import { GenericErrors } from "~/api/types";
@@ -140,6 +141,56 @@ export const useContentStore = defineStore("content", {
           message: GenericErrors.REQUEST_FAILED,
         };
       }
+    },
+
+    async edit(content: ContentEdition): Promise<ApiResponseResult<never>> {
+      const {
+        id,
+        illustration,
+        title,
+        explanation,
+        badges,
+        status,
+        userEmail,
+      } = content;
+
+      let filePath = illustration.name;
+      if (!illustration.name.startsWith("0.")) {
+        const fileExt = illustration.name.split(".").pop();
+        filePath = `${Math.random()}.${fileExt}`;
+      }
+
+      const illustrationEditionResponse = await imageService.uploadFile(
+        illustration,
+        filePath,
+      );
+
+      if (illustrationEditionResponse.error) {
+        return {
+          status: "error",
+          message: GenericErrors.REQUEST_FAILED,
+        };
+      }
+
+      const contentEdited = await contentService.edit({
+        id,
+        title,
+        explanation,
+        badges,
+        illustration: illustrationEditionResponse.data.path,
+        status,
+        userEmail,
+      });
+
+      if (contentEdited.status === "completed") {
+        return {
+          status: "success",
+        };
+      }
+      return {
+        status: "error",
+        message: GenericErrors.REQUEST_FAILED,
+      };
     },
   },
 });

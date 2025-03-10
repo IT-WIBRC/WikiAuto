@@ -100,6 +100,7 @@
                 <ContentRowDetails
                   v-if="currentContentOpened === item.id"
                   :id="item.id"
+                  @edited="reopenContentDetailAfterEditionAndListUpdate"
                 />
               </Transition>
             </client-only>
@@ -259,12 +260,26 @@ const closeContentCreationForm = (): void => {
 };
 
 const currentContentOpened = shallowRef("");
+const closeOpenedContentDetails = (): void => {
+  currentContentOpened.value = "";
+};
+
 const setCurrentOpenedContentDetails = (contentId: string): void => {
   if (currentContentOpened.value !== contentId) {
     currentContentOpened.value = contentId;
     return;
   }
-  currentContentOpened.value = "";
+  closeOpenedContentDetails();
+};
+
+const reopenContentDetailAfterEditionAndListUpdate = async (
+  contentId: string,
+): Promise<void> => {
+  isContentListLoading.value = true;
+  await getContentList();
+  isContentListLoading.value = false;
+  closeOpenedContentDetails();
+  setCurrentOpenedContentDetails(contentId);
 };
 </script>
 <style scoped>
@@ -274,35 +289,11 @@ const setCurrentOpenedContentDetails = (contentId: string): void => {
   grid-template-rows: 90px 50px 1fr;
   height: 100svh;
   max-height: calc(100svh - 2rem);
+  gap: 4px 0;
 }
 
 .scroll-height {
   max-height: calc(100svh - 140px);
-}
-
-.nested-enter-active,
-.nested-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-  opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-  transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-  transform: translateX(30px);
-  opacity: 0;
-}
-
-.nested-enter-active .inner {
-  transition-delay: 0.25s;
 }
 
 .isOpened {

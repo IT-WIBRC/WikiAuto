@@ -45,4 +45,29 @@
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     background-color: rgba(6, 21, 43, 0.9);
   }
+
+  .nested-enter-active,
+  .nested-leave-active {
+    transition: opacity 0.5s ease;
+  }
+
+  .nested-enter-from,
+  .nested-leave-to {
+    opacity: 0;
+  }
+
+  .nested-enter-active .inner,
+  .nested-leave-active .inner {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .nested-enter-from .inner,
+  .nested-leave-to .inner {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+
+  .nested-enter-active .inner {
+    transition-delay: 0.25s;
+  }
 }

@@ -314,5 +314,31 @@ describe("InputRichText", () => {
       expect(errorMessage.exists()).toBe(true);
       expect(errorMessage.text()).toBe("This is required");
     });
+
+    it("should render the default `text` when provided", async () => {
+      expect(
+        inputRichTextWrapperText.findAll("p.is-editor-empty")[0].element.dataset
+          .placeholder,
+      ).toBe("Enter your text");
+      const customInputRichTextWrapperText = await mountSuspended(
+        InputRichText,
+        {
+          props: {
+            label: "Text",
+            placeholder: "Enter your text",
+            isRequired: false,
+            modelValue: "<p>There is the explanation</p>",
+          },
+        },
+      );
+      expect(
+        customInputRichTextWrapperText.findAll("p.is-editor-empty").length,
+      ).toBe(0);
+      expect(
+        customInputRichTextWrapperText
+          .find("div[contenteditable='true']")
+          .html(),
+      ).toContain("<p>There is the explanation</p>");
+    });
   });
 });

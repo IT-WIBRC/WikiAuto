@@ -40,6 +40,7 @@
             data-test="bold"
             :disabled="!editor.can().chain().focus().toggleBold().run()"
             :class="{ 'is-active': editor.isActive('bold') }"
+            type="button"
             @click="editor.chain().focus().toggleBold().run()"
           >
             <IconEditorBold class="fill-black h-5 w-5" />
@@ -48,13 +49,16 @@
             :disabled="!editor.can().chain().focus().toggleItalic().run()"
             :class="{ 'is-active': editor.isActive('italic') }"
             data-test="italic"
+            type="button"
             @click="editor.chain().focus().toggleItalic().run()"
           >
             <IconEditorItalic class="fill-black h-5 w-5" />
           </button>
           <button
+            v-show="false"
             :class="{ 'is-active': editor.isActive('underline') }"
             data-test="underline"
+            type="button"
             @click="editor.chain().focus().toggleUnderline().run()"
           >
             <IconEditorUnderline class="fill-black h-5 w-5" />
@@ -63,6 +67,7 @@
             :disabled="!editor.can().chain().focus().toggleStrike().run()"
             :class="{ 'is-active': editor.isActive('strike') }"
             data-test="strike"
+            type="button"
             @click="editor.chain().focus().toggleStrike().run()"
           >
             <IconEditorStrike class="fill-black h-5 w-5" />
@@ -70,6 +75,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
             data-test="heading1"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
           >
             <IconEditorHeading1 class="fill-black h-5 w-5" />
@@ -77,6 +83,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
             data-test="heading2"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
           >
             <IconEditorHeading2 class="fill-black h-5 w-5" />
@@ -84,6 +91,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
             data-test="heading3"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
           >
             <IconEditorHeading3 class="fill-black h-5 w-5" />
@@ -91,6 +99,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
             data-test="heading4"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
           >
             <IconEditorHeading4 class="fill-black h-5 w-5" />
@@ -98,6 +107,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
             data-test="heading5"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
           >
             <IconEditorHeading5 class="fill-black h-5 w-5" />
@@ -105,6 +115,7 @@
           <button
             :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
             data-test="heading6"
+            type="button"
             @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
           >
             <IconEditorHeading6 class="fill-black h-5 w-5" />
@@ -115,6 +126,7 @@
             }"
             class="relative"
             data-test="color"
+            type="button"
             @click="openColorPalette"
           >
             <input
@@ -131,6 +143,7 @@
           <button
             :class="{ 'is-active': editor.isActive('highlight') }"
             data-test="highlight"
+            type="button"
             @click="editor.chain().focus().toggleHighlight().run()"
           >
             <IconEditorHighlight class="fill-black h-5 w-5" />
@@ -138,6 +151,7 @@
           <button
             :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
             data-test="left"
+            type="button"
             @click="editor.chain().focus().setTextAlign('left').run()"
           >
             <IconEditorLeft class="fill-black h-5 w-5" />
@@ -145,6 +159,7 @@
           <button
             :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
             data-test="center"
+            type="button"
             @click="editor.chain().focus().setTextAlign('center').run()"
           >
             <IconEditorCenter class="fill-black h-5 w-5" />
@@ -152,6 +167,7 @@
           <button
             :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
             data-test="right"
+            type="button"
             @click="editor.chain().focus().setTextAlign('right').run()"
           >
             <IconEditorRight class="fill-black h-5 w-5" />
@@ -159,6 +175,7 @@
           <button
             :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
             data-test="justify"
+            type="button"
             @click="editor.chain().focus().setTextAlign('justify').run()"
           >
             <IconEditorJustify class="fill-black h-5 w-5" />
@@ -166,6 +183,7 @@
           <button
             :class="{ 'is-active': editor.isActive('bulletList') }"
             data-test="bulletList"
+            type="button"
             @click="editor.chain().focus().toggleBulletList().run()"
           >
             <IconEditorBulletList class="fill-black h-5 w-5" />
@@ -173,12 +191,14 @@
           <button
             :class="{ 'is-active': editor.isActive('orderedList') }"
             data-test="orderedList"
+            type="button"
             @click="editor.chain().focus().toggleOrderedList().run()"
           >
             <IconEditorOrderedList class="fill-black h-5 w-5" />
           </button>
           <button
             data-test="horizontalRule"
+            type="button"
             @click="editor.chain().focus().setHorizontalRule().run()"
           >
             <IconEditorHorizontalRule class="fill-black h-5 w-5" />
@@ -186,6 +206,7 @@
           <button
             :disabled="!editor.can().chain().focus().undo().run()"
             data-test="undo"
+            type="button"
             @click="editor.chain().focus().undo().run()"
           >
             <IconEditorUndo class="fill-black h-5 w-5" />
@@ -193,6 +214,7 @@
           <button
             :disabled="!editor.can().chain().focus().redo().run()"
             data-test="redo"
+            type="button"
             @click="editor.chain().focus().redo().run()"
           >
             <IconEditorRedo class="fill-black h-5 w-5" />
@@ -258,6 +280,14 @@ watch(
   () => model.value,
   (newValue) => {
     const editorCurrentHTML = useString.toPre(editor.value.getHTML());
+    const cursorPosition = editor.value.state.selection.$anchor.pos;
+
+    const editorCurrentText = useString.toPre(editor.value.getText());
+    const isEdition = !editorCurrentText && !!model.value;
+    if (isEdition) {
+      editor.value.commands.setContent(model.value, false);
+      return;
+    }
 
     const isSame =
       JSON.stringify(editorCurrentHTML) === JSON.stringify(newValue);
@@ -267,6 +297,7 @@ watch(
     }
 
     editor.value.commands.setContent(editor.value.state.doc.content, false);
+    editor.value.commands.setTextSelection(cursorPosition);
   },
 );
 

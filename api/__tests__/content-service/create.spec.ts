@@ -3,26 +3,24 @@ import { contentService } from "../../contentService";
 import { CONTENT_STATUS } from "~/api/types";
 
 const mockCreateContent = vi.hoisted(() => ({
-  insert: vi
-    .fn()
-    .mockImplementationOnce(() => ({
-      select: vi.fn(() => ({
-        limit: vi.fn(() => ({
-          single: vi.fn(() => {
-            return {
-              error: null,
-              data: {
-                content_id: "1324165498",
-              },
-            };
-          }),
-        })),
+  insert: vi.fn().mockImplementationOnce(() => ({
+    select: vi.fn(() => ({
+      limit: vi.fn(() => ({
+        single: vi.fn(() => {
+          return {
+            error: null,
+            data: {
+              content_id: "1324165498",
+            },
+          };
+        }),
       })),
-    }))
-    .mockImplementationOnce(() => ({
-      error: null,
-      data: {},
     })),
+  })),
+  upsert: vi.fn().mockImplementationOnce(() => ({
+    error: null,
+    data: {},
+  })),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
@@ -50,7 +48,7 @@ describe("Create content", () => {
       },
       "user@gmail.com",
     );
-    expect(mockCreateContent.insert).toHaveBeenCalledTimes(2);
+    expect(mockCreateContent.insert).toHaveBeenCalledTimes(1);
 
     expect(mockCreateContent.insert).toHaveBeenCalledWith({
       title: "Title",
@@ -60,7 +58,8 @@ describe("Create content", () => {
       status: CONTENT_STATUS.PENDING,
     });
 
-    expect(mockCreateContent.insert).toHaveBeenLastCalledWith([
+    expect(mockCreateContent.upsert).toHaveBeenCalledTimes(1);
+    expect(mockCreateContent.upsert).toHaveBeenLastCalledWith([
       {
         badge_id: "123546",
         content_id: "1324165498",
@@ -75,31 +74,32 @@ describe("Create content", () => {
       status: "completed",
     });
     mockCreateContent.insert.mockRestore();
+    mockCreateContent.upsert.mockRestore();
   });
 
   it("should return the `incomplete` status when the creation badges failed", async () => {
-    mockCreateContent.insert
-      .mockImplementationOnce(() => ({
-        select: vi.fn(() => ({
-          limit: vi.fn(() => ({
-            single: vi.fn(() => {
-              return {
-                error: null,
-                data: {
-                  content_id: "1324165498",
-                },
-              };
-            }),
-          })),
+    mockCreateContent.insert.mockImplementationOnce(() => ({
+      select: vi.fn(() => ({
+        limit: vi.fn(() => ({
+          single: vi.fn(() => {
+            return {
+              error: null,
+              data: {
+                content_id: "1324165498",
+              },
+            };
+          }),
         })),
-      }))
-      .mockImplementationOnce(() => ({
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-      }));
+      })),
+    }));
+
+    mockCreateContent.upsert.mockImplementationOnce(() => ({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+      },
+      data: null,
+    }));
 
     const badgeResponse = await contentService.create(
       {
@@ -111,7 +111,7 @@ describe("Create content", () => {
       },
       "user@gmail.com",
     );
-    expect(mockCreateContent.insert).toHaveBeenCalledTimes(2);
+    expect(mockCreateContent.insert).toHaveBeenCalledTimes(1);
 
     expect(mockCreateContent.insert).toHaveBeenCalledWith({
       title: "Title",
@@ -121,7 +121,8 @@ describe("Create content", () => {
       status: CONTENT_STATUS.VALIDATED,
     });
 
-    expect(mockCreateContent.insert).toHaveBeenLastCalledWith([
+    expect(mockCreateContent.upsert).toHaveBeenCalledTimes(1);
+    expect(mockCreateContent.upsert).toHaveBeenLastCalledWith([
       {
         badge_id: "123546",
         content_id: "1324165498",
@@ -136,6 +137,7 @@ describe("Create content", () => {
       },
     });
     mockCreateContent.insert.mockRestore();
+    mockCreateContent.upsert.mockRestore();
   });
 
   it("should return the `failed` status when the creation has failed", async () => {
@@ -183,5 +185,6 @@ describe("Create content", () => {
       },
     });
     mockCreateContent.insert.mockRestore();
+    mockCreateContent.upsert.mockRestore();
   });
 });

@@ -64,9 +64,15 @@ export type Badge = Tables<"badges">;
 export type GetBadgeListTypeForOption = Omit<Badge, "description">;
 
 export const CONTENT_STATUS = {
+  PENDING: "PENDING",
   VALIDATED: "VALIDATED",
   DRAFT: "DRAFT",
-  PENDING: "PENDING",
+} as const;
+
+export const CONTENT_RESPONSE_STATUS = {
+  complete: "complete",
+  incomplete: "incomplete",
+  failed: "failed",
 } as const;
 
 export type ContentCreation = {
@@ -76,3 +82,8 @@ export type ContentCreation = {
   badges: Badge[];
   status: keyof typeof CONTENT_STATUS;
 };
+
+export type ContentEdition = {
+  id: string;
+  userEmail: string;
+} & ContentCreation;

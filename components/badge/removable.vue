@@ -5,6 +5,7 @@
     <span>{{ text }}</span>
     <IconClose
       class="h-2 w-2 fill-gray-800 cursor-pointer"
+      data-cy="remove"
       @click="$emit('remove')"
     />
   </div>

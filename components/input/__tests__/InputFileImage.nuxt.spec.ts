@@ -89,4 +89,37 @@ describe("InputFileImage", () => {
     expect(errorMessage.exists()).toBe(true);
     expect(errorMessage.text()).toBe("Max size is 200kb");
   });
+
+  it("should render the preview when a default image is provided", async () => {
+    vi.setSystemTime(new Date(2023, 10, 8, 0, 0, 0, 0));
+
+    const reader = {
+      readAsArrayBuffer: vi.fn(),
+      onload: vi.fn,
+      onerror: vi.fn(),
+      result: new Blob(["http://image-url.png"], { type: "image/png" }),
+    };
+    global.URL.createObjectURL = vi.fn(() => "http://image-url.png");
+    vi.spyOn(window, "FileReader").mockReturnValueOnce(
+      reader as unknown as FileReader,
+    );
+
+    const imageFile = new File([""], "image.png", { type: "image/png" });
+    Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
+
+    inputFileImage = await mountSuspended(InputFileImage, {
+      props: {
+        label: "Illustration",
+        modelValue: imageFile,
+      },
+    });
+    reader.onload();
+    expect(inputFileImage.find("img").exists()).toBe(true);
+    expect(inputFileImage.find("img").element.src).toBe(
+      "http://image-url.png/",
+    );
+
+    vi.clearAllTimers();
+    vi.clearAllMocks();
+  });
 });

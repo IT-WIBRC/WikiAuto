@@ -53,6 +53,7 @@ describe("SelectMultipleForBadge", () => {
 
   afterAll(() => {
     vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should render correctly", () => {
@@ -416,6 +417,34 @@ describe("SelectMultipleForBadge", () => {
       selectedBadges = selectMultipleForBadge.findAllComponents(BadgeRemovable);
       expect(selectedBadges.length).toBe(1);
       expect(selectedBadges[0].props().text).toBe(options[0].displayedValue);
+    });
+
+    it("should render the selected badges when present by default", async () => {
+      const selectMultipleForBadge = await mountSuspended(
+        SelectMultipleForBadge,
+        {
+          props: {
+            label: "Topics",
+            placeholder: "select option",
+            isRequired: false,
+            modelValue: [badges[0], badges[3]],
+          },
+          global: {
+            plugins: [pinia],
+          },
+        },
+      );
+
+      await flushPromises();
+
+      expect(badgeSore.fetchBadgeListForOptions).toHaveBeenCalledTimes(1);
+
+      const selectedBadges =
+        selectMultipleForBadge.findAllComponents(BadgeRemovable);
+      expect(selectedBadges.length).toBe(2);
+      [options[0], options[3]].forEach((option, index) => {
+        expect(selectedBadges[index].props().text).toBe(option.displayedValue);
+      });
     });
   });
 });

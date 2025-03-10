@@ -1,5 +1,14 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
+import { flushPromises } from "@vue/test-utils";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import ContentList from "../index.vue";
 import { createTestingPinia } from "@pinia/testing";
@@ -123,13 +132,13 @@ describe("ContentList", () => {
         updated_at: "2024-12-18 13:25:08",
       },
     ];
-    const mountWithData = async (isMontageShallow = true): Promise<void> => {
+    const mountWithData = async (isShallowMontage = true): Promise<void> => {
       contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
         status: "success",
         data: contents,
       });
       contentListWrapper = await mountSuspended(ContentList, {
-        shallow: isMontageShallow,
+        shallow: isShallowMontage,
         global: {
           plugins: [pinia],
           stubs: {
@@ -138,8 +147,13 @@ describe("ContentList", () => {
         },
       });
     };
+
     beforeAll(async () => {
       await mountWithData();
+    });
+
+    afterEach(() => {
+      vi.clearAllMocks();
     });
 
     it("should render correctly", () => {
@@ -202,8 +216,8 @@ describe("ContentList", () => {
     });
 
     it("should display the content correctly", async () => {
-      const isMontageShallow = false;
-      await mountWithData(isMontageShallow);
+      const isShallowMontage = false;
+      await mountWithData(isShallowMontage);
       const rowItems = contentListWrapper.findAll("[data-cy='table-row']");
       expect(rowItems.length).toBe(2);
       rowItems.forEach((rowItem, index) => {
@@ -242,8 +256,8 @@ describe("ContentList", () => {
     });
 
     it("should open the content details when we click on the open arrow icon", async () => {
-      const isMontageShallow = false;
-      await mountWithData(isMontageShallow);
+      const isShallowMontage = false;
+      await mountWithData(isShallowMontage);
       expect(contentListWrapper.findComponent(ContentRowDetails).exists()).toBe(
         false,
       );
@@ -260,6 +274,34 @@ describe("ContentList", () => {
       expect(
         contentListWrapper.findComponent(ContentRowDetails).props().id,
       ).toBe("123456");
+    });
+
+    it("should reopen the content detail after edition and updating the list", async () => {
+      const isShallowMontage = false;
+      await mountWithData(isShallowMontage);
+
+      let contentDetail = contentListWrapper.findComponent(ContentRowDetails);
+      expect(contentDetail.exists()).toBe(false);
+
+      await contentListWrapper
+        .findAll("[data-cy='table-row']")[0]
+        .find("td")
+        .findComponent(IconKeyboardArrowDown)
+        .trigger("click");
+
+      contentDetail = contentListWrapper.findComponent(ContentRowDetails);
+      expect(contentDetail.exists()).toBe(true);
+
+      contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
+        status: "success",
+        data: contents,
+      });
+
+      contentDetail.vm.$emit("edited", contentDetail.props().id);
+      await flushPromises();
+      expect(contentStore.fetchContentList).toHaveBeenCalledTimes(1);
+
+      expect(contentDetail.props().id).toBe("123456");
     });
   });
 
