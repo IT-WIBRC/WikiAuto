@@ -334,6 +334,7 @@ describe("ContentCreate", () => {
 
     it("should display an error message when we receive one from the api", async () => {
       const contentStore = useContentStore(pinia);
+      const toastError = vi.spyOn(useToast.prototype, "error");
 
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
@@ -362,15 +363,17 @@ describe("ContentCreate", () => {
         status: "error",
         message: GenericErrors.BAD_REQUEST,
       });
-      useToast.error = vi.fn();
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
       await flushPromises();
       await flushPromises();
       await flushPromises();
 
-      expect(useToast.error).toHaveBeenCalledTimes(1);
-      expect(useToast.error).toHaveBeenCalledWith("generic_errors.BAD_REQUEST");
+      expect(toastError).toHaveBeenCalledTimes(1);
+      expect(toastError).toHaveBeenCalledWith(
+        "generic_errors.BAD_REQUEST",
+        false,
+      );
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({
@@ -388,6 +391,7 @@ describe("ContentCreate", () => {
     let contentStore: ReturnType<typeof useContentStore>;
     let imageFile = new File([""], "image.png", { type: "image/png" });
 
+    let toastSuccess = null;
     beforeEach(async () => {
       imageFile = new File([""], "image.png", { type: "image/png" });
       Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
@@ -397,6 +401,7 @@ describe("ContentCreate", () => {
         status: "success",
       });
 
+      toastSuccess = vi.spyOn(useToast.prototype, "success");
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
           plugins: [pinia],
@@ -424,15 +429,14 @@ describe("ContentCreate", () => {
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
 
-      useToast.success = vi.fn();
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
       await flushPromises();
       await flushPromises();
       await flushPromises();
 
-      expect(useToast.success).toHaveBeenCalledOnce();
-      expect(useToast.success).toHaveBeenCalledWith("succeed");
+      expect(toastSuccess).toHaveBeenCalledOnce();
+      expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({
@@ -461,7 +465,6 @@ describe("ContentCreate", () => {
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
 
-      useToast.success = vi.fn();
       await contentCreate
         .find("[data-cy='create-continue-btn']")
         .trigger("click");
@@ -470,8 +473,8 @@ describe("ContentCreate", () => {
       await flushPromises();
       await flushPromises();
 
-      expect(useToast.success).toHaveBeenCalledTimes(1);
-      expect(useToast.success).toHaveBeenCalledWith("succeed");
+      expect(toastSuccess).toHaveBeenCalledTimes(1);
+      expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({

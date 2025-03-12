@@ -181,6 +181,7 @@ const handleFormValidation = async (): Promise<boolean> => {
 };
 
 const contentStore = useContentStore();
+const toast = new useToast();
 const manageCreation = async (): Promise<"success" | "failed"> => {
   const isValid = await handleFormValidation();
   if (!isValid) return "failed";
@@ -195,13 +196,13 @@ const manageCreation = async (): Promise<"success" | "failed"> => {
 
   if (creationResponse.status === "success") {
     emits("created");
-    useToast.setDuration(5).setPosition("top right").success(t("succeed"));
+    toast.setDuration(5).setPosition("top right").success(t("succeed"), false);
     return "success";
   }
-  useToast
+  toast
     .setDuration(5)
     .setPosition("top right")
-    .error(t("generic_errors." + creationResponse.message));
+    .error(t("generic_errors." + creationResponse.message), false);
   return "failed";
 };
 

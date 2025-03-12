@@ -34,7 +34,6 @@ export default defineVitestConfig({
         "**/*.spec.ts",
         "**/cypress/**",
         "**/skeleton/**",
-        "**/utils/use-toast.ts",
       ],
     },
   },

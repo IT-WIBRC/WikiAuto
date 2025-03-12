@@ -156,13 +156,13 @@ describe("MenuSide", () => {
     authStore.logout = vi.fn().mockReturnValueOnce({
       status: "error",
     });
-    useToast.error = vi.fn();
+    const toastError = vi.spyOn(useToast.prototype, "error");
     const menuSideCustom = await mountSuspended(MenuSide);
     const logOutButton = menuSideCustom.find("[data-cy='logout-btn']");
     expect(logOutButton.exists()).toBe(true);
     await logOutButton.trigger("click");
-    expect(useToast.error).toHaveBeenCalledTimes(1);
-    expect(useToast.error).toHaveBeenCalledWith("failed_logout");
+    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(toastError).toHaveBeenCalledWith("failed_logout", false);
   });
 
   describe("Menu items", () => {
