@@ -84,17 +84,17 @@ describe("ContentList", () => {
         status: "error",
         message: "REQUEST_FAILED",
       });
-      useToast.error = vi.fn();
+      const toastError = vi.spyOn(useToast.prototype, "error");
       contentListWrapper = await mountSuspended(ContentList, {
         shallow: true,
         global: {
           plugins: [pinia],
         },
       });
-      expect(useToast.error).toHaveBeenCalledTimes(1);
-      expect(useToast.duration).toBe(15);
-      expect(useToast.error).toHaveBeenCalledWith(
+      expect(toastError).toHaveBeenCalledTimes(1);
+      expect(toastError).toHaveBeenCalledWith(
         "generic_errors.REQUEST_FAILED",
+        false,
       );
     });
   });

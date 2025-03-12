@@ -184,7 +184,8 @@ const { t } = useI18n({
   },
 });
 
-const headers: DataHeader<Keys>[] = Object.seal([
+type HeaderKeys = "title" | "email" | "badges" | "status";
+const headers: DataHeader<HeaderKeys>[] = Object.seal([
   {
     key: "title",
     value: t("headers.title_th"),
@@ -203,7 +204,6 @@ const headers: DataHeader<Keys>[] = Object.seal([
   },
 ]) as const;
 
-type HeaderKeys = "title" | "email" | "badges" | "status";
 class DataForContent implements DataItem<HeaderKeys> {
   constructor(private content: GetContentListType) {}
 
@@ -236,7 +236,9 @@ const getContentList = async (): Promise<void> => {
     );
     return;
   }
-  useToast.setDuration(15).error(t(`generic_errors.${t(contents.message)}`));
+  new useToast()
+    .setDuration(15)
+    .error(t(`generic_errors.${t(contents.message)}`), false);
 };
 
 const isContentListLoading = shallowRef(false);

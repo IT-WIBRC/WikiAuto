@@ -477,15 +477,18 @@ describe("ContentEdit", () => {
         status: "error",
         message: GenericErrors.BAD_REQUEST,
       });
-      useToast.error = vi.fn();
+      const toastError = vi.spyOn(useToast.prototype, "error");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
       await flushPromises();
       await flushPromises();
       await flushPromises();
 
-      expect(useToast.error).toHaveBeenCalledTimes(1);
-      expect(useToast.error).toHaveBeenCalledWith("generic_errors.BAD_REQUEST");
+      expect(toastError).toHaveBeenCalledTimes(1);
+      expect(toastError).toHaveBeenCalledWith(
+        "generic_errors.BAD_REQUEST",
+        false,
+      );
 
       expect(contentStore.edit).toHaveBeenCalledTimes(1);
       expect(contentStore.edit).toHaveBeenCalledWith({
@@ -556,15 +559,15 @@ describe("ContentEdit", () => {
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
 
-      useToast.success = vi.fn();
+      const toastSuccess = vi.spyOn(useToast.prototype, "success");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
       await flushPromises();
       await flushPromises();
       await flushPromises();
 
-      expect(useToast.success).toHaveBeenCalledOnce();
-      expect(useToast.success).toHaveBeenCalledWith("succeed");
+      expect(toastSuccess).toHaveBeenCalledOnce();
+      expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
 
       expect(contentStore.edit).toHaveBeenCalledTimes(1);
       expect(contentStore.edit).toHaveBeenCalledWith({

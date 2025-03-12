@@ -129,7 +129,7 @@ const logOut = async (): Promise<void> => {
   if (status === "success") {
     await navigateTo("/auth");
   } else {
-    useToast.setDuration(7).error(t("failed_logout"));
+    new useToast().setDuration(7).error(t("failed_logout"), false);
   }
   isLogoutProcessing.value = false;
 };

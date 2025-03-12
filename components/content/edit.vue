@@ -236,16 +236,17 @@ const edit = async (): Promise<void> => {
     userEmail: currentContent.value.user_email,
   });
 
+  const toast = new useToast();
   if (editionResponse.status === "success") {
-    useToast.setDuration(5).setPosition("top right").success(t("succeed"));
+    toast.setDuration(12).setPosition("top right").success(t("succeed"), false);
     emits("edited");
     closeEditionContentForm();
     return;
   }
-  useToast
-    .setDuration(5)
+  toast
+    .setDuration(10)
     .setPosition("top right")
-    .error(t("generic_errors." + editionResponse.message));
+    .error(t("generic_errors." + editionResponse.message), false);
   isEditionLoading.value = false;
 };
 </script>
