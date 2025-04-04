@@ -19,3 +19,11 @@ Cypress.Commands.add("goToLogin", () => {
 Cypress.Commands.add("goToMenu", (item: "dashboard" | "content") => {
   cy.get(`[data-cy='item-${item}']`).click();
 });
+
+Cypress.Commands.add(
+  "openDetailDropdownActionsFor",
+  (option: "edit" | "update-status") => {
+    cy.get("[data-cy='more-actions'] [data-cy='open']").click();
+    cy.get(`[data-cy='${option}-btn']`).click({ force: true });
+  },
+);

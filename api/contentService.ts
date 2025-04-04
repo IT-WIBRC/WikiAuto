@@ -145,6 +145,15 @@ const edit = async (
   };
 };
 
+const editStatus = async (status: string, contentId: string) => {
+  return await useSupabase()
+    .from("contents")
+    .update({
+      status,
+    })
+    .eq("content_id", contentId);
+};
+
 export const contentService = {
   statistics: {
     getTotalContent,
@@ -153,4 +162,5 @@ export const contentService = {
   getContentList,
   create,
   edit,
+  editStatus,
 };

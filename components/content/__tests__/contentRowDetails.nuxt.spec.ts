@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+  beforeEach,
+} from "vitest";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import { createTestingPinia } from "@pinia/testing";
 import { useContentStore } from "~/stores/content.store";
@@ -9,7 +17,10 @@ import {
   ContentDetailWrapper,
   ContentEdit,
   ContentRowDetails,
+  Dropdown,
   IconEdit,
+  IconStatus,
+  ModalStatusUpdate,
 } from "#components";
 import type { VueWrapper } from "@vue/test-utils";
 
@@ -207,26 +218,29 @@ describe("ContentRowDetails", () => {
   });
 
   describe("Edition", () => {
-    it("should render the button to edit the content", () => {
+    it("should render the button to edit the content", async () => {
+      await openDropdown(contentRowDetailsWrapper);
+
       const editBtn = contentRowDetailsWrapper.find("[data-cy='edit-btn']");
       expect(editBtn.exists()).toBe(true);
       expect(editBtn.findComponent(IconEdit).exists()).toBe(true);
     });
 
-    it("should open the content create form when we click on the create button", async () => {
-      let editContent = contentRowDetailsWrapper.findComponent(ContentEdit);
-      expect(editContent.exists()).toBe(false);
+    it("should open the form to edit the content when we click on the edit button", async () => {
+      let editFormComponent =
+        contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editFormComponent.exists()).toBe(false);
 
       await contentRowDetailsWrapper
         .find("[data-cy='edit-btn']")
         .trigger("click");
 
-      editContent = contentRowDetailsWrapper.findComponent(ContentEdit);
-      expect(editContent.exists()).toBe(true);
-      expect(editContent.props().id).toBe(contents[1].content_id);
+      editFormComponent = contentRowDetailsWrapper.findComponent(ContentEdit);
+      expect(editFormComponent.exists()).toBe(true);
+      expect(editFormComponent.props().id).toBe(contents[1].content_id);
     });
 
-    it("should close the edition component when we receive the `close` event", async () => {
+    it("should close the edition form when we receive the `close` event", async () => {
       contentRowDetailsWrapper = await mountSuspended(ContentRowDetails, {
         props: {
           id: "123456",
@@ -241,6 +255,8 @@ describe("ContentRowDetails", () => {
 
       let editContentForm = contentRowDetailsWrapper.findComponent(ContentEdit);
       expect(editContentForm.exists()).toBe(false);
+
+      await openDropdown(contentRowDetailsWrapper);
 
       await contentRowDetailsWrapper
         .find("[data-cy='edit-btn']")
@@ -273,6 +289,8 @@ describe("ContentRowDetails", () => {
         contentRowDetailsWrapper.findComponent(ContentEdit);
       expect(editContentForm2.exists()).toBe(false);
 
+      await openDropdown(contentRowDetailsWrapper);
+
       await contentRowDetailsWrapper
         .find("[data-cy='edit-btn']")
         .trigger("click");
@@ -288,4 +306,103 @@ describe("ContentRowDetails", () => {
       ]);
     });
   });
+
+  describe("Status Edition", () => {
+    beforeEach(async () => {
+      contentRowDetailsWrapper = await mountSuspended(ContentRowDetails, {
+        props: {
+          id: "123456",
+        },
+        global: {
+          plugins: [pinia],
+          stubs: {
+            statusUpdate: true,
+            transition: false,
+          },
+        },
+      });
+    });
+
+    it("should render the button to update the status the content", async () => {
+      await openDropdown(contentRowDetailsWrapper);
+      const updateStatusBtn = contentRowDetailsWrapper.find(
+        "[data-cy='update-status-btn']",
+      );
+      expect(updateStatusBtn.exists()).toBe(true);
+      expect(updateStatusBtn.findComponent(IconStatus).exists()).toBe(true);
+    });
+
+    it("should open the form to edit the change status when we click on the 'update status' button", async () => {
+      let editStatusFormComponent =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editStatusFormComponent.exists()).toBe(false);
+
+      await openDropdown(contentRowDetailsWrapper);
+      await contentRowDetailsWrapper
+        .find("[data-cy='update-status-btn']")
+        .trigger("click");
+
+      editStatusFormComponent =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editStatusFormComponent.exists()).toBe(true);
+      expect(editStatusFormComponent.props()).toEqual({
+        contentId: contents[1].content_id,
+        currentStatus: contents[1].status,
+      });
+    });
+
+    it("should close the status edition form when we receive the `close` event", async () => {
+      let editContentStatusForm =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editContentStatusForm.exists()).toBe(false);
+
+      await openDropdown(contentRowDetailsWrapper);
+
+      await contentRowDetailsWrapper
+        .find("[data-cy='update-status-btn']")
+        .trigger("click");
+
+      editContentStatusForm =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editContentStatusForm.exists()).toBe(true);
+
+      editContentStatusForm.vm.$emit("close");
+      await nextTick();
+
+      editContentStatusForm =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editContentStatusForm.exists()).toBe(false);
+    });
+
+    it("should emit the `edited` event with the edited content id when the status edition is done", async () => {
+      let editContentStatusForm2 =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editContentStatusForm2.exists()).toBe(false);
+
+      await openDropdown(contentRowDetailsWrapper);
+
+      await contentRowDetailsWrapper
+        .find("[data-cy='update-status-btn']")
+        .trigger("click");
+
+      editContentStatusForm2 =
+        contentRowDetailsWrapper.findComponent(ModalStatusUpdate);
+      expect(editContentStatusForm2.exists()).toBe(true);
+
+      editContentStatusForm2.vm.$emit("updated");
+      await nextTick();
+
+      expect(contentRowDetailsWrapper.emitted()).toHaveProperty("edited", [
+        [contents[1].content_id],
+      ]);
+    });
+  });
+
+  const openDropdown = async (wrapper: VueWrapper) => {
+    const dropdown = wrapper.findComponent(Dropdown);
+    expect(dropdown.exists()).toBe(true);
+    await dropdown.find("[data-cy='open']").trigger("click");
+
+    expect(dropdown.find("[data-cy='options']").exists()).toBe(true);
+  };
 });

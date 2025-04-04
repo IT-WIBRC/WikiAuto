@@ -3,6 +3,7 @@ import type {
   ContentCreation,
   ContentEdition,
   GetContentListType,
+  CONTENT_STATUS,
 } from "~/api/types";
 import { GenericErrors } from "~/api/types";
 import { contentService } from "~/api/contentService";
@@ -191,6 +192,23 @@ export const useContentStore = defineStore("content", {
         status: "error",
         message: GenericErrors.REQUEST_FAILED,
       };
+    },
+
+    async editStatus(
+      status: keyof CONTENT_STATUS,
+      id: string,
+    ): Promise<ApiResponseResult<undefined>> {
+      const response = await contentService.editStatus(status, id);
+      if (!response.error) {
+        return {
+          status: "success",
+        };
+      } else {
+        return {
+          status: "error",
+          message: "",
+        };
+      }
     },
   },
 });
