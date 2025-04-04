@@ -72,16 +72,40 @@
                 </template>
               </ContentDetailWrapper>
 
-              <button
-                type="button"
-                data-cy="edit-btn"
-                @click.stop="openContentEditionForm"
-              >
-                <IconEdit
-                  class="h-5 w-5 fill-green-600 absolute right-[2%] top-0 cursor-pointer"
-                  title="edit"
-                />
-              </button>
+              <Dropdown class="absolute right-3" data-cy="more-actions">
+                <template #options>
+                  <li
+                    class="flex items-center gap-x-3"
+                    data-cy="edit-btn"
+                    @click.stop="openContentEditionForm"
+                  >
+                    <span>
+                      <IconEdit
+                        class="h-5 w-5 fill-green-600 cursor-pointer"
+                        title="edit"
+                      />
+                    </span>
+                    <div class="text-base font-medium 2xl:text-lg">
+                      {{ t("options.edit") }}
+                    </div>
+                  </li>
+                  <li
+                    class="flex items-center gap-x-3"
+                    data-cy="update-status-btn"
+                    @click.stop="openContentStatusModal"
+                  >
+                    <span>
+                      <IconStatus
+                        class="h-5 w-5 fill-blue-600 cursor-pointer"
+                        title="Status update"
+                      />
+                    </span>
+                    <div class="text-base font-medium 2xl:text-lg">
+                      {{ t("options.status") }}
+                    </div>
+                  </li>
+                </template>
+              </Dropdown>
             </div>
             <div class="h-[38%] flex items-center w-full">
               <ContentDetailWrapper
@@ -142,17 +166,26 @@
             :id="id"
             class="w-[700px] bg-white h-full inner"
             @close="closeContentEditionForm"
-            @edited="$emit('edited', id)"
+            @edited="notifyListOfModification"
           />
         </section>
       </Transition>
+
+      <ModalTransition :show="isContentStatusModalOpened">
+        <ModalStatusUpdate
+          :content-id="id"
+          :current-status="getCurrentContent.status"
+          @close="closeContentStatusModal"
+          @updated="afterStatusUpdate"
+        />
+      </ModalTransition>
     </teleport>
   </tr>
 </template>
 <script lang="ts" setup>
 import type { GetContentDetailsType } from "~/api/types";
 
-defineEmits<{
+const emits = defineEmits<{
   (e: "edited", contentIdEdited: string): void;
 }>();
 const props = defineProps<{
@@ -223,6 +256,10 @@ const { t } = useI18n({
       created_by_lbl: "Created by :",
       created_at_lbl: "Created at :",
       updated_at_lbl: "Updated at :",
+      options: {
+        edit: "Edit",
+        status: "Update status",
+      },
     },
     fr: {
       title_lbl: "Titre :",
@@ -232,6 +269,10 @@ const { t } = useI18n({
       created_by_lbl: "Créé par :",
       created_at_lbl: "Créé à :",
       updated_at_lbl: "Mise à jour à :",
+      options: {
+        edit: "Éditer",
+        status: "Modifier le status",
+      },
     },
   },
 });
@@ -247,4 +288,48 @@ const closeContentEditionForm = (): void => {
   isContentEditionFormOpened.value = false;
   contentToEditId.value = "";
 };
+
+const isContentStatusModalOpened = shallowRef(false);
+const openContentStatusModal = (): void => {
+  isContentStatusModalOpened.value = true;
+};
+
+const closeContentStatusModal = (): void => {
+  isContentStatusModalOpened.value = false;
+};
+
+const notifyListOfModification = (): void => {
+  emits("edited", props.id);
+};
+
+const afterStatusUpdate = (): void => {
+  notifyListOfModification();
+  closeContentStatusModal();
+};
 </script>
+<style scoped>
+.nested-enter-active,
+.nested-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.nested-enter-from,
+.nested-leave-to {
+  opacity: 0;
+}
+
+.nested-enter-active .inner,
+.nested-leave-active .inner {
+  transition: all 0.3s ease-in-out;
+}
+
+.nested-enter-from .inner,
+.nested-leave-to .inner {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+.nested-enter-active .inner {
+  transition-delay: 0.25s;
+}
+</style>
