@@ -106,16 +106,12 @@
             </client-only>
           </template>
         </DataTable>
-        <div
+        <BaseNoData
           v-else
-          class="h-full flex flex-col justify-center items-center"
+          class="h-full"
+          :message="t('not_content')"
           data-cy="empty-content-list"
-        >
-          <IconBlankContent class="h-60 xl:h-80 fill-gray-400" />
-          <div class="text-primary/40 text-xl" data-cy="no-content">
-            {{ t("not_content") }}
-          </div>
-        </div>
+        />
       </template>
     </div>
     <teleport to="body">
@@ -168,7 +164,7 @@ const { t } = useI18n({
     },
     fr: {
       ttl: "Content list",
-      not_content: "Pas encore de contenu cree",
+      not_content: "Aucun contenu n'a encore été créé.",
       headers: {
         title_th: "Titre",
         created_by_th: "Créé par",
@@ -238,6 +234,7 @@ const getContentList = async (): Promise<void> => {
   }
   new useToast()
     .setDuration(15)
+    .setPosition("bottom right")
     .error(t(`generic_errors.${t(contents.message)}`), false);
 };
 

@@ -24,6 +24,7 @@ import useToast from "~/utils/use-toast";
 import ContentCreate from "~/components/content/create.vue";
 import IconKeyboardArrowDown from "~/components/icon/KeyboardArrowDown.vue";
 import ContentRowDetails from "~/components/content/rowDetails.vue";
+import BaseNoData from "~/components/base/no-data.vue";
 
 describe("ContentList", () => {
   mockNuxtImport("useI18n", () => {
@@ -65,16 +66,10 @@ describe("ContentList", () => {
   });
 
   it("should render the awaited content when there is no data", () => {
-    const emptyContentList = contentListWrapper.find(
-      "[data-cy='empty-content-list']",
-    );
-    expect(emptyContentList.exists()).toBe(true);
-    expect(emptyContentList.findComponent(IconBlankContent).exists()).toBe(
-      true,
-    );
-    expect(emptyContentList.find("[data-cy='no-content']").text()).toBe(
-      "not_content",
-    );
+    const emptyContent = contentListWrapper.findComponent(BaseNoData);
+    expect(emptyContent.exists()).toBe(true);
+    expect(emptyContent.findComponent(IconBlankContent).exists()).toBe(true);
+    expect(emptyContent.props().message).toBe("not_content");
   });
 
   describe("On error", () => {

@@ -87,6 +87,7 @@ const { t } = useI18n({
     en: {
       dashboard: "dashboard",
       content: "content",
+      badge: "Badges",
       expand: "expand",
       abate: "reduce",
       logout: "logout",
@@ -95,6 +96,7 @@ const { t } = useI18n({
     fr: {
       dashboard: "dashboard",
       content: "contenu",
+      badge: "Badges",
       expand: "agrandir",
       abate: "réduire",
       logout: "se déconnecter",
@@ -114,6 +116,11 @@ const menus: Menu[] = [
     title: t("content"),
     icon: "CONTENT",
     path: "/content",
+  },
+  {
+    title: t("badge"),
+    icon: "BADGE",
+    path: "/badge",
   },
 ];
 

@@ -105,12 +105,15 @@ export default function useCypressInterceptors() {
     };
   };
 
-  const getBadgeList = (): void => {
+  const getBadgeList = (asOptions = true): void => {
+    const badgeUrl = asOptions
+      ? "select=badge_id%2Cname"
+      : "select=badge_id%2Cname%2Cdescription";
     cy.intercept(
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/badges?select=badge_id%2Cname",
+        url: `**/rest/v1/badges?${badgeUrl}`,
       },
       (request) => {
         request.reply({
