@@ -1,4 +1,8 @@
-import type { ApiResponseResult, GetBadgeListTypeForOption } from "~/api/types";
+import type {
+  ApiResponseResult,
+  GetBadgeListTypeForOption,
+  Badge,
+} from "~/api/types";
 import { GenericErrors } from "~/api/types";
 import { badgeService } from "~/api/badgeService";
 
@@ -61,6 +65,21 @@ export const useBadgeStore = defineStore("badge", {
               message: GenericErrors.UNKNOWN_ERROR,
             };
         }
+      }
+    },
+    async fetchBadgeList(): Promise<ApiResponseResult<Badge[]>> {
+      const response = await badgeService.getBadgeList();
+
+      if (!response.error) {
+        return {
+          status: "success",
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "error",
+          message: GenericErrors.REQUEST_FAILED,
+        };
       }
     },
   },

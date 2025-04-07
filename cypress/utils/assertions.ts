@@ -125,11 +125,23 @@ export default function useCypressAssertions() {
     });
   };
 
+  const assertBadgeDetailsIs = (
+    id: string,
+    title: string,
+    description: string,
+  ): void => {
+    cy.get(`[data-cy-id='badge-${id}']`).within(() => {
+      cy.get("[data-cy='title']").should("have.text", title);
+      cy.get("[data-cy='description']").should("have.text", description);
+    });
+  };
+
   return {
     assertDashboardCardContentHas,
     assertTableHeadersAre,
     assertTableRowHas,
     assertToastMessageIs,
     assertContentDetailsAre,
+    assertBadgeDetailsIs,
   };
 }

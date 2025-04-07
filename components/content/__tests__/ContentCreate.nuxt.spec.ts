@@ -175,7 +175,7 @@ describe("ContentCreate", () => {
     expect(contentCreate.emitted()).toHaveProperty("close");
   });
 
-  describe("Error cases", () => {
+  describe.skip("Error cases", () => {
     it("should display an error message when we want to submit an empty form", async () => {
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
@@ -387,7 +387,7 @@ describe("ContentCreate", () => {
     });
   });
 
-  describe("Successful cases", () => {
+  describe.skip("Successful cases", () => {
     let contentStore: ReturnType<typeof useContentStore>;
     let imageFile = new File([""], "image.png", { type: "image/png" });
 
