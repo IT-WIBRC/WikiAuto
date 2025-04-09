@@ -29,4 +29,15 @@ describe("CardBadge", () => {
       "My description",
     );
   });
+
+  it("should display the awaited placeholder description when it's not provided ", async () => {
+    cardBadge = await mountSuspended(CardBadge, {
+      props: {
+        title: "No data created yet!!",
+      },
+    });
+    expect(cardBadge.find("[data-cy='description']").text()).toBe(
+      "Description",
+    );
+  });
 });

@@ -1,24 +1,29 @@
 <template>
   <ModalLayout @closed="closeModal">
     <template #header>
-      <div data-cy="preview">
-        <Badge class="w-fit" :text="tagToCreate.name" />
+      <div v-if="title" data-cy="preview">
+        <Badge class="w-fit" :text="title" />
       </div>
     </template>
     <template #body>
-      <div class="space-y-6">
+      <div class="space-y-6 min-w-[400px]">
         <InputText
-          v-model="tagToCreate.name"
+          v-model="title"
           :label="t('name.lbl')"
           :placeholder="t('name.ph')"
           :is-required="true"
-          :error-message="tagNameErrorMessage"
+          :error-message="badgeToCreateErrors.title"
+          :limit-character="MAX_TAG_LENGTH"
+          data-cy="field-title-input"
         />
         <InputText
-          v-model="tagToCreate.description"
+          v-model="description"
           :label="t('description.lbl')"
           :placeholder="t('description.ph')"
           :is-required="false"
+          :limit-character="MAX_DESCRIPTION_LENGTH"
+          :error-message="errorMessage"
+          data-cy="field-description-input"
         />
       </div>
     </template>
@@ -28,6 +33,7 @@
           :text="t('save_btn')"
           class="w-full justify-center"
           :disabled="isCreationProcessing"
+          data-cy="create-badge-btn"
           @click.stop="createTag"
         >
           <template #icon>
@@ -44,8 +50,15 @@
   <div />
 </template>
 <script setup lang="ts">
+import { toTypedSchema } from "@vee-validate/zod";
+import { object, string } from "zod";
+
+const MAX_TAG_LENGTH = 30;
+const MAX_DESCRIPTION_LENGTH = 60;
+const MIN_TAG_LENGTH = 2;
+
 const props = defineProps<{
-  name: string;
+  name?: string;
 }>();
 
 const emits = defineEmits<{
@@ -61,11 +74,14 @@ const { t } = useI18n({
         ph: "New tag name",
         error: {
           required: "Name is required",
+          moreThan: "Name must be longer than {length} characters",
+          lessThan: "The name must be less than {length} characters long",
         },
       },
       description: {
         lbl: "Description",
         ph: "Optional description",
+        lessThan: "The description must be less than {length} characters long",
       },
       save_btn: "Save",
       success: "Created successfully",
@@ -76,13 +92,14 @@ const { t } = useI18n({
         lbl: "Nom",
         ph: "Nouveau nom de thème",
         error: {
-          required: "Le nom est obligatoire",
-          moreThan2: "Le nom doit comporter plus de 2 caractères",
+          moreThan: "Le nom doit comporter plus de {length} caractères",
+          lessThan: "Le nom doit comporter moins de {length} caractères",
         },
       },
       description: {
         lbl: "Description",
         ph: "Description facultative",
+        lessThan: "La description doit comporter moins de {length} caractères",
       },
       save_btn: "Sauvegarder",
       success: "Créé avec succès",
@@ -91,43 +108,60 @@ const { t } = useI18n({
   },
 });
 
-onMounted(() => {
-  tagToCreate.name = props.name;
-});
-
-const tagNameErrorMessage = shallowRef("");
-const tagToCreate = reactive({
-  name: "",
-  description: "",
-});
-
 const closeModal = (): void => {
   emits("closed");
 };
 
+const validationSchema = toTypedSchema(
+  object({
+    title: string()
+      .min(MIN_TAG_LENGTH, t("name.error.moreThan", { length: MIN_TAG_LENGTH }))
+      .max(MAX_TAG_LENGTH, t("name.error.lessThan", { length: MAX_TAG_LENGTH })),
+  }),
+);
+
+const { errors: badgeToCreateErrors, validate } = useForm({
+  validationSchema,
+  initialValues: {
+    title: props.name || "",
+    description: "",
+  },
+});
+
+const { value: title } = useField("title");
+const { value: description } = useField("description");
+
 const isCreationProcessing = shallowRef(false);
+const errorMessage = shallowRef("");
 const createTag = async (): Promise<void> => {
   isCreationProcessing.value = true;
-  if (useString.isEmpty(tagToCreate.name)) {
-    tagNameErrorMessage.value = t("name.error.required");
+  const { valid: isValid } = await validate();
+
+  if (!isValid) {
     isCreationProcessing.value = false;
     return;
-  } else if (useString.isLessThan(tagToCreate.name, 2)) {
+  }
+
+  if (
+    description.value &&
+    useString.isMoreThan(description.value, MAX_DESCRIPTION_LENGTH)
+  ) {
+    errorMessage.value = t("description.lessThan");
     isCreationProcessing.value = false;
-    tagNameErrorMessage.value = t("name.error.moreThan2");
     return;
   }
 
   const creationResponse = await useBadgeStore().create(
-    tagToCreate.name,
-    tagToCreate.description,
+    title.value,
+    description.value || "",
   );
+  const toast = new useToast();
   if (creationResponse.status === "error") {
-    useToast.error(t("failed"));
+    toast.error(t("failed"));
     isCreationProcessing.value = false;
     return;
   }
-  useToast.success(t("success"));
+  toast.success(t("success"));
   emits("created");
   isCreationProcessing.value = false;
   closeModal();

@@ -1,14 +1,26 @@
 import useCypressInterceptors from "../../utils/interceptors";
 import useCypressAssertions from "../../utils/assertions";
 
-const { loginAdminInterceptor, getBadgeList } = useCypressInterceptors();
+const {
+  loginAdminInterceptor, getBadgeList, content, totalBadgeInterceptor
+} = useCypressInterceptors();
 const { assertBadgeDetailsIs, assertToastMessageIs } = useCypressAssertions();
 
 describe("Display badge list", () => {
+  const Content = content();
+
   beforeEach(() => {
     cy.goToLogin();
     loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
+
+    Content.totalInterceptor(0);
+    Content.totalValidatedInterceptor(0);
+    totalBadgeInterceptor(0);
+
     cy.wait("@login");
+    cy.wait("@totalContent");
+    cy.wait("@totalValidatedContent");
+    cy.wait("@totalBadges");
   });
 
   afterEach(() => {
@@ -20,7 +32,7 @@ describe("Display badge list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/badges?select=badge_id%2Cname%2Cdescription",
+        url: "**/rest/v1/badges?select=*",
       },
       {
         statusCode: 200,
@@ -41,7 +53,7 @@ describe("Display badge list", () => {
       {
         method: "GET",
         https: true,
-        url: "**/rest/v1/badges?select=badge_id%2Cname%2Cdescription",
+        url: "**/rest/v1/badges?select=*",
       },
       {
         statusCode: 404,

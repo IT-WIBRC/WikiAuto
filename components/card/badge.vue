@@ -12,13 +12,13 @@
       class="text-gray-500 text-sm 2xl:text-base font-dm-sans"
       data-cy="description"
     >
-      {{ description }}
+      {{ description || "Description" }}
     </p>
   </div>
 </template>
 <script setup lang="ts">
 defineProps<{
   title: string;
-  description: string;
+  description?: string;
 }>();
 </script>

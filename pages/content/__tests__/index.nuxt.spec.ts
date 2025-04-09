@@ -12,7 +12,7 @@ import { flushPromises } from "@vue/test-utils";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import ContentList from "../index.vue";
 import { createTestingPinia } from "@pinia/testing";
-import { useContentStore } from "../../../stores/content.store";
+import { useContentStore } from "~/stores/content.store";
 import IconBlankContent from "~/components/icon/BlankContent.vue";
 import DataTable, { type DataItem } from "~/components/DataTable.vue";
 import type { GetContentListType } from "../../../api/types";

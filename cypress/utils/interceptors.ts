@@ -108,7 +108,7 @@ export default function useCypressInterceptors() {
   const getBadgeList = (asOptions = true): void => {
     const badgeUrl = asOptions
       ? "select=badge_id%2Cname"
-      : "select=badge_id%2Cname%2Cdescription";
+      : "select=*";
     cy.intercept(
       {
         method: "GET",
