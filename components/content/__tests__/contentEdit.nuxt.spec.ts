@@ -1,7 +1,6 @@
 import {
   afterAll,
   beforeAll,
-  afterEach,
   beforeEach,
   describe,
   expect,
@@ -11,7 +10,6 @@ import {
 import type { VueWrapper } from "@vue/test-utils";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import {
-  ContentCreate,
   ContentEdit,
   IconAdd,
   InputFileImage,
