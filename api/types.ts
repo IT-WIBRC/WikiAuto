@@ -1,20 +1,5 @@
 import type { Tables } from "~/api/wikiAutoType";
 
-export type Primitive =
-  | string
-  | number
-  | boolean
-  | bigint
-  | symbol
-  | null
-  | undefined;
-
-export type IsArray<T> = T extends readonly unknown[] ? T : never;
-export type IsObject<T> =
-  T extends Record<string | number, unknown> ? T : never;
-
-export type IsPrimitiveType<T> = T extends Primitive ? T : never;
-
 export const GenericErrors = {
   NETWORK_ERROR: "NETWORK_ERROR",
   UNKNOWN_ERROR: "UNKNOWN_ERROR",
@@ -54,14 +39,14 @@ export type ApiResponseResult<T> = ResponseOnError | ResponseOnSuccess<T>;
 export type GetContentListType = Omit<
   Tables<"contents">,
   "explanation" | "image"
-> & { badges: Omit<Tables<"badges">, "badge_id" | "description">[] };
+> & { badges: Omit<Tables<"badges">, "badge_id" | "description" | "created_at" | "updated_at">[] };
 
 export type GetContentDetailsType = Tables<"contents"> & {
   badges: Tables<"badges">[];
 };
 
 export type Badge = Tables<"badges">;
-export type GetBadgeListTypeForOption = Omit<Badge, "description">;
+export type GetBadgeListTypeForOption = Omit<Badge, "description" | "created_at" | "updated_at">;
 
 export const CONTENT_STATUS = {
   PENDING: "PENDING",

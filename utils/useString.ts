@@ -14,4 +14,7 @@ export default {
   isLessThan: function (text: string, characterLength: number): boolean {
     return this.substituteSpacesBy(text).length < characterLength;
   },
+  isMoreThan: function (text: string, characterLength: number): boolean {
+    return this.substituteSpacesBy(text).length > characterLength;
+  },
 };

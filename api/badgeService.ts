@@ -5,7 +5,7 @@ const getBadgeListForOptions = async () => {
 };
 
 const getBadgeList = async () => {
-  return useSupabase().from("badges").select("badge_id, name, description");
+  return useSupabase().from("badges").select("*");
 };
 
 const create = async (name: string, description: string) => {

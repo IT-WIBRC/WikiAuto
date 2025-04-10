@@ -14,6 +14,7 @@
     "test:ci": "TZ=Africa vitest run",
     "test:coverage": "TZ=Africa vitest run --coverage.enabled",
     "pre-commit": "lint-staged --allow-empty",
+    "generate:types": "supabase gen types typescript --project-id bgebiukwfhdwkwxtnyhy > ./api/wikiAutoType.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "bunx prettier . -w"
@@ -33,7 +34,8 @@
     "dayjs": "^1.11.13",
     "nuxt": "^3.14.159",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.2",
@@ -50,6 +52,7 @@
     "lint-staged": "^15.2.10",
     "postcss": "^8.4.49",
     "sass-embedded": "^1.83.0",
+    "supabase": "^2.20.12",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.7.2",
     "vitest": "^2.1.6"

@@ -6,6 +6,17 @@
     >
       {{ t("ttl") }}
     </h1>
+    <div class="pr-8 flex justify-end items-center">
+      <BaseButtonIcon
+          data-cy="go-to-badge-create"
+          :text="t('create_btn')"
+          @click.stop="openBadgeCreationForm"
+      >
+        <template #icon>
+          <IconAdd class="fill-white stroke-white h-4 w-4" />
+        </template>
+      </BaseButtonIcon>
+    </div>
     <div class="pr-8 scroll-height scroll">
       <template v-if="isBadgeListLoading">
         <div class="relative h-full">
@@ -15,7 +26,7 @@
         </div>
       </template>
       <template v-else>
-        <div v-if="badgeGroup.length > 0" class="flex flex-wrap gap-x-4">
+        <div v-if="badgeGroup.length > 0" class="flex flex-wrap gap-x-4 gap-y-4">
           <CardBadge
             v-for="badge in badgeGroup"
             :key="badge.id"
@@ -37,6 +48,16 @@
         </BaseNoData>
       </template>
     </div>
+    <teleport to="body">
+      <client-only>
+        <ModalTransition :show="isBadgeCreationFormOpened">
+          <LazySelectCreateBadge
+              @closed="closeBadgeCreationForm"
+              @created="onBadgeCreationEnd"
+          />
+        </ModalTransition>
+      </client-only>
+    </teleport>
   </div>
 </template>
 <script setup lang="ts">
@@ -54,6 +75,7 @@ const { t } = useI18n({
       generic_errors: {
         REQUEST_FAILED: "Request to retrieve list of badges failed.",
       },
+      create_btn: "Create a badge",
     },
     fr: {
       ttl: "Badge list",
@@ -62,6 +84,7 @@ const { t } = useI18n({
         REQUEST_FAILED:
           "Échec de la demande d'extraction de la liste des badges.",
       },
+      create_btn: "Créer a badge",
     },
   },
 });
@@ -76,13 +99,15 @@ const getBadgeList = async (): Promise<void> => {
   const badgeListOrError = await useBadgeStore().fetchBadgeList();
 
   if (badgeListOrError.status === "success") {
-    badgeGroup.value = badgeListOrError.data
+    badgeGroup.value = [...badgeListOrError.data]
+      .sort((firstBadge, secondBadge) =>
+        useDate.difference(secondBadge.updated_at, firstBadge.updated_at),
+      )
       .map((badge) => ({
         title: badge.name,
         description: badge.description,
         id: badge.badge_id,
-      }))
-      .reverse();
+      }));
     return;
   }
 
@@ -98,6 +123,20 @@ onBeforeMount(async () => {
   await getBadgeList();
   isBadgeListLoading.value = false;
 });
+
+const isBadgeCreationFormOpened = shallowRef(false);
+const openBadgeCreationForm = (): void => {
+  isBadgeCreationFormOpened.value = true;
+};
+
+const closeBadgeCreationForm = (): void => {
+  isBadgeCreationFormOpened.value = false;
+};
+
+const onBadgeCreationEnd = async (): Promise<void> => {
+  await getBadgeList();
+  closeBadgeCreationForm();
+};
 </script>
 <style scoped>
 .scroll-height {
@@ -107,9 +146,9 @@ onBeforeMount(async () => {
 .custom-grid {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 90px 1fr;
+  grid-template-rows: 50px 40px 1fr;
   height: 100svh;
   max-height: calc(100svh - 2rem);
-  gap: 4px 0;
+  gap: 20px 0;
 }
 </style>

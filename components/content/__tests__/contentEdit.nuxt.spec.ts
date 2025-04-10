@@ -1,7 +1,6 @@
 import {
   afterAll,
   beforeAll,
-  afterEach,
   beforeEach,
   describe,
   expect,
@@ -248,13 +247,10 @@ describe("ContentEdit", () => {
     expect(contentEdit.emitted()).toHaveProperty("close");
   });
 
-  describe.skip("Error cases", () => {
-    afterEach(() => {
-      vi.clearAllMocks();
-      vi.clearAllTimers();
-    });
-
-    it("should display an error message when we want to submit an empty form", async () => {
+  describe("Error cases", () => {
+    beforeEach(async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers();
       contentEdit = await mountSuspended(ContentEdit, {
         props: {
           id: contents[0].content_id,
@@ -263,9 +259,17 @@ describe("ContentEdit", () => {
           plugins: [pinia],
         },
       });
-      await flushPromises();
-      await flushPromises();
 
+      vi.advanceTimersByTime(50);
+      await flushPromises();
+      await contentEdit.vm.$nextTick();
+    });
+
+    afterAll(() => {
+      vi.useRealTimers();
+    });
+
+    it("should display an error message when we want to submit an empty form", async () => {
       await contentEdit
         .findComponent(InputFileImage)
         .setValue(new File([], ""));
@@ -274,7 +278,9 @@ describe("ContentEdit", () => {
       await contentEdit.findComponent(SelectMultipleForBadge).setValue([]);
 
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
+      vi.advanceTimersByTime(50);
       await flushPromises();
+      await contentEdit.vm.$nextTick();
 
       expect(
         contentEdit.findComponent(InputFileImage).props().errorMessage,
@@ -292,47 +298,28 @@ describe("ContentEdit", () => {
 
     describe("Field: Title", () => {
       it("should display an error message when the title entered has less than 10 characters", async () => {
-        contentEdit = await mountSuspended(ContentEdit, {
-          props: {
-            id: contents[0].content_id,
-          },
-          global: {
-            plugins: [pinia],
-          },
-        });
-        await flushPromises();
-        await flushPromises();
-
         let title = contentEdit.findComponent(InputText);
         await title.setValue("test less");
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
+        vi.advanceTimersByTime(50);
         await flushPromises();
+        await contentEdit.vm.$nextTick();
 
         title = contentEdit.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_min");
       });
 
       it("should display an error message when the title entered has more than 100 characters", async () => {
-        contentEdit = await mountSuspended(ContentEdit, {
-          props: {
-            id: contents[0].content_id,
-          },
-          global: {
-            plugins: [pinia],
-          },
-        });
-        await flushPromises();
-        await flushPromises();
-
         let title = contentEdit.findComponent(InputText);
         await title.setValue(
           "test with more than one hundred characters for testing wikiAuto application title for content creation",
         );
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
+        vi.advanceTimersByTime(50);
         await flushPromises();
-        await flushPromises();
+        await contentEdit.vm.$nextTick();
 
         title = contentEdit.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_max");
@@ -341,23 +328,13 @@ describe("ContentEdit", () => {
 
     describe("Field: Explanation", () => {
       it("should display an error message when the explanation entered has less than 20 characters", async () => {
-        contentEdit = await mountSuspended(ContentEdit, {
-          props: {
-            id: contents[0].content_id,
-          },
-          global: {
-            plugins: [pinia],
-          },
-        });
-        await flushPromises();
-        await flushPromises();
-
         let explanation = contentEdit.findComponent(InputRichText);
         await explanation.setValue("test with less");
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
+        vi.advanceTimersByTime(50);
         await flushPromises();
-        await flushPromises();
+        await contentEdit.vm.$nextTick();
 
         explanation = contentEdit.findComponent(InputRichText);
         expect(explanation.props().errorMessage).toBe("_min");
@@ -371,17 +348,6 @@ describe("ContentEdit", () => {
       it("should display an error message when the illustration size is `0` or more than `200kb`", async () => {
         vi.clearAllMocks();
 
-        contentEdit = await mountSuspended(ContentEdit, {
-          props: {
-            id: contents[0].content_id,
-          },
-          global: {
-            plugins: [pinia],
-          },
-        });
-        await flushPromises();
-        await flushPromises();
-
         let illustration = contentEdit.findComponent(InputFileImage);
         await illustration.setValue(
           new File([""], "test.png", { type: "image/png" }),
@@ -389,10 +355,9 @@ describe("ContentEdit", () => {
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
+        vi.advanceTimersByTime(50);
         await flushPromises();
-        await flushPromises();
-        await flushPromises();
-        await nextTick();
+        await contentEdit.vm.$nextTick();
 
         illustration = contentEdit.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_size");
@@ -402,17 +367,6 @@ describe("ContentEdit", () => {
       });
 
       it("should display an error message when the illustration has a non supported extension", async () => {
-        contentEdit = await mountSuspended(ContentEdit, {
-          props: {
-            id: contents[0].content_id,
-          },
-          global: {
-            plugins: [pinia],
-          },
-        });
-        await flushPromises();
-        await flushPromises();
-
         let illustration = contentEdit.findComponent(InputFileImage);
 
         const fakeFile = new File([""], "fake.ts", { type: "text/ts" });
@@ -422,9 +376,9 @@ describe("ContentEdit", () => {
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
+        vi.advanceTimersByTime(50);
         await flushPromises();
-        await flushPromises();
-        await flushPromises();
+        await contentEdit.vm.$nextTick();
 
         illustration = contentEdit.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_fileTypes");
@@ -480,9 +434,9 @@ describe("ContentEdit", () => {
       const toastError = vi.spyOn(useToast.prototype, "error");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
+      vi.advanceTimersByTime(50);
       await flushPromises();
-      await flushPromises();
-      await flushPromises();
+      await contentEdit.vm.$nextTick();
 
       expect(toastError).toHaveBeenCalledTimes(1);
       expect(toastError).toHaveBeenCalledWith(
@@ -509,6 +463,8 @@ describe("ContentEdit", () => {
     let imageFile = new File([""], "image.png", { type: "image/png" });
 
     beforeEach(async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers();
       imageFile = new File([""], "image.png", { type: "image/png" });
       Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
 
@@ -526,13 +482,13 @@ describe("ContentEdit", () => {
         },
       });
 
+      vi.advanceTimersByTime(50);
       await flushPromises();
-      await flushPromises();
+      await contentEdit.vm.$nextTick();
     });
 
     afterAll(() => {
-      vi.clearAllMocks();
-      vi.clearAllTimers();
+      vi.useRealTimers();
     });
 
     it("should emit the awaited events when the creation is successful", async () => {
@@ -562,9 +518,9 @@ describe("ContentEdit", () => {
       const toastSuccess = vi.spyOn(useToast.prototype, "success");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
+      vi.advanceTimersByTime(50);
       await flushPromises();
-      await flushPromises();
-      await flushPromises();
+      await contentEdit.vm.$nextTick();
 
       expect(toastSuccess).toHaveBeenCalledOnce();
       expect(toastSuccess).toHaveBeenCalledWith("succeed", false);

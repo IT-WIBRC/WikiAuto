@@ -30,9 +30,7 @@ describe("Get Badge List", () => {
       error: null,
       data: [],
     });
-    expect(mockGetBadgeList.select).toHaveBeenCalledWith(
-      "badge_id, name, description",
-    );
+    expect(mockGetBadgeList.select).toHaveBeenCalledWith("*");
   });
 
   it("should return the badge list for option on success", async () => {
@@ -42,11 +40,15 @@ describe("Get Badge List", () => {
         badge_id: "12345",
         name: "My title",
         description: "My description",
+        created_at: "2024-12-14 13:25:08",
+        updated_at: "2024-02-14 13:25:08"
       },
       {
         badge_id: "123456",
         name: "My title0",
         description: "My description 0",
+        created_at: "2025-03-20 18:25:08",
+        updated_at: "2025-04-08 08:02:56"
       },
     ];
     mockGetBadgeList.select.mockImplementation(() => {
