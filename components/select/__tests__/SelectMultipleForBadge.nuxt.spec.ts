@@ -1,6 +1,7 @@
 import {
   afterAll,
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -38,7 +39,7 @@ describe("SelectMultipleForBadge", () => {
   });
 
   let selectMultipleForBadge: VueWrapper;
-  beforeEach(async () => {
+  beforeAll(async () => {
     selectMultipleForBadge = await mountSuspended(SelectMultipleForBadge, {
       props: {
         label: "Topics",
@@ -49,6 +50,10 @@ describe("SelectMultipleForBadge", () => {
         plugins: [pinia],
       },
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   afterAll(() => {
@@ -104,6 +109,23 @@ describe("SelectMultipleForBadge", () => {
   });
 
   it("should get the badge list when we clock on the field", async () => {
+    badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValueOnce({
+      status: "success",
+      data: [],
+    });
+    const selectMultipleForBadge = await mountSuspended(
+      SelectMultipleForBadge,
+      {
+        props: {
+          label: "Topics",
+          isRequired: true,
+          modelValue: [],
+        },
+        global: {
+          plugins: [pinia],
+        },
+      },
+    );
     await selectMultipleForBadge.find("input").trigger("focusin");
     await flushPromises();
     expect(badgeSore.fetchBadgeListForOptions).toHaveBeenCalledTimes(1);
@@ -195,6 +217,7 @@ describe("SelectMultipleForBadge", () => {
       selectMultipleForBadge.findComponent(ModalTransition).props().show,
     ).toBe(true);
     await createBadgeForm.vm.$emit("created");
+    await nextTick();
     await flushPromises();
 
     expect(badgeSore.fetchBadgeListForOptions).toHaveBeenCalledTimes(2);
@@ -204,7 +227,8 @@ describe("SelectMultipleForBadge", () => {
     ).toBe(false);
   });
 
-  it("should close teh form when we click on the close icon", async () => {
+  it("should close the form when we click on the close icon", async () => {
+    vi.useFakeTimers();
     const selectMultipleForBadgeCustom = await mountSuspended(
       SelectMultipleForBadge,
       {
@@ -226,13 +250,15 @@ describe("SelectMultipleForBadge", () => {
       status: "success",
     });
 
-    let createBadgeForm = selectMultipleForBadge.findComponent(
+    let createBadgeForm = selectMultipleForBadgeCustom.findComponent(
       LazySelectCreateBadge,
     );
     expect(createBadgeForm.exists()).toBe(false);
 
     await selectMultipleForBadgeCustom.find("input").trigger("focusin");
     await selectMultipleForBadgeCustom.find("input").setValue("ts");
+
+    await vi.advanceTimersByTime(50);
     await flushPromises();
 
     expect(badgeSore.fetchBadgeListForOptions).toHaveBeenCalledTimes(1);
@@ -245,7 +271,9 @@ describe("SelectMultipleForBadge", () => {
     badgeList.vm.$emit("openCreationForm");
     await nextTick();
 
+    await vi.advanceTimersByTime(50);
     await vi.dynamicImportSettled();
+
     createBadgeForm =
       selectMultipleForBadgeCustom.findComponent(SelectCreateBadge);
     expect(createBadgeForm.exists()).toBe(true);
@@ -254,11 +282,13 @@ describe("SelectMultipleForBadge", () => {
       selectMultipleForBadgeCustom.findComponent(ModalTransition).props().show,
     ).toBe(true);
     createBadgeForm.vm.$emit("closed");
+    await vi.advanceTimersByTime(50);
     await nextTick();
 
     expect(
       selectMultipleForBadgeCustom.findComponent(ModalTransition).props().show,
     ).toBe(false);
+    vi.useRealTimers();
   });
 
   describe("With options", () => {
