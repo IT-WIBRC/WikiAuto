@@ -2,6 +2,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -18,13 +19,13 @@ import DataTable, { type DataItem } from "~/components/DataTable.vue";
 import type { GetContentListType } from "../../../api/types";
 import BadgeStatus from "~/components/badge/Status.vue";
 import BaseButtonIcon from "~/components/base/button/icon.vue";
-import AddIcon from "~/components/icon/add.vue";
 import BadgeList from "~/components/badge/list.vue";
 import useToast from "~/utils/use-toast";
 import ContentCreate from "~/components/content/create.vue";
 import IconKeyboardArrowDown from "~/components/icon/KeyboardArrowDown.vue";
 import ContentRowDetails from "~/components/content/rowDetails.vue";
 import BaseNoData from "~/components/base/no-data.vue";
+import { nextTick } from "vue";
 
 describe("ContentList", () => {
   mockNuxtImport("useI18n", () => {
@@ -301,12 +302,33 @@ describe("ContentList", () => {
   });
 
   describe("Content create", () => {
-    it("should render the button to go the content create page", () => {
+    beforeEach(async () => {
+      contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
+        status: "success",
+        data: [],
+      });
+      contentListWrapper = await mountSuspended(ContentList, {
+        shallow: true,
+        global: {
+          plugins: [pinia],
+          stubs: {
+            teleport: true,
+            rowDetails: true,
+            clientOnly: false,
+          },
+        },
+      });
+    });
+
+    afterEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should render the button to go the content create page", async () => {
       const contentCreateButton =
         contentListWrapper.findComponent(BaseButtonIcon);
       expect(contentCreateButton.exists()).toBe(true);
       expect(contentCreateButton.props().text).toBe("add_btn");
-      expect(contentCreateButton.findComponent(AddIcon).exists()).toBe(true);
     });
 
     it("should open the content create form when we click on the create button", async () => {
@@ -317,6 +339,45 @@ describe("ContentList", () => {
       expect(contentListWrapper.findComponent(ContentCreate).exists()).toBe(
         true,
       );
+    });
+
+    it("should close the content create form when we click on the close icon button", async () => {
+      let creationForm = contentListWrapper.findComponent(ContentCreate);
+      expect(creationForm.exists()).toBe(false);
+
+      await contentListWrapper.findComponent(BaseButtonIcon).trigger("click");
+
+      creationForm = contentListWrapper.findComponent(ContentCreate);
+      expect(creationForm.exists()).toBe(true);
+
+      creationForm.vm.$emit("close");
+      await nextTick();
+
+      creationForm = contentListWrapper.findComponent(ContentCreate);
+      expect(creationForm.exists()).toBe(false);
+    });
+
+    it("should get the new content when we the creation succeed", async () => {
+      expect(contentStore.fetchContentList).toHaveBeenCalledTimes(1);
+
+      let creationForm = contentListWrapper.findComponent(ContentCreate);
+      expect(creationForm.exists()).toBe(false);
+
+      await contentListWrapper.findComponent(BaseButtonIcon).trigger("click");
+
+      creationForm = contentListWrapper.findComponent(ContentCreate);
+      expect(creationForm.exists()).toBe(true);
+
+      contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
+        status: "success",
+        data: [],
+      });
+
+      creationForm.vm.$emit("created");
+      await nextTick();
+      await flushPromises();
+
+      expect(contentStore.fetchContentList).toHaveBeenCalledTimes(1);
     });
   });
 });

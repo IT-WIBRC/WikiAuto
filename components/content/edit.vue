@@ -167,6 +167,7 @@ const createFileFromUrl = async (imageUrl: string): Promise<File> => {
   });
 };
 
+const contentStore = useContentStore();
 const getContentImageUrl = async (): Promise<void> => {
   const getImageUrlResponse = await contentStore.getImageURLFrom(
     currentContent.value.image,
@@ -219,7 +220,6 @@ const handleFormValidation = async (): Promise<boolean> => {
   return valid;
 };
 
-const contentStore = useContentStore();
 const isEditionLoading = shallowRef(false);
 const edit = async (): Promise<void> => {
   isEditionLoading.value = true;

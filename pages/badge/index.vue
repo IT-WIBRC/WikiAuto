@@ -8,9 +8,9 @@
     </h1>
     <div class="pr-8 flex justify-end items-center">
       <BaseButtonIcon
-          data-cy="go-to-badge-create"
-          :text="t('create_btn')"
-          @click.stop="openBadgeCreationForm"
+        data-cy="go-to-badge-create"
+        :text="t('create_btn')"
+        @click.stop="openBadgeCreationForm"
       >
         <template #icon>
           <IconAdd class="fill-white stroke-white h-4 w-4" />
@@ -26,7 +26,10 @@
         </div>
       </template>
       <template v-else>
-        <div v-if="badgeGroup.length > 0" class="flex flex-wrap gap-x-4 gap-y-4">
+        <div
+          v-if="badgeGroup.length > 0"
+          class="flex flex-wrap gap-x-4 gap-y-4"
+        >
           <CardBadge
             v-for="badge in badgeGroup"
             :key="badge.id"
@@ -34,6 +37,7 @@
             :description="badge.description"
             data-cy="badge"
             :data-cy-id="`badge-${badge.id}`"
+            @want-edit="openBadgeEditionForm(badge.id)"
           />
         </div>
         <BaseNoData
@@ -51,9 +55,16 @@
     <teleport to="body">
       <client-only>
         <ModalTransition :show="isBadgeCreationFormOpened">
-          <LazySelectCreateBadge
-              @closed="closeBadgeCreationForm"
-              @created="onBadgeCreationEnd"
+          <LazyBadgeCreate
+            @closed="closeBadgeCreationForm"
+            @created="onBadgeCreationEnd"
+          />
+        </ModalTransition>
+        <ModalTransition :show="isBadgeEditionFormOpened">
+          <LazyBadgeEdit
+            :id="currentBadgeId"
+            @closed="closeBadgeEditionForm"
+            @edited="onBadgeEditionEnd"
           />
         </ModalTransition>
       </client-only>
@@ -136,6 +147,23 @@ const closeBadgeCreationForm = (): void => {
 const onBadgeCreationEnd = async (): Promise<void> => {
   await getBadgeList();
   closeBadgeCreationForm();
+};
+
+const currentBadgeId = shallowRef("");
+const isBadgeEditionFormOpened = shallowRef(false);
+const openBadgeEditionForm = (badgeId: string): void => {
+  currentBadgeId.value = badgeId;
+  isBadgeEditionFormOpened.value = true;
+};
+
+const closeBadgeEditionForm = (): void => {
+  currentBadgeId.value = "";
+  isBadgeEditionFormOpened.value = false;
+};
+
+const onBadgeEditionEnd = async (): Promise<void> => {
+  await getBadgeList();
+  closeBadgeEditionForm();
 };
 </script>
 <style scoped>

@@ -30,15 +30,15 @@
     <template #footer>
       <div class="w-full">
         <BaseButtonIcon
-          :text="t('save_btn')"
+          :text="t('edit_btn')"
           class="w-full justify-center"
-          :disabled="isCreationProcessing"
-          data-cy="create-badge-btn"
-          @click.stop="createTag"
+          :disabled="isEditionProcessing"
+          data-cy="edit-badge-btn"
+          @click.stop="edit"
         >
           <template #icon>
             <LazyLoaderFade
-              v-if="isCreationProcessing"
+              v-if="isEditionProcessing"
               class="h-6 w-6 before:w-6 before:h-6 before:left-24"
             />
             <LazyIconTheme v-else class="h-4 w-4 fill-none stroke-white" />
@@ -50,60 +50,36 @@
   <div />
 </template>
 <script setup lang="ts">
-import { toTypedSchema } from "@vee-validate/zod";
-import { object, string } from "zod";
-
-const MAX_TAG_LENGTH = 30;
-const MAX_DESCRIPTION_LENGTH = 60;
-const MIN_TAG_LENGTH = 2;
+import {
+  MAX_DESCRIPTION_LENGTH,
+  MAX_TAG_LENGTH,
+  getBadgeValidation,
+  badgeTranslation,
+} from "./utils";
+import type { Badge } from "~/api/types";
 
 const props = defineProps<{
-  name?: string;
+  id: string;
 }>();
 
 const emits = defineEmits<{
-  (e: "closed" | "created"): void;
+  (e: "closed" | "edited"): void;
 }>();
 
 const { t } = useI18n({
   useScope: "local",
   messages: {
     en: {
-      name: {
-        lbl: "Name",
-        ph: "New tag name",
-        error: {
-          required: "Name is required",
-          moreThan: "Name must be longer than {length} characters",
-          lessThan: "The name must be less than {length} characters long",
-        },
-      },
-      description: {
-        lbl: "Description",
-        ph: "Optional description",
-        lessThan: "The description must be less than {length} characters long",
-      },
-      save_btn: "Save",
-      success: "Created successfully",
-      failed: "Failed to create",
+      ...badgeTranslation.en,
+      edit_btn: "Edit",
+      success: "Edited successfully",
+      failed: "Failed to edit",
     },
     fr: {
-      name: {
-        lbl: "Nom",
-        ph: "Nouveau nom de thème",
-        error: {
-          moreThan: "Le nom doit comporter plus de {length} caractères",
-          lessThan: "Le nom doit comporter moins de {length} caractères",
-        },
-      },
-      description: {
-        lbl: "Description",
-        ph: "Description facultative",
-        lessThan: "La description doit comporter moins de {length} caractères",
-      },
-      save_btn: "Sauvegarder",
-      success: "Créé avec succès",
-      failed: "Échec de la création",
+      ...badgeTranslation.fr,
+      edit_btn: "Editer",
+      success: "Edité avec succès",
+      failed: "Échec de la l'édition",
     },
   },
 });
@@ -112,18 +88,16 @@ const closeModal = (): void => {
   emits("closed");
 };
 
-const validationSchema = toTypedSchema(
-  object({
-    title: string()
-      .min(MIN_TAG_LENGTH, t("name.error.moreThan", { length: MIN_TAG_LENGTH }))
-      .max(MAX_TAG_LENGTH, t("name.error.lessThan", { length: MAX_TAG_LENGTH })),
-  }),
-);
+const badgeStore = useBadgeStore();
+const findBadgeInTheList = (): Badge =>
+  badgeStore.badgeList.find((badge) => badge.badge_id === props.id);
+
+const validationSchema = getBadgeValidation(t);
 
 const { errors: badgeToCreateErrors, validate } = useForm({
   validationSchema,
   initialValues: {
-    title: props.name || "",
+    title: "",
     description: "",
   },
 });
@@ -131,14 +105,27 @@ const { errors: badgeToCreateErrors, validate } = useForm({
 const { value: title } = useField("title");
 const { value: description } = useField("description");
 
-const isCreationProcessing = shallowRef(false);
+const toast = new useToast();
+onBeforeMount(async () => {
+  const currentBadge = findBadgeInTheList();
+  if (!currentBadge) {
+    closeModal();
+    toast.error(`No data with id ${props.id}`);
+    return;
+  }
+
+  title.value = currentBadge.name;
+  description.value = currentBadge.description;
+});
+
+const isEditionProcessing = shallowRef(false);
 const errorMessage = shallowRef("");
-const createTag = async (): Promise<void> => {
-  isCreationProcessing.value = true;
+const edit = async (): Promise<void> => {
+  isEditionProcessing.value = true;
   const { valid: isValid } = await validate();
 
   if (!isValid) {
-    isCreationProcessing.value = false;
+    isEditionProcessing.value = false;
     return;
   }
 
@@ -147,23 +134,24 @@ const createTag = async (): Promise<void> => {
     useString.isMoreThan(description.value, MAX_DESCRIPTION_LENGTH)
   ) {
     errorMessage.value = t("description.lessThan");
-    isCreationProcessing.value = false;
+    isEditionProcessing.value = false;
     return;
   }
 
-  const creationResponse = await useBadgeStore().create(
-    title.value,
-    description.value || "",
-  );
-  const toast = new useToast();
-  if (creationResponse.status === "error") {
+  const editionResponse = await useBadgeStore().edit({
+    id: props.id,
+    name: title.value,
+    description: description.value || "",
+  });
+
+  if (editionResponse.status === "error") {
     toast.error(t("failed"));
-    isCreationProcessing.value = false;
+    isEditionProcessing.value = false;
     return;
   }
   toast.success(t("success"));
-  emits("created");
-  isCreationProcessing.value = false;
+  emits("edited");
+  isEditionProcessing.value = false;
   closeModal();
 };
 </script>

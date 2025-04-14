@@ -1,26 +1,12 @@
 import useCypressInterceptors from "../../utils/interceptors";
 import useCypressAssertions from "../../utils/assertions";
 
-const {
-  loginAdminInterceptor, getBadgeList, content, totalBadgeInterceptor
-} = useCypressInterceptors();
+const { getBadgeList, initAdminPart } = useCypressInterceptors();
 const { assertBadgeDetailsIs, assertToastMessageIs } = useCypressAssertions();
 
 describe("Display badge list", () => {
-  const Content = content();
-
   beforeEach(() => {
-    cy.goToLogin();
-    loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
-
-    Content.totalInterceptor(0);
-    Content.totalValidatedInterceptor(0);
-    totalBadgeInterceptor(0);
-
-    cy.wait("@login");
-    cy.wait("@totalContent");
-    cy.wait("@totalValidatedContent");
-    cy.wait("@totalBadges");
+    initAdminPart();
   });
 
   afterEach(() => {

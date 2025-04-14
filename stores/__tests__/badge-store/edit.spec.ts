@@ -12,33 +12,32 @@ describe("BadgeStore", () => {
     vi.resetAllMocks();
   });
 
-  describe("Create", () => {
+  describe("Edit", () => {
     it("should return the awaited status with data on success", async () => {
       const badgeStore = useBadgeStore();
-      const getCreateBadgeMock = vi.fn(() => {
+      const editBadgeMock = vi.fn(() => {
         return {
           error: null,
           data: [],
         };
       });
-      vi.spyOn(badgeService, "create", "get").mockReturnValueOnce(
-        getCreateBadgeMock,
-      );
+      vi.spyOn(badgeService, "edit", "get").mockReturnValueOnce(editBadgeMock);
 
-      const badgeCreationResponse = await badgeStore.create(
-        "name",
-        "description",
-      );
+      const badgeEditionResponse = await badgeStore.edit({
+        id: "32145",
+        name: "name",
+        description: "description",
+      });
 
-      expect(getCreateBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeCreationResponse).toEqual({
+      expect(editBadgeMock).toHaveBeenCalledTimes(1);
+      expect(badgeEditionResponse).toEqual({
         status: "success",
       });
     });
 
     it("should return the awaited result on failure", async () => {
       const badgeStore = useBadgeStore();
-      const getCreateBadgeMock = vi.fn(() => {
+      const editBadgeMock = vi.fn(() => {
         return {
           error: {
             code: "NoSuchKey",
@@ -47,17 +46,16 @@ describe("BadgeStore", () => {
           data: null,
         };
       });
-      vi.spyOn(badgeService, "create", "get").mockReturnValueOnce(
-        getCreateBadgeMock,
-      );
+      vi.spyOn(badgeService, "edit", "get").mockReturnValueOnce(editBadgeMock);
 
-      const badgeCreationResponse = await badgeStore.create(
-        "name",
-        "description",
-      );
+      const badgeEditionResponse = await badgeStore.edit({
+        id: "32145",
+        name: "name",
+        description: "description",
+      });
 
-      expect(getCreateBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeCreationResponse).toEqual({
+      expect(editBadgeMock).toHaveBeenCalledTimes(1);
+      expect(badgeEditionResponse).toEqual({
         status: "error",
         message: "REQUEST_FAILED",
       });

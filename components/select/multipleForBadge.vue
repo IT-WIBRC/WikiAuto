@@ -55,7 +55,7 @@
       />
     </Transition>
     <ModalTransition :show="shouldOpenCreationBadgeForm">
-      <LazySelectCreateBadge
+      <LazyBadgeCreate
         :name="hittingText"
         @closed="closeCreationForm"
         @created="onTagCreationEnd"
