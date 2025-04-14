@@ -13,11 +13,11 @@ import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   BadgeRemovable,
   LazySelectBadgeList,
-  LazySelectCreateBadge,
+  LazyBadgeCreate,
   ModalTransition,
   SelectBadgeList,
   SelectMultipleForBadge,
-  SelectCreateBadge,
+  BadgeCreate,
 } from "#components";
 import { createTestingPinia } from "@pinia/testing";
 import { BadgeToOptionForList } from "~/components/select/type";
@@ -191,9 +191,7 @@ describe("SelectMultipleForBadge", () => {
       status: "success",
     });
 
-    let createBadgeForm = selectMultipleForBadge.findComponent(
-      LazySelectCreateBadge,
-    );
+    let createBadgeForm = selectMultipleForBadge.findComponent(LazyBadgeCreate);
     expect(createBadgeForm.exists()).toBe(false);
 
     await selectMultipleForBadge.find("input").trigger("focusin");
@@ -210,7 +208,7 @@ describe("SelectMultipleForBadge", () => {
     await nextTick();
 
     await vi.dynamicImportSettled();
-    createBadgeForm = selectMultipleForBadge.findComponent(SelectCreateBadge);
+    createBadgeForm = selectMultipleForBadge.findComponent(BadgeCreate);
     expect(createBadgeForm.exists()).toBe(true);
 
     expect(
@@ -250,9 +248,8 @@ describe("SelectMultipleForBadge", () => {
       status: "success",
     });
 
-    let createBadgeForm = selectMultipleForBadgeCustom.findComponent(
-      LazySelectCreateBadge,
-    );
+    let createBadgeForm =
+      selectMultipleForBadgeCustom.findComponent(LazyBadgeCreate);
     expect(createBadgeForm.exists()).toBe(false);
 
     await selectMultipleForBadgeCustom.find("input").trigger("focusin");
@@ -274,8 +271,7 @@ describe("SelectMultipleForBadge", () => {
     await vi.advanceTimersByTime(50);
     await vi.dynamicImportSettled();
 
-    createBadgeForm =
-      selectMultipleForBadgeCustom.findComponent(SelectCreateBadge);
+    createBadgeForm = selectMultipleForBadgeCustom.findComponent(BadgeCreate);
     expect(createBadgeForm.exists()).toBe(true);
 
     expect(

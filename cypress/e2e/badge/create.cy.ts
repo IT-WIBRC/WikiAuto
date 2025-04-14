@@ -1,26 +1,12 @@
 import useCypressInterceptors from "../../utils/interceptors";
 import useCypressAssertions from "../../utils/assertions";
 
-const { loginAdminInterceptor,
-  getBadgeList,
-  totalBadgeInterceptor,
-  content } = useCypressInterceptors();
+const { getBadgeList, initAdminPart } = useCypressInterceptors();
 const { assertToastMessageIs } = useCypressAssertions();
 
 describe("Create badge", () => {
-  const Content = content();
-
   beforeEach(() => {
-    cy.goToLogin();
-    loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
-    Content.totalInterceptor(0);
-    Content.totalValidatedInterceptor(0);
-    totalBadgeInterceptor(0);
-
-    cy.wait("@login");
-    cy.wait("@totalContent");
-    cy.wait("@totalValidatedContent");
-    cy.wait("@totalBadges");
+    initAdminPart();
   });
 
   it("should create the tag successfully", () => {
@@ -86,7 +72,6 @@ describe("Create badge", () => {
     cy.get("[data-cy='empty-badge-list']").should("not.exist");
     cy.get("[data-cy='badge']").should("have.length", 4);
 
-
     cy.get("[data-cy='go-to-badge-create']").click();
 
     cy.intercept(
@@ -118,12 +103,8 @@ describe("Create badge", () => {
   });
 
   const fillBadgeForm = (name: string, description: string): void => {
-    cy.get("[data-cy='field-title-input'] input").type(
-      name
-    );
-    cy.get("[data-cy='field-description-input'] input").type(
-      description
-    );
+    cy.get("[data-cy='field-title-input'] input").type(name);
+    cy.get("[data-cy='field-description-input'] input").type(description);
 
     cy.get("[data-cy='create-badge-btn']").click();
   };

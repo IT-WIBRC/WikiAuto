@@ -18,6 +18,22 @@ export default function useCypressInterceptors() {
     cy.login(email, password);
   };
 
+  const initAdminPart = () => {
+    const Content = content();
+
+    cy.goToLogin();
+    loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
+
+    Content.totalInterceptor(0);
+    Content.totalValidatedInterceptor(0);
+    totalBadgeInterceptor(0);
+
+    cy.wait("@login");
+    cy.wait("@totalContent");
+    cy.wait("@totalValidatedContent");
+    cy.wait("@totalBadges");
+  };
+
   const logoutAdminInterceptor = (): void => {
     cy.intercept(
       {
@@ -106,9 +122,7 @@ export default function useCypressInterceptors() {
   };
 
   const getBadgeList = (asOptions = true): void => {
-    const badgeUrl = asOptions
-      ? "select=badge_id%2Cname"
-      : "select=*";
+    const badgeUrl = asOptions ? "select=badge_id%2Cname" : "select=*";
     cy.intercept(
       {
         method: "GET",
@@ -141,11 +155,35 @@ export default function useCypressInterceptors() {
     ).as("totalBadges");
   };
 
+  const badgeEditionInterceptor = ({
+    id,
+    alias,
+    statusCode,
+  }: {
+    id: string;
+    alias: string;
+    statusCode: 201 | 403;
+  }): void => {
+    cy.intercept(
+      {
+        method: "PATCH",
+        https: true,
+        url: `**/rest/v1/badges?badge_id=eq.${id}`,
+      },
+      {
+        statusCode,
+        body: [],
+      },
+    ).as(alias);
+  };
+
   return {
     loginAdminInterceptor,
     logoutAdminInterceptor,
     content,
     getBadgeList,
     totalBadgeInterceptor,
+    initAdminPart,
+    badgeEditionInterceptor,
   };
 }
