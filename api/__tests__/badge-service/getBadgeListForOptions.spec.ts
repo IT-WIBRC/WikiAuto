@@ -1,20 +1,24 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { badgeService } from "~/api/badgeService";
 
-const mockGetBadgeList = vi.hoisted(() => ({
-  select: vi.fn(() => {
+const mockSelect = vi.fn(() => {
+  return {
+    error: null,
+    data: [],
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: [],
+      select: mockSelect,
     };
   }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockGetBadgeList,
-    };
+    return mockFrom;
   },
 }));
 
@@ -23,18 +27,27 @@ describe("Get Badge List for options", () => {
     vi.doUnmock("~/api/supabaseInit");
   });
 
+  afterEach(() => {
+    mockSelect.mockRestore();
+    mockFrom.from.mockRestore();
+  });
+
   it("should return an empty array when there is no badge", async () => {
     const badgeList = await badgeService.getBadgeListForOptions();
-    expect(mockGetBadgeList.select).toHaveBeenCalledTimes(1);
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith("badge_id, name");
+
     expect(badgeList).toEqual({
       error: null,
       data: [],
     });
-    expect(mockGetBadgeList.select).toHaveBeenCalledWith("badge_id, name");
   });
 
   it("should return the badge list for option on success", async () => {
-    mockGetBadgeList.select.mockRestore();
     const result = [
       {
         badge_id: "12345",
@@ -45,24 +58,27 @@ describe("Get Badge List for options", () => {
         name: "My title0",
       },
     ];
-    mockGetBadgeList.select.mockImplementation(() => {
+    mockSelect.mockImplementation(() => {
       return {
         error: null,
         data: result,
       };
     });
     const badgeList = await badgeService.getBadgeListForOptions();
-    expect(mockGetBadgeList.select).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith("badge_id, name");
+
     expect(badgeList).toEqual({
       error: null,
       data: result,
     });
-    mockGetBadgeList.select.mockRestore();
   });
 
   it("should return an error when failed", async () => {
-    mockGetBadgeList.select.mockRestore();
-    mockGetBadgeList.select.mockImplementation(() => {
+    mockSelect.mockImplementation(() => {
       return {
         error: {
           code: "InvalidToken",
@@ -73,7 +89,12 @@ describe("Get Badge List for options", () => {
       };
     });
     const badgeList = await badgeService.getBadgeListForOptions();
-    expect(mockGetBadgeList.select).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith("badge_id, name");
+
     expect(badgeList).toEqual({
       error: {
         code: "InvalidToken",
@@ -82,6 +103,5 @@ describe("Get Badge List for options", () => {
       data: null,
       count: 0,
     });
-    mockGetBadgeList.select.mockRestore();
   });
 });

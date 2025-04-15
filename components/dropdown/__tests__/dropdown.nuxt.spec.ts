@@ -8,7 +8,7 @@ describe("Dropdown", () => {
   beforeAll(async () => {
     dropdown = await mountSuspended(Dropdown, {
       slots: {
-        options: "<p>Options</p>",
+        options: () => "<p>Options</p>",
       },
     });
   });

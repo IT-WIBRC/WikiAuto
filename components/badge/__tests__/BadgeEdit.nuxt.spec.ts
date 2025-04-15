@@ -7,8 +7,8 @@ import {
   it,
   vi,
 } from "vitest";
-import { flushPromises, type VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import type { VueWrapper } from "@vue/test-utils";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   Badge,
   BaseButtonIcon,
@@ -18,23 +18,12 @@ import {
   ModalLayout,
   BadgeEdit,
 } from "#components";
-import { createTestingPinia } from "@pinia/testing";
 import { useBadgeStore } from "~/stores/badge.store";
-
-const mockToast = (method: "success" | "error") =>
-  vi.spyOn(useToast.prototype, method);
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("BadgeEdit", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
   const badgeStore = useBadgeStore(pinia);
   badgeStore.badgeList = [
     {
@@ -63,6 +52,7 @@ describe("BadgeEdit", () => {
 
   afterAll(() => {
     vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should render correctly", () => {
@@ -119,9 +109,7 @@ describe("BadgeEdit", () => {
     await name.setValue("n");
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    vi.advanceTimersByTime(50);
-    await flushPromises();
-    await badgeEdit.vm.$nextTick();
+    await useUnitTestUtils.flushPromises(badgeEdit);
 
     name = badgeEdit.findComponent(InputText);
     expect(name.exists()).toBe(true);
@@ -137,9 +125,7 @@ describe("BadgeEdit", () => {
     );
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    vi.advanceTimersByTime(50);
-    await flushPromises();
-    await badgeEdit.vm.$nextTick();
+    await useUnitTestUtils.flushPromises(badgeEdit);
 
     description = badgeEdit.findAllComponents(InputText)[1];
     expect(description.exists()).toBe(true);
@@ -154,14 +140,12 @@ describe("BadgeEdit", () => {
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "success",
     });
-    const toastSuccess = mockToast("success");
+    const toastSuccess = useUnitTestUtils.spyOnToastFn("success");
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
     expect(badgeEdit.findComponent(LazyLoaderFade).exists()).toBe(true);
 
-    vi.advanceTimersByTime(50);
-    await flushPromises();
-    await badgeEdit.vm.$nextTick();
+    await useUnitTestUtils.flushPromises(badgeEdit);
 
     expect(toastSuccess).toHaveBeenCalledTimes(1);
     expect(toastSuccess).toHaveBeenCalledWith("success");
@@ -180,15 +164,13 @@ describe("BadgeEdit", () => {
     await badgeEdit.findAllComponents(InputText)[1].setValue("Everything");
 
     const badgeStore = useBadgeStore(pinia);
-    const toastSuccess = mockToast("success");
+    const toastSuccess = useUnitTestUtils.spyOnToastFn("success");
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "success",
     });
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    vi.advanceTimersByTime(50);
-    await flushPromises();
-    await badgeEdit.vm.$nextTick();
+    await useUnitTestUtils.flushPromises(badgeEdit);
 
     expect(badgeStore.edit).toHaveBeenCalledWith({
       id: "123548498",
@@ -209,12 +191,10 @@ describe("BadgeEdit", () => {
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "error",
     });
-    const toastError = mockToast("error");
+    const toastError = useUnitTestUtils.spyOnToastFn("error");
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    vi.advanceTimersByTime(50);
-    await flushPromises();
-    await badgeEdit.vm.$nextTick();
+    await useUnitTestUtils.flushPromises(badgeEdit);
 
     expect(toastError).toHaveBeenCalledTimes(1);
     expect(toastError).toHaveBeenCalledWith("failed");

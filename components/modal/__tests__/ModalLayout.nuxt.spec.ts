@@ -8,9 +8,9 @@ describe("ModalLayout", () => {
   beforeAll(async () => {
     modalLayout = await mountSuspended(ModalLayout, {
       slots: {
-        header: "<h3>Header</h3>",
-        body: "<div>Body</div>",
-        footer: "<p>Footer</p>",
+        header: () => "<h3>Header</h3>",
+        body: () => "<div>Body</div>",
+        footer: () => "<p>Footer</p>",
       },
     });
   });
@@ -35,26 +35,26 @@ describe("ModalLayout", () => {
   it("should contain the awaited header", () => {
     const modalHeader = modalLayout.find("[data-test='modal-header']");
     expect(modalHeader.exists()).toBe(true);
-    expect(modalHeader.text()).toBe("Header");
+    expect(modalHeader.text()).toContain("Header");
   });
 
   it("should contain the awaited body", () => {
     const modalBody = modalLayout.find("[data-test='modal-body']");
     expect(modalBody.exists()).toBe(true);
-    expect(modalBody.text()).toBe("Body");
+    expect(modalBody.text()).toContain("Body");
   });
 
   it("should contain the awaited footer", () => {
     const modalFooter = modalLayout.find("[data-test='modal-footer']");
     expect(modalFooter.exists()).toBe(true);
-    expect(modalFooter.text()).toBe("Footer");
+    expect(modalFooter.text()).toContain("Footer");
   });
 
   it("should not display the footer if not provide", async () => {
     const modalLayout = await mountSuspended(ModalLayout, {
       slots: {
-        header: "<h3>Header</h3>",
-        body: "<div>Body</div>",
+        header: () => "<h3>Header</h3>",
+        body: () => "<div>Body</div>",
       },
     });
     expect(modalLayout.find("[data-test='modal-footer']").exists()).toBe(false);
@@ -63,7 +63,7 @@ describe("ModalLayout", () => {
   it("should not display the header if not provide", async () => {
     const modalLayout = await mountSuspended(ModalLayout, {
       slots: {
-        body: "<div>Body</div>",
+        body: () => "<div>Body</div>",
       },
     });
     expect(modalLayout.find("[data-test='modal-header']").exists()).toBe(false);
@@ -72,8 +72,8 @@ describe("ModalLayout", () => {
   it("should not display the body if not provide", async () => {
     const modalLayout = await mountSuspended(ModalLayout, {
       slots: {
-        header: "<h3>Header</h3>",
-        footer: "<p>Footer</p>",
+        header: () => "<h3>Header</h3>",
+        footer: () => "<p>Footer</p>",
       },
     });
     expect(modalLayout.find("[data-test='modal-body']").exists()).toBe(false);

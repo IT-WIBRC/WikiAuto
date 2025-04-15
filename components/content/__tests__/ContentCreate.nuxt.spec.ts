@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   ContentCreate,
   IconAdd,
@@ -19,42 +19,13 @@ import {
   SelectCustomForContentStatus,
   SelectMultipleForBadge,
 } from "#components";
-import { createTestingPinia } from "@pinia/testing";
 import { CONTENT_STATUS, GenericErrors } from "~/api/types";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
-const badges = [
-  {
-    badge_id: 1,
-    name: "Radio",
-    description: "description",
-  },
-  {
-    badge_id: 2,
-    name: "Radio 2",
-    description: "description",
-  },
-  {
-    badge_id: 3,
-    name: "shoutcast",
-    description: "description",
-  },
-  {
-    badge_id: 4,
-    name: "icecast",
-    description: "description",
-  },
-] as const;
+const badges = useUnitTestUtils.getMockBadges();
 
 describe("ContentCreate", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const badgeSore = useBadgeStore(pinia);
   badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValue({
@@ -193,9 +164,7 @@ describe("ContentCreate", () => {
     it("should display an error message when we want to submit an empty form", async () => {
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentCreate.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentCreate);
 
       expect(contentCreate.findComponent(InputText).props().errorMessage).toBe(
         "_min",
@@ -225,9 +194,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentCreate.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentCreate);
 
         title = contentCreate.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_min");
@@ -247,9 +214,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentCreate.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentCreate);
 
         title = contentCreate.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_max");
@@ -267,9 +232,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentCreate.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentCreate);
 
         explanation = contentCreate.findComponent(InputRichText);
         expect(explanation.props().errorMessage).toBe("_min");
@@ -295,9 +258,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentCreate.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentCreate);
 
         illustration = contentCreate.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_size");
@@ -306,15 +267,16 @@ describe("ContentCreate", () => {
       it("should display an error message when the illustration has a non supported extension", async () => {
         let illustration = contentCreate.findComponent(InputFileImage);
 
-        const fakeFile = new File([""], "fake.ts", { type: "text/ts" });
-        Object.defineProperty(fakeFile, "size", { value: 1024 * 100 });
+        const fakeFile = useUnitTestUtils.createFile({
+          name: "fake.ts",
+          type: "text/pts",
+          size: 1024 * 100,
+        });
 
         await illustration.setValue(fakeFile);
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentCreate.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentCreate);
 
         illustration = contentCreate.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_fileTypes");
@@ -323,7 +285,7 @@ describe("ContentCreate", () => {
 
     it("should display an error message when we receive one from the api", async () => {
       const contentStore = useContentStore(pinia);
-      const toastError = vi.spyOn(useToast.prototype, "error");
+      const toastError = useUnitTestUtils.spyOnToastFn("error");
 
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
@@ -332,8 +294,11 @@ describe("ContentCreate", () => {
         attachTo: document.body,
       });
 
-      const imageTestFile = new File([""], "image.png", { type: "image/png" });
-      Object.defineProperty(imageTestFile, "size", { value: 1024 * 100 });
+      const imageTestFile = useUnitTestUtils.createFile({
+        name: "image.png",
+        type: "image/png",
+        size: 1024 * 100,
+      });
 
       await contentCreate.findComponent(InputFileImage).setValue(imageTestFile);
       await contentCreate.findComponent(InputText).setValue("Driving licence");
@@ -354,9 +319,7 @@ describe("ContentCreate", () => {
       });
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentCreate.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentCreate);
 
       expect(toastError).toHaveBeenCalledTimes(1);
       expect(toastError).toHaveBeenCalledWith(
@@ -385,15 +348,18 @@ describe("ContentCreate", () => {
       vi.useRealTimers();
       vi.useFakeTimers();
       vi.setSystemTime(new Date(2023, 10, 8, 0, 0, 0, 0));
-      imageFile = new File([""], "image.png", { type: "image/png" });
-      Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
+      imageFile = useUnitTestUtils.createFile({
+        name: "image.png",
+        type: "image/png",
+        size: 1024 * 110,
+      });
 
       contentStore = useContentStore(pinia);
       contentStore.create = vi.fn().mockReturnValue({
         status: "success",
       });
 
-      toastSuccess = vi.spyOn(useToast.prototype, "success");
+      toastSuccess = useUnitTestUtils.spyOnToastFn("success");
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
           plugins: [pinia],
@@ -418,9 +384,7 @@ describe("ContentCreate", () => {
 
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentCreate.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentCreate);
 
       expect(toastSuccess).toHaveBeenCalledOnce();
       expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
@@ -456,9 +420,7 @@ describe("ContentCreate", () => {
         .find("[data-cy='create-continue-btn']")
         .trigger("click");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentCreate.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentCreate);
 
       expect(toastSuccess).toHaveBeenCalledTimes(1);
       expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
@@ -474,7 +436,7 @@ describe("ContentCreate", () => {
 
       expect(contentCreate.emitted()).toHaveProperty("created");
 
-      // TODO: Investigate why this is the onely one which does not work
+      // TODO: Investigate why this is the only one which does not work
       // expect(
       //   contentCreate.findComponent(InputFileImage).props().modelValue,
       // ).toEqual(new File([], "", { lastModified: 1699401600000 }));

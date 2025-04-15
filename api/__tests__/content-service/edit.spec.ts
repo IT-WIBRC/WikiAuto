@@ -1,35 +1,45 @@
-import { describe, afterAll, expect, it, vi } from "vitest";
+import { describe, afterAll, expect, it, vi, afterEach } from "vitest";
 import { CONTENT_STATUS } from "~/api/types";
 import { contentService } from "../../contentService";
 
-const mockEditContent = vi.hoisted(() => ({
-  upsert: vi
-    .fn()
-    .mockImplementationOnce(() => ({
-      select: vi.fn(() => ({
-        limit: vi.fn(() => ({
-          single: vi.fn(() => {
-            return {
-              error: null,
-              data: {
-                content_id: "1324165498",
-              },
-            };
-          }),
-        })),
-      })),
-    }))
-    .mockImplementationOnce(() => ({
-      error: null,
-      data: {},
-    })),
+const mockSingle = vi.fn(() => {
+  return {
+    error: null,
+    data: {
+      content_id: "1324165498",
+    },
+  };
+});
+
+const mockLimit = vi.fn(() => ({
+  single: mockSingle,
+}));
+
+const mockSelect = vi.fn(() => ({
+  limit: mockLimit,
+}));
+
+const mockUpsert = vi
+  .fn()
+  .mockImplementationOnce(() => ({
+    select: mockSelect,
+  }))
+  .mockImplementationOnce(() => ({
+    error: null,
+    data: {},
+  }));
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
+    return {
+      upsert: mockUpsert,
+    };
+  }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockEditContent,
-    };
+    return mockFrom;
   },
 }));
 
@@ -37,6 +47,14 @@ describe("Edit content", () => {
   afterAll(() => {
     vi.doUnmock("~/api/supabaseInit");
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    mockFrom.from.mockRestore();
+    mockUpsert.mockRestore();
+    mockSelect.mockRestore();
+    mockLimit.mockRestore();
+    mockSingle.mockRestore();
   });
 
   it("should return the `completed` status when the edition is successful", async () => {
@@ -49,9 +67,12 @@ describe("Edit content", () => {
       userEmail: "user@gmail.com",
       id: "98745611384174184",
     });
-    expect(mockEditContent.upsert).toHaveBeenCalledTimes(2);
 
-    expect(mockEditContent.upsert).toHaveBeenCalledWith({
+    expect(mockFrom.from).toHaveBeenCalledTimes(2);
+    expect(mockFrom.from).toHaveBeenCalledWith("contents");
+
+    expect(mockUpsert).toHaveBeenCalledTimes(2);
+    expect(mockUpsert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation",
       user_email: "user@gmail.com",
@@ -60,7 +81,16 @@ describe("Edit content", () => {
       content_id: "98745611384174184",
     });
 
-    expect(mockEditContent.upsert).toHaveBeenLastCalledWith([
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith("content_id");
+
+    expect(mockSingle).toHaveBeenCalledTimes(1);
+    expect(mockSingle).toHaveBeenCalledWith();
+
+    expect(mockLimit).toHaveBeenCalledTimes(1);
+    expect(mockLimit).toHaveBeenCalledWith(1);
+
+    expect(mockUpsert).toHaveBeenLastCalledWith([
       {
         badge_id: "123546",
         content_id: "1324165498",
@@ -74,24 +104,12 @@ describe("Edit content", () => {
     expect(badgeResponse).toEqual({
       status: "completed",
     });
-    mockEditContent.upsert.mockRestore();
   });
 
   it("should return the `incomplete` status when the edition badges failed", async () => {
-    mockEditContent.upsert
+    mockUpsert
       .mockImplementationOnce(() => ({
-        select: vi.fn(() => ({
-          limit: vi.fn(() => ({
-            single: vi.fn(() => {
-              return {
-                error: null,
-                data: {
-                  content_id: "1324165498",
-                },
-              };
-            }),
-          })),
-        })),
+        select: mockSelect,
       }))
       .mockImplementationOnce(() => ({
         error: {
@@ -111,8 +129,8 @@ describe("Edit content", () => {
       id: "56874165415",
     });
 
-    expect(mockEditContent.upsert).toHaveBeenCalledTimes(2);
-    expect(mockEditContent.upsert).toHaveBeenCalledWith({
+    expect(mockUpsert).toHaveBeenCalledTimes(2);
+    expect(mockUpsert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation0",
       user_email: "user@gmail.com",
@@ -121,7 +139,7 @@ describe("Edit content", () => {
       content_id: "56874165415",
     });
 
-    expect(mockEditContent.upsert).toHaveBeenLastCalledWith([
+    expect(mockUpsert).toHaveBeenLastCalledWith([
       {
         badge_id: "123546",
         content_id: "1324165498",
@@ -135,24 +153,29 @@ describe("Edit content", () => {
         message: "Unknown key",
       },
     });
-    mockEditContent.upsert.mockRestore();
   });
 
   it("should return the `failed` status when the creation has failed", async () => {
-    mockEditContent.upsert.mockImplementationOnce(() => ({
-      select: vi.fn(() => ({
-        limit: vi.fn(() => ({
-          single: vi.fn(() => {
-            return {
-              error: {
-                code: "InvalidToken",
-                message: "Unknown key",
-              },
-              data: null,
-            };
-          }),
-        })),
-      })),
+    const mockSingle = vi.fn(() => {
+      return {
+        error: {
+          code: "InvalidToken",
+          message: "Unknown key",
+        },
+        data: null,
+      };
+    });
+
+    const mockLimit = vi.fn(() => ({
+      single: mockSingle,
+    }));
+
+    const mockSelect = vi.fn(() => ({
+      limit: mockLimit,
+    }));
+
+    mockUpsert.mockImplementationOnce(() => ({
+      select: mockSelect,
     }));
 
     const badgeResponse = await contentService.edit({
@@ -164,9 +187,9 @@ describe("Edit content", () => {
       userEmail: "user@gmail.com",
       id: "56478931254",
     });
-    expect(mockEditContent.upsert).toHaveBeenCalledTimes(1);
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
 
-    expect(mockEditContent.upsert).toHaveBeenCalledWith({
+    expect(mockUpsert).toHaveBeenCalledWith({
       title: "Title",
       explanation: "explanation1",
       user_email: "user@gmail.com",
@@ -182,6 +205,5 @@ describe("Edit content", () => {
         message: "Unknown key",
       },
     });
-    mockEditContent.upsert.mockRestore();
   });
 });

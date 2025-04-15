@@ -1,16 +1,30 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { imageService } from "~/api/imageService";
 
 const imagePath = "0.269874.jpg";
-const mockUploadFile = vi.hoisted(() => ({
-  upload: vi.fn(() => {
+const mockUpload = vi.fn(() => {
+  return {
+    error: null,
+    data: {
+      path: imagePath,
+      fullPath: `/wikiAuto/${imagePath}`,
+      id: "5465654164",
+    },
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: {
-        path: imagePath,
-        fullPath: `/wikiAuto/${imagePath}`,
-        id: "5465654164",
-      },
+      upload: mockUpload,
     };
   }),
 }));
@@ -18,9 +32,7 @@ const mockUploadFile = vi.hoisted(() => ({
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
     return {
-      storage: {
-        from: () => mockUploadFile,
-      },
+      storage: mockFrom,
     };
   },
 }));
@@ -35,6 +47,11 @@ describe("Upload file", () => {
     vi.useRealTimers();
   });
 
+  afterEach(() => {
+    mockFrom.from.mockRestore();
+    mockUpload.mockRestore();
+  });
+
   const imageFile = new File([""], "image.png", {
     type: "image/png",
     lastModified: 1696723200000,
@@ -42,7 +59,15 @@ describe("Upload file", () => {
 
   it("should return an empty array when there is no content", async () => {
     const fileUpload = await imageService.uploadFile(imageFile, imagePath);
-    expect(mockUploadFile.upload).toHaveBeenCalledTimes(1);
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("wikiAuto_images");
+
+    expect(mockUpload).toHaveBeenCalledTimes(1);
+    expect(mockUpload).toHaveBeenCalledWith(imagePath, imageFile, {
+      upsert: true,
+    });
+
     expect(fileUpload).toEqual({
       error: null,
       data: {
@@ -51,15 +76,10 @@ describe("Upload file", () => {
         id: "5465654164",
       },
     });
-    expect(mockUploadFile.upload).toHaveBeenCalledWith(imagePath, imageFile, {
-      upsert: true,
-    });
-    mockUploadFile.upload.mockRestore();
   });
 
   it("should return an error when the upload failed", async () => {
-    mockUploadFile.upload.mockRestore();
-    mockUploadFile.upload.mockImplementation(() => {
+    mockUpload.mockImplementation(() => {
       return {
         error: {
           code: "InvalidToken",
@@ -69,7 +89,12 @@ describe("Upload file", () => {
       };
     });
     const fileUpload = await imageService.uploadFile(imageFile, imagePath);
-    expect(mockUploadFile.upload).toHaveBeenCalledTimes(1);
+
+    expect(mockUpload).toHaveBeenCalledTimes(1);
+    expect(mockUpload).toHaveBeenCalledWith(imagePath, imageFile, {
+      upsert: true,
+    });
+
     expect(fileUpload).toEqual({
       error: {
         code: "InvalidToken",
@@ -77,6 +102,5 @@ describe("Upload file", () => {
       },
       data: null,
     });
-    mockUploadFile.upload.mockRestore();
   });
 });

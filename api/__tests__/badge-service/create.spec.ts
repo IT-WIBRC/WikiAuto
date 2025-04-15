@@ -1,20 +1,24 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { badgeService } from "~/api/badgeService";
 
-const mockCreateBadge = vi.hoisted(() => ({
-  insert: vi.fn(() => {
+const mockInsert = vi.fn(() => {
+  return {
+    error: null,
+    data: [],
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: [],
+      insert: mockInsert,
     };
   }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockCreateBadge,
-    };
+    return mockFrom;
   },
 }));
 
@@ -23,22 +27,34 @@ describe("Create Badge", () => {
     vi.doUnmock("~/api/supabaseInit");
   });
 
+  afterEach(() => {
+    mockInsert.mockRestore();
+    mockFrom.from.mockRestore();
+  });
+
   it("should return an empty array when the creation succeed", async () => {
-    const badgeResponse = await badgeService.create("name", "description");
-    expect(mockCreateBadge.insert).toHaveBeenCalledTimes(1);
-    expect(badgeResponse).toEqual({
-      error: null,
-      data: [],
-    });
-    expect(mockCreateBadge.insert).toHaveBeenCalledWith({
+    const badgeCreationResponse = await badgeService.create(
+      "name",
+      "description",
+    );
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockInsert).toHaveBeenCalledWith({
       name: "name",
       description: "description",
+    });
+
+    expect(badgeCreationResponse).toEqual({
+      error: null,
+      data: [],
     });
   });
 
   it("should return an error when it failed", async () => {
-    mockCreateBadge.insert.mockRestore();
-    mockCreateBadge.insert.mockImplementation(() => {
+    mockInsert.mockImplementation(() => {
       return {
         error: {
           code: "ReferenceError",
@@ -47,15 +63,26 @@ describe("Create Badge", () => {
         data: null,
       };
     });
-    const badgeList = await badgeService.create("name", "description");
-    expect(mockCreateBadge.insert).toHaveBeenCalledTimes(1);
-    expect(badgeList).toEqual({
+    const badgeCreationResponse = await badgeService.create(
+      "name",
+      "description",
+    );
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockInsert).toHaveBeenCalledWith({
+      name: "name",
+      description: "description",
+    });
+
+    expect(badgeCreationResponse).toEqual({
       error: {
         code: "ReferenceError",
         message: "Policy error",
       },
       data: null,
     });
-    mockCreateBadge.insert.mockRestore();
   });
 });

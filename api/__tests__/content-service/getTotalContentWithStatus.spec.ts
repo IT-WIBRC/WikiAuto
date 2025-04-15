@@ -1,23 +1,32 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "~/api/contentService";
+import { CONTENT_STATUS } from "../../types";
 
-const mockSupabaseSelectEq = vi.hoisted(() => ({
-  eq: vi.fn(() => ({
+const mockEq = vi.fn(() => {
+  return {
     error: null,
     data: [],
-    count: 15,
-  })),
+    count: 105,
+  };
+});
+
+const mockSelect = vi.fn(() => {
+  return {
+    eq: mockEq,
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
+    return {
+      select: mockSelect,
+    };
+  }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => {
-        return {
-          select: () => mockSupabaseSelectEq,
-        };
-      },
-    };
+    return mockFrom;
   },
 }));
 
@@ -27,23 +36,39 @@ describe("Content services", () => {
       vi.doUnmock("~/api/supabaseInit");
     });
 
+    afterEach(() => {
+      mockFrom.from.mockRestore();
+      mockSelect.mockRestore();
+      mockEq.mockRestore();
+    });
+
     describe("Case: Validated", () => {
       it("should return the total `validated` content on success", async () => {
         const totalContentResponse =
           await contentService.statistics.getTotalContentWithStatus(
             "VALIDATED",
           );
-        expect(mockSupabaseSelectEq.eq).toHaveBeenCalledTimes(1);
+
+        expect(mockFrom.from).toHaveBeenCalledTimes(1);
+        expect(mockFrom.from).toHaveBeenCalledWith("contents");
+
+        expect(mockSelect).toHaveBeenCalledTimes(1);
+        expect(mockSelect).toHaveBeenCalledWith("content_id, status", {
+          count: "exact",
+        });
+
+        expect(mockEq).toHaveBeenCalledTimes(1);
+        expect(mockEq).toHaveBeenCalledWith("status", CONTENT_STATUS.VALIDATED);
+
         expect(totalContentResponse).toEqual({
           error: null,
           data: [],
-          count: 15,
+          count: 105,
         });
-        mockSupabaseSelectEq.eq.mockRestore();
       });
 
       it("should return an error when the total `validated` content failed", async () => {
-        mockSupabaseSelectEq.eq.mockImplementation(() => {
+        mockEq.mockImplementation(() => {
           return {
             error: {
               code: "InvalidToken",
@@ -57,7 +82,10 @@ describe("Content services", () => {
           await contentService.statistics.getTotalContentWithStatus(
             "VALIDATED",
           );
-        expect(mockSupabaseSelectEq.eq).toHaveBeenCalledTimes(1);
+
+        expect(mockEq).toHaveBeenCalledTimes(1);
+        expect(mockEq).toHaveBeenCalledWith("status", CONTENT_STATUS.VALIDATED);
+
         expect(totalContentResponse).toEqual({
           error: {
             code: "InvalidToken",
@@ -66,7 +94,6 @@ describe("Content services", () => {
           data: null,
           count: 0,
         });
-        mockSupabaseSelectEq.eq.mockRestore();
       });
     });
   });

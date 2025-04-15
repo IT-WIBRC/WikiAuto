@@ -11,7 +11,7 @@ describe("ContentDetailWrapper", () => {
         label: "Title",
       },
       slots: {
-        content: "<div>Content</div>",
+        content: () => "<div>Content</div>",
       },
     });
   });

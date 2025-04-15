@@ -33,10 +33,10 @@ describe("BaseNoData", () => {
         message: "No data created yet!!",
       },
       slots: {
-        icon: "<span>icon changed</span>",
+        icon: () => "<span>icon changed</span>",
       },
     });
 
-    expect(baseNoData.html()).toContain("<span>icon changed</span>");
+    expect(baseNoData.text()).toContain("<span>icon changed</span>");
   });
 });

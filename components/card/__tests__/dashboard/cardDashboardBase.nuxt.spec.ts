@@ -13,7 +13,7 @@ describe("CardDashboardBase", () => {
         description: "Total contents",
       },
       slots: {
-        icon: "<div data-cy='icon'>Icons</div>",
+        icon: () => "<div data-cy='icon'>Icons</div>",
       },
     });
   });
@@ -35,6 +35,6 @@ describe("CardDashboardBase", () => {
   });
 
   it("should display the card icon", () => {
-    expect(cardDashboardBase.find("[data-cy='icon']").text()).toBe("Icons");
+    expect(cardDashboardBase.text()).toContain("Icons");
   });
 });

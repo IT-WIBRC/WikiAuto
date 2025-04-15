@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   BadgeRemovable,
   LazySelectBadgeList,
@@ -19,19 +19,11 @@ import {
   SelectMultipleForBadge,
   BadgeCreate,
 } from "#components";
-import { createTestingPinia } from "@pinia/testing";
 import { BadgeToOptionForList } from "~/components/select/type";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("SelectMultipleForBadge", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
   const badgeSore = useBadgeStore(pinia);
   badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValueOnce({
     status: "success",
@@ -255,8 +247,7 @@ describe("SelectMultipleForBadge", () => {
     await selectMultipleForBadgeCustom.find("input").trigger("focusin");
     await selectMultipleForBadgeCustom.find("input").setValue("ts");
 
-    await vi.advanceTimersByTime(50);
-    await flushPromises();
+    await useUnitTestUtils.flushPromises(selectMultipleForBadgeCustom);
 
     expect(badgeSore.fetchBadgeListForOptions).toHaveBeenCalledTimes(1);
 
@@ -268,7 +259,7 @@ describe("SelectMultipleForBadge", () => {
     badgeList.vm.$emit("openCreationForm");
     await nextTick();
 
-    await vi.advanceTimersByTime(50);
+    await useUnitTestUtils.flushPromises(selectMultipleForBadgeCustom);
     await vi.dynamicImportSettled();
 
     createBadgeForm = selectMultipleForBadgeCustom.findComponent(BadgeCreate);
@@ -278,7 +269,7 @@ describe("SelectMultipleForBadge", () => {
       selectMultipleForBadgeCustom.findComponent(ModalTransition).props().show,
     ).toBe(true);
     createBadgeForm.vm.$emit("closed");
-    await vi.advanceTimersByTime(50);
+    await useUnitTestUtils.flushPromises(selectMultipleForBadgeCustom);
     await nextTick();
 
     expect(
@@ -288,24 +279,7 @@ describe("SelectMultipleForBadge", () => {
   });
 
   describe("With options", () => {
-    const badges = [
-      {
-        badge_id: 1,
-        name: "Radio",
-      },
-      {
-        badge_id: 2,
-        name: "Radio 2",
-      },
-      {
-        badge_id: 3,
-        name: "shoutcast",
-      },
-      {
-        badge_id: 4,
-        name: "icecast",
-      },
-    ];
+    const badges = useUnitTestUtils.getMockBadges();
 
     const options = badges.map((badge) => new BadgeToOptionForList(badge, []));
 

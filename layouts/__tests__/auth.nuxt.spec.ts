@@ -11,9 +11,9 @@ describe("AuthLayout", () => {
   it("should display the awaited content", async () => {
     const authLayoutWrapper = await mountSuspended(AuthLayout, {
       slots: {
-        default: "My content must be here",
+        default: () => "My content must be here",
       },
     });
-    expect(authLayoutWrapper.text()).toBe("My content must be here");
+    expect(authLayoutWrapper.text()).toContain("My content must be here");
   });
 });

@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   ContentEdit,
   IconAdd,
@@ -18,87 +18,16 @@ import {
   SelectCustomForContentStatus,
   SelectMultipleForBadge,
 } from "#components";
-import { createTestingPinia } from "@pinia/testing";
 import { useContentStore } from "~/stores/content.store";
 import { flushPromises } from "@vue/test-utils";
 import { CONTENT_STATUS, GenericErrors } from "~/api/types";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
-const contents = [
-  {
-    content_id: "12345",
-    explanation: "Explanation 0",
-    status: "VALIDATED",
-    title: "My title",
-    user_email: "email@email.com",
-    image: "0.0251.png",
-    badges: [
-      {
-        badge_id: "7b72146b-403c-4837-abe5-5d884af8cc35",
-        description: "description 1",
-        name: "badge-service 1",
-      },
-    ],
-    updated_at: "2024-12-14 18:45:28",
-    created_at: "2024-10-14 18:45:28",
-  },
-  {
-    content_id: "123456",
-    status: "PENDING",
-    explanation: "Explanation 1",
-    title: "My title 2",
-    image: "0.0281.png",
-    user_email: "email2@email.com",
-    badges: [
-      {
-        badge_id: "68330b2f-1555-46cb-bc2f-c99a1afb5923",
-        description: "description 10",
-        name: "badge-service 10",
-      },
-      {
-        badge_id: "29370a87-93e5-4548-b9c5-277701a64893",
-        description: "description 2",
-        name: "badge-service 11",
-      },
-      {
-        badge_id: "b04b94f6-ac53-41bd-a051-cb5f2003f3db",
-        description: "description 3",
-        name: "badge-service 12",
-      },
-    ],
-    updated_at: "2024-12-18 13:25:08",
-    created_at: "2024-11-14 18:45:28",
-  },
-] as const;
-
-const badges = [
-  {
-    badge_id: 1,
-    name: "Radio",
-  },
-  {
-    badge_id: 2,
-    name: "Radio 2",
-  },
-  {
-    badge_id: 3,
-    name: "shoutcast",
-  },
-  {
-    badge_id: 4,
-    name: "icecast",
-  },
-] as const;
+const contents = useUnitTestUtils.getMockContentList();
+const badges = useUnitTestUtils.getMockBadges();
 
 describe("ContentEdit", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const badgeSore = useBadgeStore(pinia);
   badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValue({
@@ -122,11 +51,7 @@ describe("ContentEdit", () => {
   const imageResponseBlob = new Blob(["image.png"], {
     type: "image/png",
   });
-  global.fetch = vi.fn().mockImplementation(() =>
-    Promise.resolve({
-      blob: () => Promise.resolve(imageResponseBlob),
-    }),
-  );
+  useUnitTestUtils.mockFetch(imageResponseBlob);
 
   let contentEdit: VueWrapper;
   beforeAll(async () => {
@@ -145,7 +70,6 @@ describe("ContentEdit", () => {
 
   afterAll(() => {
     vi.clearAllTimers();
-    vi.resetAllMocks();
     vi.clearAllMocks();
   });
 
@@ -172,9 +96,11 @@ describe("ContentEdit", () => {
     expect(illustrationField.exists()).toBe(true);
     expect(illustrationField.props()).toEqual({
       label: "fields.illustration.lbl",
-      modelValue: new File([imageResponseBlob], contents[0].image, {
-        lastModified: 1699401600000,
+      modelValue: useUnitTestUtils.createFile({
+        name: contents[0].image,
         type: "image/png",
+        size: 1024_00,
+        content: imageResponseBlob,
       }),
     });
   });
@@ -249,6 +175,7 @@ describe("ContentEdit", () => {
 
   describe("Error cases", () => {
     beforeEach(async () => {
+      vi.clearAllMocks();
       vi.useRealTimers();
       vi.useFakeTimers();
       contentEdit = await mountSuspended(ContentEdit, {
@@ -260,9 +187,7 @@ describe("ContentEdit", () => {
         },
       });
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentEdit.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentEdit);
     });
 
     afterAll(() => {
@@ -278,9 +203,7 @@ describe("ContentEdit", () => {
       await contentEdit.findComponent(SelectMultipleForBadge).setValue([]);
 
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentEdit.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentEdit);
 
       expect(
         contentEdit.findComponent(InputFileImage).props().errorMessage,
@@ -302,9 +225,7 @@ describe("ContentEdit", () => {
         await title.setValue("test less");
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentEdit.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentEdit);
 
         title = contentEdit.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_min");
@@ -317,9 +238,7 @@ describe("ContentEdit", () => {
         );
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentEdit.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentEdit);
 
         title = contentEdit.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_max");
@@ -332,15 +251,10 @@ describe("ContentEdit", () => {
         await explanation.setValue("test with less");
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentEdit.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentEdit);
 
         explanation = contentEdit.findComponent(InputRichText);
         expect(explanation.props().errorMessage).toBe("_min");
-
-        vi.clearAllMocks();
-        vi.clearAllTimers();
       });
     });
 
@@ -355,36 +269,29 @@ describe("ContentEdit", () => {
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentEdit.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentEdit);
 
         illustration = contentEdit.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_size");
-
-        vi.clearAllMocks();
-        vi.clearAllTimers();
       });
 
       it("should display an error message when the illustration has a non supported extension", async () => {
         let illustration = contentEdit.findComponent(InputFileImage);
 
-        const fakeFile = new File([""], "fake.ts", { type: "text/ts" });
-        Object.defineProperty(fakeFile, "size", { value: 1024 * 100 });
+        const fakeFile = useUnitTestUtils.createFile({
+          name: "fake.ts",
+          type: "text/ts",
+          size: 1024_00,
+        });
 
         await illustration.setValue(fakeFile);
 
         await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
-        vi.advanceTimersByTime(50);
-        await flushPromises();
-        await contentEdit.vm.$nextTick();
+        await useUnitTestUtils.flushPromises(contentEdit);
 
         illustration = contentEdit.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_fileTypes");
-
-        vi.clearAllMocks();
-        vi.clearAllTimers();
       });
     });
 
@@ -401,10 +308,12 @@ describe("ContentEdit", () => {
         attachTo: document.body,
       });
 
-      const imageTestFile = new File([imageResponseBlob], contents[0].image, {
+      const imageTestFile = useUnitTestUtils.createFile({
+        name: contents[0].image,
         type: "image/png",
+        size: 1024_00,
+        content: imageResponseBlob,
       });
-      Object.defineProperty(imageTestFile, "size", { value: 1024 * 100 });
 
       await contentEdit.findComponent(InputFileImage).setValue(imageTestFile);
       await contentEdit.findComponent(InputText).setValue("Driving licence");
@@ -431,12 +340,10 @@ describe("ContentEdit", () => {
         status: "error",
         message: GenericErrors.BAD_REQUEST,
       });
-      const toastError = vi.spyOn(useToast.prototype, "error");
+      const toastError = useUnitTestUtils.spyOnToastFn("error");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentEdit.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentEdit);
 
       expect(toastError).toHaveBeenCalledTimes(1);
       expect(toastError).toHaveBeenCalledWith(
@@ -462,11 +369,14 @@ describe("ContentEdit", () => {
     let contentStore: ReturnType<typeof useContentStore>;
     let imageFile = new File([""], "image.png", { type: "image/png" });
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       vi.useRealTimers();
       vi.useFakeTimers();
-      imageFile = new File([""], "image.png", { type: "image/png" });
-      Object.defineProperty(imageFile, "size", { value: 1024 * 110 });
+      imageFile = useUnitTestUtils.createFile({
+        name: "image.png",
+        type: "image/png",
+        size: 1024 * 110,
+      });
 
       contentStore = useContentStore(pinia);
       contentStore.edit = vi.fn().mockReturnValueOnce({
@@ -482,13 +392,12 @@ describe("ContentEdit", () => {
         },
       });
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentEdit.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentEdit);
     });
 
     afterAll(() => {
       vi.useRealTimers();
+      vi.clearAllMocks();
     });
 
     it("should emit the awaited events when the creation is successful", async () => {
@@ -515,12 +424,10 @@ describe("ContentEdit", () => {
         .findComponent(InputRichText)
         .setValue("<p>This is useful when we cant to deal with police</p>");
 
-      const toastSuccess = vi.spyOn(useToast.prototype, "success");
+      const toastSuccess = useUnitTestUtils.spyOnToastFn("success");
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
-      vi.advanceTimersByTime(50);
-      await flushPromises();
-      await contentEdit.vm.$nextTick();
+      await useUnitTestUtils.flushPromises(contentEdit);
 
       expect(toastSuccess).toHaveBeenCalledOnce();
       expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
