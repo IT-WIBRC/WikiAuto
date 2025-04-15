@@ -18,7 +18,7 @@ vi.mock("nuxt/app", () => {
   };
 });
 
-describe("Aut middleware", () => {
+describe("Auth middleware", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });

@@ -12,12 +12,6 @@ import { createTestingPinia } from "@pinia/testing";
 import { useAuthStore } from "~/stores/auth.store";
 
 describe("MenuSide", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   const { mockNavigateTo } = vi.hoisted(() => {
     return { mockNavigateTo: vi.fn() };
   });
@@ -46,7 +40,7 @@ describe("MenuSide", () => {
   });
 
   afterAll(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should render correctly", () => {

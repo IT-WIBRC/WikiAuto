@@ -1,20 +1,24 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "~/api/contentService";
 
-const mockGetContentList = vi.hoisted(() => ({
-  select: vi.fn(() => {
+const mockSelect = vi.fn(() => {
+  return {
+    error: null,
+    data: [],
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: [],
+      select: mockSelect,
     };
   }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockGetContentList,
-    };
+    return mockFrom;
   },
 }));
 
@@ -23,14 +27,19 @@ describe("Get content List", () => {
     vi.doUnmock("~/api/supabaseInit");
   });
 
+  afterEach(() => {
+    mockSelect.mockRestore();
+    mockFrom.from.mockRestore();
+  });
+
   it("should return an empty array when there is no content", async () => {
     const contentList = await contentService.getContentList();
-    expect(mockGetContentList.select).toHaveBeenCalledTimes(1);
-    expect(contentList).toEqual({
-      error: null,
-      data: [],
-    });
-    expect(mockGetContentList.select).toHaveBeenCalledWith(`
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("contents");
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith(`
       content_id, status, title, user_email, updated_at, image, created_at, explanation,
       badges (
         name,
@@ -38,10 +47,14 @@ describe("Get content List", () => {
         description
       )
     `);
+
+    expect(contentList).toEqual({
+      error: null,
+      data: [],
+    });
   });
 
   it("should return the content list on success", async () => {
-    mockGetContentList.select.mockRestore();
     const result = [
       {
         content_id: "12345",
@@ -56,24 +69,23 @@ describe("Get content List", () => {
         updated_at: "2024-12-14 13:25:08",
       },
     ];
-    mockGetContentList.select.mockImplementation(() => {
+    mockSelect.mockImplementation(() => {
       return {
         error: null,
         data: result,
       };
     });
     const contentList = await contentService.getContentList();
-    expect(mockGetContentList.select).toHaveBeenCalledTimes(1);
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
     expect(contentList).toEqual({
       error: null,
       data: result,
     });
-    mockGetContentList.select.mockRestore();
   });
 
   it("should return an error when failed", async () => {
-    mockGetContentList.select.mockRestore();
-    mockGetContentList.select.mockImplementation(() => {
+    mockSelect.mockImplementation(() => {
       return {
         error: {
           code: "InvalidToken",
@@ -84,7 +96,8 @@ describe("Get content List", () => {
       };
     });
     const contentList = await contentService.getContentList();
-    expect(mockGetContentList.select).toHaveBeenCalledTimes(1);
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
     expect(contentList).toEqual({
       error: {
         code: "InvalidToken",
@@ -93,6 +106,5 @@ describe("Get content List", () => {
       data: null,
       count: 0,
     });
-    mockGetContentList.select.mockRestore();
   });
 });

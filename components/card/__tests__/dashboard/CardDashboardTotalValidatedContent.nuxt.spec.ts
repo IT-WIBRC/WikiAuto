@@ -1,30 +1,21 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   CardDashboardBase,
   CardDashboardTotalValidatedContent,
   IconValidated,
 } from "#components";
-import { createTestingPinia } from "@pinia/testing";
 import { useContentStore } from "~/stores/content.store";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("CardDashboardTotalValidatedContent", () => {
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.fetchTotalContentValidated = vi.fn().mockReturnValue({
     status: "success",
     data: 170,
-  });
-
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
   });
 
   let cardDashboardTotalValidatedContent: VueWrapper;
@@ -40,7 +31,7 @@ describe("CardDashboardTotalValidatedContent", () => {
   });
 
   afterAll(() => {
-    vi.resetModules();
+    vi.clearAllMocks();
   });
 
   it("should render correctly", () => {

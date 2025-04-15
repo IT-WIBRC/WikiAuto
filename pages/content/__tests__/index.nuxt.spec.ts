@@ -10,9 +10,8 @@ import {
 } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { flushPromises } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import ContentList from "../index.vue";
-import { createTestingPinia } from "@pinia/testing";
 import { useContentStore } from "~/stores/content.store";
 import IconBlankContent from "~/components/icon/BlankContent.vue";
 import DataTable, { type DataItem } from "~/components/DataTable.vue";
@@ -26,18 +25,10 @@ import IconKeyboardArrowDown from "~/components/icon/KeyboardArrowDown.vue";
 import ContentRowDetails from "~/components/content/rowDetails.vue";
 import BaseNoData from "~/components/base/no-data.vue";
 import { nextTick } from "vue";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("ContentList", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
   const contentStore = useContentStore(pinia);
   contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
     status: "success",
@@ -96,38 +87,7 @@ describe("ContentList", () => {
   });
 
   describe("With data", () => {
-    const contents = [
-      {
-        content_id: "12345",
-        status: "Validated",
-        title: "My title",
-        user_email: "email@email.com",
-        badges: [
-          {
-            name: "badge-service 1",
-          },
-        ],
-        updated_at: "2024-12-14 18:45:28",
-      },
-      {
-        content_id: "123456",
-        status: "Validated",
-        title: "My title 2",
-        user_email: "email2@email.com",
-        badges: [
-          {
-            name: "badge-service 10",
-          },
-          {
-            name: "badge-service 11",
-          },
-          {
-            name: "badge-service 12",
-          },
-        ],
-        updated_at: "2024-12-18 13:25:08",
-      },
-    ];
+    const contents = useUnitTestUtils.getMockContentList();
     const mountWithData = async (isShallowMontage = true): Promise<void> => {
       contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
         status: "success",

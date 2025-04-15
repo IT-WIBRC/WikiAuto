@@ -7,8 +7,7 @@ import {
   vi,
   beforeEach,
 } from "vitest";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
-import { createTestingPinia } from "@pinia/testing";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { useContentStore } from "~/stores/content.store";
 import {
   Badge,
@@ -23,66 +22,13 @@ import {
   ModalStatusUpdate,
 } from "#components";
 import type { VueWrapper } from "@vue/test-utils";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
+
+const contents = useUnitTestUtils.getMockContentList();
 
 describe("ContentRowDetails", () => {
   let contentRowDetailsWrapper: VueWrapper;
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
-  const contents = [
-    {
-      content_id: "12345",
-      explanation: "Explanation 0",
-      status: "VALIDATED",
-      title: "My title",
-      user_email: "email@email.com",
-      image: "0.0251.png",
-      badges: [
-        {
-          badge_id: "7b72146b-403c-4837-abe5-5d884af8cc35",
-          description: "description 1",
-          name: "badge-service 1",
-        },
-      ],
-      updated_at: "2024-12-14 18:45:28",
-      created_at: "2024-10-14 18:45:28",
-    },
-    {
-      content_id: "123456",
-      status: "PENDING",
-      explanation: "Explanation 1",
-      title: "My title 2",
-      image: "0.0281.png",
-      user_email: "email2@email.com",
-      badges: [
-        {
-          badge_id: "68330b2f-1555-46cb-bc2f-c99a1afb5923",
-          description: "description 10",
-          name: "badge-service 10",
-        },
-        {
-          badge_id: "29370a87-93e5-4548-b9c5-277701a64893",
-          description: "description 2",
-          name: "badge-service 11",
-        },
-        {
-          badge_id: "b04b94f6-ac53-41bd-a051-cb5f2003f3db",
-          description: "description 3",
-          name: "badge-service 12",
-        },
-      ],
-      updated_at: "2024-12-18 13:25:08",
-      created_at: "2024-11-14 18:45:28",
-    },
-  ] as const;
-
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.contentList = contents;

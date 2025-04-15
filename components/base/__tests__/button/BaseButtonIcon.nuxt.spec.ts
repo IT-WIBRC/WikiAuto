@@ -11,7 +11,7 @@ describe("BaseButtonIcon", () => {
         text: "Add content",
       },
       slots: {
-        icon: "icon",
+        icon: () => "icon",
       },
     });
   });

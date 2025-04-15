@@ -5,22 +5,14 @@ import {
   ModalStatusUpdate,
   SelectCustomForContentStatus,
 } from "#components";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { CONTENT_STATUS } from "~/api/types";
-import { createTestingPinia } from "@pinia/testing";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("ModalStatusUpdate", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   let modalStatusUpdate: VueWrapper;
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
+
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.editStatus = vi.fn().mockReturnValue({
@@ -29,7 +21,6 @@ describe("ModalStatusUpdate", () => {
   beforeAll(async () => {
     modalStatusUpdate = await mountSuspended(ModalStatusUpdate, {
       props: {
-        isOpened: true,
         contentId: "135246546",
         currentStatus: CONTENT_STATUS.PENDING,
       },
@@ -119,7 +110,6 @@ describe("ModalStatusUpdate", () => {
 
     modalStatusUpdate = await mountSuspended(ModalStatusUpdate, {
       props: {
-        isOpened: true,
         contentId: "135246546",
         currentStatus: CONTENT_STATUS.PENDING,
       },

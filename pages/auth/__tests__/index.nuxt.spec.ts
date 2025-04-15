@@ -11,12 +11,6 @@ import { useAuthStore } from "~/stores/auth.store";
 import { useUserStore } from "~/stores/user.store";
 
 describe("AuthPage", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   const { mockNavigateTo } = vi.hoisted(() => {
     return { mockNavigateTo: vi.fn() };
   });

@@ -1,14 +1,20 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { imageService } from "~/api/imageService";
 
 const imagePath = "http://localhost/wikiAuto/0.269874.jpg";
-const mockGetPublicUrlFile = vi.hoisted(() => ({
-  getPublicUrl: vi.fn(() => {
+const mockGetPublicUrl = vi.fn(() => {
+  return {
+    error: null,
+    data: {
+      publicUrl: imagePath,
+    },
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: {
-        publicUrl: imagePath,
-      },
+      getPublicUrl: mockGetPublicUrl,
     };
   }),
 }));
@@ -16,9 +22,7 @@ const mockGetPublicUrlFile = vi.hoisted(() => ({
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
     return {
-      storage: {
-        from: () => mockGetPublicUrlFile,
-      },
+      storage: mockFrom,
     };
   },
 }));
@@ -28,24 +32,30 @@ describe("Get public url file", () => {
     vi.doUnmock("~/api/supabaseInit");
   });
 
+  afterEach(() => {
+    mockFrom.from.mockRestore();
+    mockGetPublicUrl.mockRestore();
+  });
+
   it("should return the public URL from image path", async () => {
     const fileUpload = await imageService.getPublicUrlFrom("0.269874.jpg");
-    expect(mockGetPublicUrlFile.getPublicUrl).toHaveBeenCalledTimes(1);
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("wikiAuto_images");
+
+    expect(mockGetPublicUrl).toHaveBeenCalledTimes(1);
+    expect(mockGetPublicUrl).toHaveBeenCalledWith("0.269874.jpg");
+
     expect(fileUpload).toEqual({
       error: null,
       data: {
         publicUrl: imagePath,
       },
     });
-    expect(mockGetPublicUrlFile.getPublicUrl).toHaveBeenCalledWith(
-      "0.269874.jpg",
-    );
-    mockGetPublicUrlFile.getPublicUrl.mockRestore();
   });
 
   it("should return an error when the image is not recognize", async () => {
-    mockGetPublicUrlFile.getPublicUrl.mockRestore();
-    mockGetPublicUrlFile.getPublicUrl.mockImplementation(() => {
+    mockGetPublicUrl.mockImplementation(() => {
       return {
         error: {
           code: "InvalidToken",
@@ -55,7 +65,10 @@ describe("Get public url file", () => {
       };
     });
     const fileUpload = await imageService.getPublicUrlFrom("0.269874.jpg");
-    expect(mockGetPublicUrlFile.getPublicUrl).toHaveBeenCalledTimes(1);
+
+    expect(mockGetPublicUrl).toHaveBeenCalledTimes(1);
+    expect(mockGetPublicUrl).toHaveBeenCalledWith("0.269874.jpg");
+
     expect(fileUpload).toEqual({
       error: {
         code: "InvalidToken",
@@ -63,6 +76,5 @@ describe("Get public url file", () => {
       },
       data: null,
     });
-    mockGetPublicUrlFile.getPublicUrl.mockRestore();
   });
 });

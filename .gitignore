@@ -9,6 +9,9 @@ dist
 #test outputs
 coverage
 
+# test mock
+__mocks__
+
 # Node dependencies
 node_modules
 

@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { Badge, BadgeList } from "#components";
+import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("BadgeList", () => {
   let badgeListWrapper: VueWrapper;
@@ -64,7 +65,7 @@ describe("BadgeList", () => {
 
   describe("Extra Large size (XL)", () => {
     beforeEach(() => {
-      vi.spyOn(window, "innerWidth", "get").mockReturnValueOnce(1280);
+      useUnitTestUtils.spyOnScreenSize(1280);
     });
 
     afterAll(() => {
@@ -102,7 +103,7 @@ describe("BadgeList", () => {
 
   describe("More than Extra Large size (2XL, ...)", () => {
     beforeEach(() => {
-      vi.spyOn(window, "innerWidth", "get").mockReturnValueOnce(1536);
+      useUnitTestUtils.spyOnScreenSize(1536);
     });
 
     afterAll(() => {

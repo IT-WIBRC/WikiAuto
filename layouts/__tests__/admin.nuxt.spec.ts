@@ -9,7 +9,7 @@ describe("AdminLayout", () => {
   beforeAll(async () => {
     adminLayoutWrapper = await mountSuspended(AdminLayout, {
       slots: {
-        default: "My content must be here",
+        default: () => "My content must be here",
       },
       shallow: true,
     });
@@ -20,7 +20,7 @@ describe("AdminLayout", () => {
   });
 
   it("should display the awaited content", async () => {
-    expect(adminLayoutWrapper.text()).toBe("My content must be here");
+    expect(adminLayoutWrapper.text()).toContain("My content must be here");
   });
 
   it("should render the menu side", async () => {

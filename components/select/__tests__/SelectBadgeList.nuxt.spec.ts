@@ -1,17 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { LazyLoaderFade, SelectBadgeList } from "#components";
 import { BadgeToOptionForList } from "~/components/select/type";
 
 describe("SelectBadgeList", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   let selectBadgeList: VueWrapper;
+
   beforeEach(async () => {
     selectBadgeList = await mountSuspended(SelectBadgeList, {
       props: {

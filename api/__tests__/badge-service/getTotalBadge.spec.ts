@@ -1,21 +1,25 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { badgeService } from "~/api/badgeService";
 
-const mockSupabaseSelect = vi.hoisted(() => ({
-  select: vi.fn(() => {
+const mockSelect = vi.fn(() => {
+  return {
+    error: null,
+    data: [],
+    count: 15,
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: [],
-      count: 15,
+      select: mockSelect,
     };
   }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockSupabaseSelect,
-    };
+    return mockFrom;
   },
 }));
 
@@ -25,19 +29,31 @@ describe("Badge services", () => {
       vi.doUnmock("~/api/supabaseInit");
     });
 
+    afterEach(() => {
+      mockSelect.mockRestore();
+      mockFrom.from.mockRestore();
+    });
+
     it("should return the total badges on success", async () => {
       const totalBadgeResponse = await badgeService.statistics.getTotalBadge();
-      expect(mockSupabaseSelect.select).toHaveBeenCalledTimes(1);
+
+      expect(mockFrom.from).toHaveBeenCalledTimes(1);
+      expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+      expect(mockSelect).toHaveBeenCalledTimes(1);
+      expect(mockSelect).toHaveBeenCalledWith("badge_id", {
+        count: "exact",
+      });
+
       expect(totalBadgeResponse).toEqual({
         error: null,
         data: [],
         count: 15,
       });
-      mockSupabaseSelect.select.mockRestore();
     });
 
     it("should return an error when failed", async () => {
-      mockSupabaseSelect.select.mockImplementation(() => {
+      mockSelect.mockImplementation(() => {
         return {
           error: {
             code: "InvalidToken",
@@ -48,7 +64,14 @@ describe("Badge services", () => {
         };
       });
       const totalBadgeResponse = await badgeService.statistics.getTotalBadge();
-      expect(mockSupabaseSelect.select).toHaveBeenCalledTimes(1);
+      expect(mockFrom.from).toHaveBeenCalledTimes(1);
+      expect(mockFrom.from).toHaveBeenCalledWith("badges");
+
+      expect(mockSelect).toHaveBeenCalledTimes(1);
+      expect(mockSelect).toHaveBeenCalledWith("badge_id", {
+        count: "exact",
+      });
+
       expect(totalBadgeResponse).toEqual({
         error: {
           code: "InvalidToken",
@@ -57,7 +80,6 @@ describe("Badge services", () => {
         data: null,
         count: 0,
       });
-      mockSupabaseSelect.select.mockRestore();
     });
   });
 });

@@ -1,21 +1,25 @@
-import { afterAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "~/api/contentService";
 
-const mockSupabaseSelect = vi.hoisted(() => ({
-  select: vi.fn(() => {
+const mockSelect = vi.fn(() => {
+  return {
+    error: null,
+    data: [],
+    count: 20,
+  };
+});
+
+const mockFrom = vi.hoisted(() => ({
+  from: vi.fn(() => {
     return {
-      error: null,
-      data: [],
-      count: 15,
+      select: mockSelect,
     };
   }),
 }));
 
 vi.mock("~/api/supabaseInit", () => ({
   default: () => {
-    return {
-      from: () => mockSupabaseSelect,
-    };
+    return mockFrom;
   },
 }));
 
@@ -25,20 +29,32 @@ describe("Content services", () => {
       vi.doUnmock("~/api/supabaseInit");
     });
 
+    afterEach(() => {
+      mockSelect.mockRestore();
+      mockFrom.from.mockRestore();
+    });
+
     it("should return the total content on success", async () => {
       const totalContentResponse =
         await contentService.statistics.getTotalContent();
-      expect(mockSupabaseSelect.select).toHaveBeenCalledTimes(1);
+
+      expect(mockFrom.from).toHaveBeenCalledTimes(1);
+      expect(mockFrom.from).toHaveBeenCalledWith("contents");
+
+      expect(mockSelect).toHaveBeenCalledTimes(1);
+      expect(mockSelect).toHaveBeenCalledWith("content_id", {
+        count: "exact",
+      });
+
       expect(totalContentResponse).toEqual({
         error: null,
         data: [],
-        count: 15,
+        count: 20,
       });
-      mockSupabaseSelect.select.mockRestore();
     });
 
     it("should return an error when failed", async () => {
-      mockSupabaseSelect.select.mockImplementation(() => {
+      mockSelect.mockImplementation(() => {
         return {
           error: {
             code: "InvalidToken",
@@ -50,7 +66,12 @@ describe("Content services", () => {
       });
       const totalContentResponse =
         await contentService.statistics.getTotalContent();
-      expect(mockSupabaseSelect.select).toHaveBeenCalledTimes(1);
+
+      expect(mockSelect).toHaveBeenCalledTimes(1);
+      expect(mockSelect).toHaveBeenCalledWith("content_id", {
+        count: "exact",
+      });
+
       expect(totalContentResponse).toEqual({
         error: {
           code: "InvalidToken",
@@ -59,7 +80,6 @@ describe("Content services", () => {
         data: null,
         count: 0,
       });
-      mockSupabaseSelect.select.mockRestore();
     });
   });
 });

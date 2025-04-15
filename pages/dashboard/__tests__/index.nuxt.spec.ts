@@ -1,18 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import Dashboard from "../index.vue";
 import CardDashboardTotalContent from "~/components/card/dashboard/TotalContent.vue";
 import CardDashboardTotalValidatedContent from "~/components/card/dashboard/TotalValidatedContent.vue";
 import CardDashboardTotalBadge from "~/components/card/dashboard/TotalBadge.vue";
 
 describe("Dashboard", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   let dashboard: VueWrapper;
   beforeAll(async () => {
     dashboard = await mountSuspended(Dashboard, {

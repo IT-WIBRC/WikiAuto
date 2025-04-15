@@ -1,17 +1,12 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { SelectCustomForContentStatus } from "#components";
 import { CONTENT_STATUS } from "~/api/types";
 
 describe("CustomForContentStatus", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
-
   let selectCustomForContentStatus: VueWrapper;
+
   beforeAll(async () => {
     selectCustomForContentStatus = await mountSuspended(
       SelectCustomForContentStatus,

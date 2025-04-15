@@ -10,9 +10,8 @@ import {
 } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { flushPromises } from "@vue/test-utils";
-import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
+import { mountSuspended } from "@nuxt/test-utils/runtime";
 import BadgeList from "../index.vue";
-import { createTestingPinia } from "@pinia/testing";
 import { useBadgeStore } from "~/stores/badge.store";
 import useToast from "~/utils/use-toast";
 import IconBadge from "~/components/icon/badge.vue";
@@ -22,18 +21,11 @@ import CardBadge from "~/components/card/badge.vue";
 import BadgeCreate from "~/components/badge/create.vue";
 import BadgeEdit from "~/components/badge/edit.vue";
 import { nextTick } from "vue";
+import useUnitTestUtils from "../../../utils/useUnitTestUtils";
 
 describe("BadgeList", () => {
-  mockNuxtImport("useI18n", () => {
-    return () => ({
-      t: vi.fn((msg: string) => msg),
-    });
-  });
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
-  const pinia = createTestingPinia({
-    createSpy: vi.fn,
-    stubActions: true,
-  });
   const badgeStore = useBadgeStore(pinia);
   badgeStore.fetchBadgeList = vi.fn().mockResolvedValueOnce({
     status: "success",
