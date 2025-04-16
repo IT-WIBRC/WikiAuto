@@ -32,7 +32,7 @@
         <BaseButtonIcon
           :text="t('edit_btn')"
           class="w-full justify-center"
-          :disabled="isEditionProcessing"
+          :disabled="isEditionProcessing || !canEdit"
           data-cy="edit-badge-btn"
           @click.stop="edit"
         >
@@ -106,16 +106,33 @@ const { value: title } = useField("title");
 const { value: description } = useField("description");
 
 const toast = new useToast();
+const currentBadge = ref({
+  name: "",
+  description: "",
+});
 onBeforeMount(async () => {
-  const currentBadge = findBadgeInTheList();
-  if (!currentBadge) {
+  currentBadge.value = findBadgeInTheList();
+  if (!currentBadge.value) {
     closeModal();
     toast.error(`No data with id ${props.id}`);
     return;
   }
 
-  title.value = currentBadge.name;
-  description.value = currentBadge.description;
+  title.value = currentBadge.value.name;
+  description.value = currentBadge.value.description;
+});
+
+const canEdit = computed<boolean>(() => {
+  return (
+    JSON.stringify({
+      title: useString.substituteSpacesBy(currentBadge.value.name),
+      description: useString.substituteSpacesBy(currentBadge.value.description),
+    }) !==
+    JSON.stringify({
+      title: useString.substituteSpacesBy(title.value),
+      description: useString.substituteSpacesBy(description.value),
+    })
+  );
 });
 
 const isEditionProcessing = shallowRef(false);

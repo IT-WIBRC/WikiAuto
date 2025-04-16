@@ -110,22 +110,22 @@ export default (() => {
   const getMockBadges = () => {
     return [
       {
-        badge_id: 1,
+        badge_id: "1",
         name: "Radio",
         description: "description",
       },
       {
-        badge_id: 2,
+        badge_id: "2",
         name: "Radio 2",
         description: "description",
       },
       {
-        badge_id: 3,
+        badge_id: "3",
         name: "shoutcast",
         description: "description",
       },
       {
-        badge_id: 4,
+        badge_id: "4",
         name: "icecast",
         description: "description",
       },

@@ -157,6 +157,7 @@ describe("ContentEdit", () => {
   it("should render the button to edit the content", () => {
     const createContentBtn = contentEdit.find("[data-cy='edit-btn']");
     expect(createContentBtn.exists()).toBe(true);
+    expect(createContentBtn.element.disabled).toBe(true);
     expect(createContentBtn.text()).toBe("button.edit");
   });
 
@@ -307,6 +308,7 @@ describe("ContentEdit", () => {
         },
         attachTo: document.body,
       });
+      await useUnitTestUtils.flushPromises(contentEdit);
 
       const imageTestFile = useUnitTestUtils.createFile({
         name: contents[0].image,
@@ -341,6 +343,7 @@ describe("ContentEdit", () => {
         message: GenericErrors.BAD_REQUEST,
       });
       const toastError = useUnitTestUtils.spyOnToastFn("error");
+
       await contentEdit.find("[data-cy='edit-btn']").trigger("submit");
 
       await useUnitTestUtils.flushPromises(contentEdit);

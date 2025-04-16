@@ -73,7 +73,7 @@
             type="submit"
             class="w-full relative bg-primary-text cursor-pointer font-semibold text-white text-base border h-12 rounded-lg disabled:bg-gray-600/60 disabled:text-white disabled:cursor-not-allowed"
             data-cy="edit-btn"
-            :disabled="isEditionLoading"
+            :disabled="isEditionLoading || !canEdit"
           >
             <LoaderFade
               v-if="isEditionLoading"
@@ -213,6 +213,27 @@ onBeforeMount(async () => {
   badges.value = currentContent.value.badges;
   status.value = currentContent.value.status;
   illustration.value = currentContent.value.illustration;
+});
+
+const canEdit = computed<boolean>(() => {
+  const baseContent = {
+    title: useString.substituteSpacesBy(currentContent.value.title),
+    status: useString.substituteSpacesBy(currentContent.value.status),
+    badges: currentContent.value.badges,
+    explanation: useString.substituteSpacesBy(currentContent.value.explanation),
+    illustration: currentContent.value.illustration,
+  };
+
+  return (
+    JSON.stringify(baseContent) !==
+    JSON.stringify({
+      title: useString.substituteSpacesBy(title.value),
+      status: useString.substituteSpacesBy(status.value),
+      badges: badges.value,
+      explanation: useString.substituteSpacesBy(explanation.value),
+      illustration: illustration.value,
+    })
+  );
 });
 
 const handleFormValidation = async (): Promise<boolean> => {

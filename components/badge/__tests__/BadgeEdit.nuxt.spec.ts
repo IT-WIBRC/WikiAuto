@@ -25,20 +25,14 @@ describe("BadgeEdit", () => {
   const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const badgeStore = useBadgeStore(pinia);
-  badgeStore.badgeList = [
-    {
-      badge_id: "123548498",
-      name: "name",
-      description: "description",
-    },
-  ];
+  badgeStore.badgeList = useUnitTestUtils.getMockBadges();
 
   let badgeEdit: VueWrapper;
   beforeEach(async () => {
     vi.useFakeTimers();
     badgeEdit = await mountSuspended(BadgeEdit, {
       props: {
-        id: "123548498",
+        id: "1",
       },
       global: {
         plugins: [pinia],
@@ -51,7 +45,7 @@ describe("BadgeEdit", () => {
   });
 
   afterAll(() => {
-    vi.resetAllMocks();
+    vi.clearAllTimers();
     vi.clearAllMocks();
   });
 
@@ -66,14 +60,14 @@ describe("BadgeEdit", () => {
   it("should render the awaited preview", () => {
     const preview = badgeEdit.findComponent(Badge);
     expect(preview.exists()).toBe(true);
-    expect(preview.props().text).toBe("name");
+    expect(preview.props().text).toBe("Radio");
   });
 
   it("should render the field to fill the name with the default value present on the props `name`", () => {
     const name = badgeEdit.findComponent(InputText);
     expect(name.exists()).toBe(true);
     expect(name.props()).toEqual({
-      modelValue: "name",
+      modelValue: "Radio",
       placeholder: "name.ph",
       label: "name.lbl",
       limitCharacter: 30,
@@ -99,6 +93,7 @@ describe("BadgeEdit", () => {
   it("should display the button to edit", () => {
     const createButton = badgeEdit.findComponent(BaseButtonIcon);
     expect(createButton.exists()).toBe(true);
+    expect(createButton.element.disabled).toBe(true);
     expect(createButton.props().text).toBe("edit_btn");
     expect(createButton.findComponent(LazyIconTheme).exists()).toBe(true);
   });
@@ -153,7 +148,7 @@ describe("BadgeEdit", () => {
     expect(badgeEdit.emitted()).toHaveProperty("closed");
 
     expect(badgeStore.edit).toHaveBeenCalledWith({
-      id: "123548498",
+      id: "1",
       name: "js",
       description: "",
     });
@@ -173,7 +168,7 @@ describe("BadgeEdit", () => {
     await useUnitTestUtils.flushPromises(badgeEdit);
 
     expect(badgeStore.edit).toHaveBeenCalledWith({
-      id: "123548498",
+      id: "1",
       name: "js",
       description: "Everything",
     });
@@ -199,7 +194,7 @@ describe("BadgeEdit", () => {
     expect(toastError).toHaveBeenCalledTimes(1);
     expect(toastError).toHaveBeenCalledWith("failed");
     expect(badgeStore.edit).toHaveBeenCalledWith({
-      id: "123548498",
+      id: "1",
       name: "js",
       description: "Everything",
     });
