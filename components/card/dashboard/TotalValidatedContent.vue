@@ -17,6 +17,11 @@
   </div>
 </template>
 <script setup lang="ts">
+import {
+  realtimeObserver,
+  type ListenEvent,
+} from "~/api/realtime/realtimeObserver";
+
 const { t } = useI18n({
   useScope: "local",
   messages: {
@@ -29,20 +34,47 @@ const { t } = useI18n({
   },
 });
 
-const totalValidatedContent = ref("0");
+const totalValidatedContent = ref(0);
 const isTotalValidatedContentLoading = ref(false);
 const getTotalValidatedContent = async (): Promise<void> => {
   isTotalValidatedContentLoading.value = true;
   const totalValidatedContentErrorOrValue =
     await useContentStore().fetchTotalContentValidated();
   if (totalValidatedContentErrorOrValue.status === "success") {
-    totalValidatedContent.value =
-      totalValidatedContentErrorOrValue.data.toString();
+    totalValidatedContent.value = totalValidatedContentErrorOrValue.data;
   }
   isTotalValidatedContentLoading.value = false;
 };
 
+const triggeringEvents: ListenEvent[] = ["INSERT", "UPDATE"];
+const handler = ({ eventType, new: newRow, old: oldRow }): void => {
+  if (eventType === "INSERT" && newRow?.status === "VALIDATED") {
+    totalValidatedContent.value++;
+  }
+  if (eventType === "UPDATE") {
+    if (oldRow?.status !== "VALIDATED" && newRow?.status === "VALIDATED") {
+      totalValidatedContent.value++;
+    }
+    if (oldRow?.status === "VALIDATED" && newRow?.status !== "VALIDATED") {
+      totalValidatedContent.value--;
+    }
+  }
+};
+
 onBeforeMount(async () => {
   await getTotalValidatedContent();
+  realtimeObserver.subscribe({
+    forEvents: [...triggeringEvents],
+    onTable: "contents",
+    withHandler: handler,
+  });
+});
+
+onBeforeUnmount(async () => {
+  await realtimeObserver.unsubscribe({
+    forEvents: [...triggeringEvents],
+    fromTable: "contents",
+    withHandler: handler,
+  });
 });
 </script>

@@ -34,7 +34,8 @@ export default defineNuxtConfig({
     autoImports: true,
   },
   alias: {
-    "@": resolve(__dirname, "/"),
+    "~": resolve(__dirname, "."),
+    "@": resolve(__dirname, "."),
   },
   css: ["~/assets/css/main.css"],
   postcss: {

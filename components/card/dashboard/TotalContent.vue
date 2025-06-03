@@ -13,6 +13,11 @@
   </div>
 </template>
 <script setup lang="ts">
+import {
+  realtimeObserver,
+  type ListenEvent,
+} from "~/api/realtime/realtimeObserver";
+
 const { t } = useI18n({
   useScope: "local",
   messages: {
@@ -25,19 +30,44 @@ const { t } = useI18n({
   },
 });
 
-const totalContent = ref("0");
+const totalContent = ref(0);
 
 const isTotalContentLoading = ref(false);
 const getTotalContent = async (): Promise<void> => {
   isTotalContentLoading.value = true;
   const totalContentErrorOrValue = await useContentStore().fetchTotalContent();
   if (totalContentErrorOrValue.status === "success") {
-    totalContent.value = totalContentErrorOrValue.data.toString();
+    totalContent.value = totalContentErrorOrValue.data;
   }
   isTotalContentLoading.value = false;
 };
 
+const triggeringEvents: ListenEvent[] = ["INSERT", "DELETE"] as const;
+const handler = ({ eventType }): void => {
+  switch (eventType) {
+    case "INSERT":
+      totalContent.value++;
+      break;
+    case "DELETE":
+      totalContent.value--;
+      break;
+  }
+};
+
 onBeforeMount(async () => {
   await getTotalContent();
+  realtimeObserver.subscribe({
+    forEvents: [...triggeringEvents],
+    onTable: "contents",
+    withHandler: handler,
+  });
+});
+
+onBeforeUnmount(async () => {
+  await realtimeObserver.unsubscribe({
+    forEvents: [...triggeringEvents],
+    fromTable: "contents",
+    withHandler: handler,
+  });
 });
 </script>

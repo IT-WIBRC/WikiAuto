@@ -18,7 +18,7 @@
 </template>
 <script setup lang="ts">
 defineProps<{
-  value: string;
+  value: number;
   description: string;
 }>();
 </script>

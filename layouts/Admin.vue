@@ -9,3 +9,10 @@
     </main>
   </div>
 </template>
+<script type="ts" setup>
+import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+
+onBeforeMount(() => {
+  realtimeObserver.unsubscribeToAll();
+});
+</script>
