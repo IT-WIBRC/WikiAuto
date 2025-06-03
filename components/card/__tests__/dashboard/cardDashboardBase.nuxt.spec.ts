@@ -9,7 +9,7 @@ describe("CardDashboardBase", () => {
     vi.spyOn(console, "warn");
     cardDashboardBase = await mountSuspended(CardDashboardBase, {
       props: {
-        value: "178+",
+        value: 178,
         description: "Total contents",
       },
       slots: {
@@ -25,7 +25,7 @@ describe("CardDashboardBase", () => {
   it("should display the card value", () => {
     expect(
       cardDashboardBase.find("[data-cy='dashboard-card-value']").text(),
-    ).toBe("178+");
+    ).toBe("178");
   });
 
   it("should display the card description", () => {

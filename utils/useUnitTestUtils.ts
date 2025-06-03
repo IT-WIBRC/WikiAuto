@@ -14,10 +14,14 @@ export default (() => {
     );
   };
 
-  const flushPromises = async (wrapper: VueWrapper) => {
-    vi.advanceTimersByTime(50);
-    await vueFlushPromises();
-    await wrapper.vm.$nextTick();
+  const flushPromises = async (wrapper?: VueWrapper) => {
+    if (wrapper) {
+      vi.advanceTimersByTime(50);
+      await vueFlushPromises();
+      await wrapper.vm.$nextTick();
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
   };
 
   const spyOnToastFn = (

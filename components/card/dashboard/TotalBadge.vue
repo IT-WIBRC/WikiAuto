@@ -13,6 +13,8 @@
   </div>
 </template>
 <script setup lang="ts">
+import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+
 const { t } = useI18n({
   useScope: "local",
   messages: {
@@ -25,19 +27,43 @@ const { t } = useI18n({
   },
 });
 
-const totalBadges = ref("0");
+const totalBadges = ref(0);
 
 const isTotalBadgeLoading = ref(false);
 const getTotalBadge = async (): Promise<void> => {
   isTotalBadgeLoading.value = true;
   const totalBadgeErrorOrValue = await useBadgeStore().fetchTotalBadges();
   if (totalBadgeErrorOrValue.status === "success") {
-    totalBadges.value = totalBadgeErrorOrValue.data.toString();
+    totalBadges.value = totalBadgeErrorOrValue.data;
   }
   isTotalBadgeLoading.value = false;
 };
 
+const handler = ({ eventType }): void => {
+  switch (eventType) {
+    case "INSERT":
+      totalBadges.value++;
+      break;
+    case "DELETE":
+      totalBadges.value--;
+      break;
+  }
+};
+
 onBeforeMount(async () => {
   await getTotalBadge();
+  realtimeObserver.subscribe({
+    forEvents: ["INSERT", "DELETE"],
+    onTable: "badges",
+    withHandler: handler,
+  });
+});
+
+onBeforeUnmount(async () => {
+  await realtimeObserver.unsubscribe({
+    forEvents: ["INSERT", "DELETE"],
+    fromTable: "badges",
+    withHandler: handler,
+  });
 });
 </script>
