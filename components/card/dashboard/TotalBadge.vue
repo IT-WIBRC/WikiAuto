@@ -1,7 +1,13 @@
 <template>
   <div class="flex">
     <SkeletonDashboardCard v-if="isTotalBadgeLoading" />
-    <CardDashboardBase v-else :value="totalBadges" :description="t('total')">
+    <CardDashboardBase
+      v-else
+      :value="totalBadges"
+      :description="t('total')"
+      :link="badgeListRoute"
+      :link-label="t('viewAllBadges')"
+    >
       <template #icon>
         <div
           class="rounded-full h-10 w-10 2xl:h-12 2xl:w-12 flex items-center justify-center bg-primary/30"
@@ -14,15 +20,18 @@
 </template>
 <script setup lang="ts">
 import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+const badgeListRoute = "/badge";
 
 const { t } = useI18n({
   useScope: "local",
   messages: {
     en: {
       total: "Total badges",
+      viewAllBadges: "View all badges",
     },
     fr: {
       total: "Sujets total",
+      viewAllBadges: "Voir tous les badges",
     },
   },
 });
