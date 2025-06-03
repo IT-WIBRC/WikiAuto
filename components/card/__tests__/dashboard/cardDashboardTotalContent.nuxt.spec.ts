@@ -65,6 +65,8 @@ describe("CardDashboardTotalContent", () => {
     expect(cardDashboardBase.exists()).toBe(true);
     expect(cardDashboardBase.props().value).toBe(178);
     expect(cardDashboardBase.props().description).toBe("total");
+    expect(cardDashboardBase.props().link).toBe("/content");
+    expect(cardDashboardBase.props().linkLabel).toBe("viewAllContents");
     expect(cardDashboardBase.findComponent(IconContent).exists()).toBe(true);
   });
 

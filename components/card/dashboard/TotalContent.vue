@@ -1,7 +1,13 @@
 <template>
   <div class="flex">
     <SkeletonDashboardCard v-if="isTotalContentLoading" />
-    <CardDashboardBase v-else :value="totalContent" :description="t('total')">
+    <CardDashboardBase
+      v-else
+      :value="totalContent"
+      :description="t('total')"
+      :link="contentListRoute"
+      :link-label="t('viewAllContents')"
+    >
       <template #icon>
         <div
           class="rounded-full h-10 w-10 2xl:h-12 2xl:w-12 flex items-center justify-center bg-primary/30"
@@ -18,14 +24,18 @@ import {
   type ListenEvent,
 } from "~/api/realtime/realtimeObserver";
 
+const contentListRoute = "/content";
+
 const { t } = useI18n({
   useScope: "local",
   messages: {
     en: {
       total: "Total content",
+      viewAllContents: "View all contents",
     },
     fr: {
       total: "Contenu total",
+      viewAllContents: "Voir tous les contenus",
     },
   },
 });

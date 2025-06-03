@@ -61,6 +61,8 @@ describe("CardDashboardTotalBadge", () => {
     expect(cardDashboardBase.props().value).toBe(178);
     expect(cardDashboardBase.exists()).toBe(true);
     expect(cardDashboardBase.props().description).toBe("total");
+    expect(cardDashboardBase.props().link).toBe("/badge");
+    expect(cardDashboardBase.props().linkLabel).toBe("viewAllBadges");
     expect(cardDashboardBase.findComponent(IconBadge).exists()).toBe(true);
   });
 
