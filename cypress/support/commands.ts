@@ -17,7 +17,8 @@ Cypress.Commands.add("goToLogin", () => {
   cy.get("[data-cy='login-btn']").click();
 });
 
-Cypress.Commands.add("goToMenu", (item: "dashboard" | "content" | "badges") => {
+type Menus = "dashboard" | "content" | "badges" | "profile";
+Cypress.Commands.add("goToMenu", (item: Menus) => {
   cy.get(`[data-cy='item-${item}']`).click();
 });
 
