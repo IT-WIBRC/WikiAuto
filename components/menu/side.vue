@@ -88,6 +88,7 @@ const { t } = useI18n({
       dashboard: "dashboard",
       content: "content",
       badge: "Badges",
+      profile: "Profile",
       expand: "expand",
       abate: "reduce",
       logout: "logout",
@@ -97,6 +98,7 @@ const { t } = useI18n({
       dashboard: "dashboard",
       content: "contenu",
       badge: "Badges",
+      profile: "Profile",
       expand: "agrandir",
       abate: "réduire",
       logout: "se déconnecter",
@@ -121,6 +123,11 @@ const menus: Menu[] = [
     title: t("badge"),
     icon: "BADGE",
     path: "/badge",
+  },
+  {
+    title: t("profile"),
+    icon: "PROFILE",
+    path: "/profile",
   },
 ];
 

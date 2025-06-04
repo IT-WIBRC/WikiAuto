@@ -104,4 +104,18 @@ describe("InputEmail", () => {
       ["wibrc@"],
     ]);
   });
+
+  it("should disable the input when 'isDisabled' is true", async () => {
+    inputEmailWrapper = await mountSuspended(InputEmail, {
+      props: {
+        label: "Email",
+        placeholder: "Enter your email",
+        isRequired: false,
+        modelValue: "",
+        isDisabled: true,
+      },
+    });
+    const input = inputEmailWrapper.find("input");
+    expect(input.attributes("disabled")).toBeDefined();
+  });
 });

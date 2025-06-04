@@ -31,12 +31,18 @@
   </NuxtLink>
 </template>
 <script lang="ts">
-import { IconArticle, IconBadge, IconDashboard } from "#components";
+import {
+  IconArticle,
+  IconBadge,
+  IconDashboard,
+  IconProfile,
+} from "#components";
 
 export const MENU_ICONS = {
   DASHBOARD: markRaw(IconDashboard),
   CONTENT: markRaw(IconArticle),
   BADGE: markRaw(IconBadge),
+  PROFILE: markRaw(IconProfile),
 } as const;
 
 export default defineComponent({
@@ -45,7 +51,7 @@ export default defineComponent({
   },
   props: {
     icon: {
-      type: String as keyof typeof MENU_ICONS,
+      type: String as PropType<keyof typeof MENU_ICONS>,
       required: true,
     },
     title: {

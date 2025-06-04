@@ -51,6 +51,7 @@ describe("AuthPage", () => {
       hasError: false,
       isRequired: true,
       modelValue: "",
+      isDisabled: false,
     });
   });
 
