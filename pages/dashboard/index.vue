@@ -33,4 +33,13 @@ const { t } = useI18n({
     },
   },
 });
+
+const userStore = useUserStore();
+if (!userStore.hasAlreadyFetchUserProfile) {
+  const userInformation = await useUserStore().getProfile();
+  const toast = new useToast();
+  if (userInformation.status === "error") {
+    toast.error(t(`generic_errors.${userInformation.message}`));
+  }
+}
 </script>

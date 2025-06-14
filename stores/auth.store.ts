@@ -1,6 +1,5 @@
 import { authService } from "~/api/authService";
-import type { ApiResponseResult } from "~/api/types";
-import { GenericErrors } from "~/api/types";
+import { GenericErrors, type ApiResponseResult } from "~/api/types";
 import type { Session, User } from "@supabase/auth-js";
 
 type AuthState = {
@@ -46,12 +45,13 @@ export const useAuthStore = defineStore("auth", {
         }
       }
     },
-    async logout(): Promise<ApiResponseResult<undefined>> {
+    async logout(): Promise<ApiResponseResult> {
       const response = await authService.logout();
 
       if (!response.error) {
         return {
           status: "success",
+          data: undefined,
         };
       } else {
         return {

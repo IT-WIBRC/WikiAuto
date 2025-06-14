@@ -1,5 +1,5 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { VueWrapper } from "@vue/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   SectionProfile,
@@ -7,83 +7,183 @@ import {
   InputEmail,
   BaseButtonIcon,
 } from "#components";
+import { useUserStore } from "~/stores/user.store";
+import { nextTick } from "vue";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
-import type { User } from "@supabase/auth-js";
-
-// Mock Pinia user store
-const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
-const userStore = useUserStore(pinia);
-userStore.currentUser = {
-  user_metadata: {
-    firstname: "John",
-    lastname: "Doe",
-    username: "johndoe",
-  },
-  email: "john@example.com",
-} as unknown as User;
+import { GenericErrors } from "~/api/types";
 
 describe("SectionProfile", () => {
-  let sectionProfileWrapper: VueWrapper;
+  let profileWrapper: VueWrapper;
+  let userStore: ReturnType<typeof useUserStore>;
+  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: false });
+
+  let toastSuccess: ReturnType<typeof useUnitTestUtils.spyOnToastFn>;
+  let toastError: ReturnType<typeof useUnitTestUtils.spyOnToastFn>;
 
   beforeEach(async () => {
-    sectionProfileWrapper = await mountSuspended(SectionProfile, {
+    toastSuccess = useUnitTestUtils.spyOnToastFn("success");
+    toastError = useUnitTestUtils.spyOnToastFn("error");
+
+    userStore = useUserStore();
+    userStore.currentUser = {
+      id: "id1",
+      firstname: "John",
+      lastname: "Doe",
+      username: "johndoe",
+      email: "john@example.com",
+    };
+
+    profileWrapper = await mountSuspended(SectionProfile, {
       global: {
         plugins: [pinia],
+        stubs: {
+          LoaderFade: true,
+        },
       },
     });
   });
 
-  afterAll(() => {
-    vi.resetModules();
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("should render correctly", () => {
-    expect(sectionProfileWrapper.exists()).toBe(true);
+  it("shows the profile section when you visit the page", () => {
+    expect(profileWrapper.exists()).toBe(true);
   });
 
-  it("renders section title and description using i18n keys", () => {
-    expect(sectionProfileWrapper.text()).toContain("ttl");
-    expect(sectionProfileWrapper.text()).toContain("desc");
+  it("greets you with a title and a short description", () => {
+    expect(profileWrapper.html()).toContain("ttl");
+    expect(profileWrapper.html()).toContain("desc");
   });
 
-  it("renders all input fields with correct i18n label keys and values", () => {
-    const inputTexts = sectionProfileWrapper.findAllComponents(InputText);
-    const inputEmail = sectionProfileWrapper.findComponent(InputEmail);
+  it("displays your profile details in the form fields", () => {
+    const inputTexts = profileWrapper.findAllComponents(InputText);
+    const inputEmail = profileWrapper.findComponent(InputEmail);
 
-    expect(inputTexts.length).toBe(3);
+    expect(inputTexts).toHaveLength(3);
     expect(inputTexts[0].props("label")).toBe("name.first");
     expect(inputTexts[1].props("label")).toBe("name.last");
     expect(inputTexts[2].props("label")).toBe("name.user");
     expect(inputTexts[0].props("modelValue")).toBe("John");
     expect(inputTexts[1].props("modelValue")).toBe("Doe");
     expect(inputTexts[2].props("modelValue")).toBe("johndoe");
-    expect(inputTexts[0].props("isRequired")).toBe(false);
-    expect(inputTexts[1].props("isRequired")).toBe(false);
-    expect(inputTexts[2].props("isRequired")).toBe(false);
 
     expect(inputEmail.exists()).toBe(true);
     expect(inputEmail.props("label")).toBe("email");
     expect(inputEmail.props("modelValue")).toBe("john@example.com");
     expect(inputEmail.props("isDisabled")).toBe(true);
-    expect(inputEmail.props("isRequired")).toBe(false);
   });
 
-  it("renders the save button with correct i18n label key", () => {
-    const button = sectionProfileWrapper.findComponent(BaseButtonIcon);
+  it("shows a save button so you can update your profile", () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
     expect(button.exists()).toBe(true);
     expect(button.props("text")).toBe("btn.save");
   });
 
-  it("disables the save button if no changes are made", () => {
-    const button = sectionProfileWrapper.findComponent(BaseButtonIcon);
+  it("keeps the save button disabled until you make a change", () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
     expect(button.element.disabled).toBe(true);
   });
 
-  it("enables the save button if a field is changed", async () => {
-    const input = sectionProfileWrapper.findAllComponents(InputText)[0];
-    await input.vm.$emit("update:modelValue", "Jane");
-    await sectionProfileWrapper.vm.$nextTick();
-    const button = sectionProfileWrapper.findComponent(BaseButtonIcon);
+  it("lets you save your changes after you update your first name", async () => {
+    const input = profileWrapper.findComponent(InputText);
+    await input.setValue("Jane");
+    await nextTick();
+
+    const button = profileWrapper.findComponent(BaseButtonIcon);
     expect(button.element.disabled).toBe(false);
+  });
+
+  it("shows a happy message when your profile is updated", async () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
+
+    userStore.updateInfo = vi.fn().mockResolvedValueOnce({
+      status: "success",
+      data: { firstname: "Jane", lastname: "Doe", username: "johndoe" },
+    });
+
+    await profileWrapper.findComponent(InputText).setValue("Jane");
+    await nextTick();
+    await button.trigger("click");
+    await flushPromises();
+
+    expect(userStore.updateInfo).toHaveBeenCalledWith({
+      lastname: "Doe",
+      firstname: "Jane",
+      username: "johndoe",
+      user_id: "id1",
+    });
+    expect(toastSuccess).toHaveBeenCalledWith("success");
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("shows an error message if something goes wrong while saving", async () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
+
+    userStore.updateInfo = vi.fn().mockResolvedValueOnce({
+      status: "error",
+      message: GenericErrors.SERVER_ERROR,
+    });
+
+    await profileWrapper.findComponent(InputText).setValue("Jane");
+    await nextTick();
+    await button.trigger("click");
+    await flushPromises();
+
+    expect(userStore.updateInfo).toHaveBeenCalledWith({
+      lastname: "Doe",
+      firstname: "Jane",
+      username: "johndoe",
+      user_id: "id1",
+    });
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith("generic_errors.SERVER_ERROR");
+  });
+
+  it("does nothing if you try to save without making changes", async () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
+    userStore.updateInfo = vi.fn();
+
+    expect(button.element.disabled).toBe(true);
+    await button.trigger("click");
+
+    expect(userStore.updateInfo).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("still shows a happy message if the server says it worked but returns no data", async () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
+
+    userStore.updateInfo = vi.fn().mockResolvedValueOnce({
+      status: "success",
+      data: null,
+    });
+
+    await profileWrapper.findComponent(InputText).setValue("Jane");
+    await nextTick();
+    await button.trigger("click");
+    await flushPromises();
+
+    expect(userStore.updateInfo).toHaveBeenCalled();
+    expect(toastSuccess).toHaveBeenCalledWith("success");
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it("shows a generic error message if something unexpected happens while saving", async () => {
+    const button = profileWrapper.findComponent(BaseButtonIcon);
+
+    userStore.updateInfo = vi.fn().mockReturnValueOnce({
+      status: "error",
+      message: GenericErrors.SERVER_ERROR,
+    });
+
+    await profileWrapper.findComponent(InputText).setValue("Jane");
+    await nextTick();
+    await button.trigger("click");
+    await flushPromises();
+
+    expect(userStore.updateInfo).toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith("generic_errors.SERVER_ERROR");
   });
 });

@@ -151,23 +151,35 @@ export type Database = {
             foreignKeyName: "contents_user_email_fkey";
             columns: ["user_email"];
             isOneToOne: false;
-            referencedRelation: "users";
+            referencedRelation: "profile";
             referencedColumns: ["email"];
           },
         ];
       };
-      users: {
+      profile: {
         Row: {
+          created_at: string | null;
           email: string;
+          firstname: string | null;
+          lastname: string | null;
           user_id: string;
+          username: string | null;
         };
         Insert: {
+          created_at?: string | null;
           email: string;
+          firstname?: string | null;
+          lastname?: string | null;
           user_id?: string;
+          username?: string | null;
         };
         Update: {
+          created_at?: string | null;
           email?: string;
+          firstname?: string | null;
+          lastname?: string | null;
           user_id?: string;
+          username?: string | null;
         };
         Relationships: [];
       };
@@ -176,7 +188,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_profile: {
+        Args:
+          | { user_id: number; email: string }
+          | { user_id: number; username: string; bio: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

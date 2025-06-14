@@ -50,9 +50,18 @@
         <div class="flex justify-end gap-x-4">
           <BaseButtonIcon
             :text="t('btn.save')"
-            :disabled="!canSaveChanges"
+            :disabled="!infosHaveChanged || areChangesSaveInProgress"
             data-cy="save-btn"
-          />
+            class="relative"
+            @click.stop="save"
+          >
+            <template #icon>
+              <LoaderFade
+                v-if="areChangesSaveInProgress"
+                class="w-5 h-5 text-white before:w-5 before:h-5 before:left-5"
+              />
+            </template>
+          </BaseButtonIcon>
         </div>
       </div>
     </div>
@@ -74,6 +83,7 @@ const { t } = useI18n({
       btn: {
         save: "Save changes",
       },
+      success: "Changes saved successfully",
     },
     fr: {
       ttl: "Info Personelles",
@@ -88,6 +98,7 @@ const { t } = useI18n({
         save: "Enregistrer",
       },
     },
+    success: "Modifications enregistrées avec succès",
   },
 });
 
@@ -95,20 +106,44 @@ const userStore = useUserStore();
 const { currentUser } = storeToRefs(userStore);
 
 const profile = reactive({
-  firstname: currentUser.value?.user_metadata?.firstname ?? "",
-  lastname: currentUser.value?.user_metadata?.lastname ?? "",
-  email: currentUser.value?.email ?? "",
-  username: currentUser.value?.user_metadata?.username ?? "",
+  firstname: currentUser.value?.firstname ?? "",
+  lastname: currentUser.value?.lastname ?? "",
+  email: currentUser.value.email,
+  username: currentUser.value?.username ?? "",
 });
 
-const canSaveChanges = computed<boolean>(() => {
+const infosHaveChanged = computed<boolean>(() => {
   return (
     JSON.stringify({
-      firstname: currentUser.value?.user_metadata?.firstname ?? "",
-      lastname: currentUser.value?.user_metadata?.lastname ?? "",
-      email: currentUser.value?.email ?? "",
-      username: currentUser.value?.user_metadata?.username ?? "",
+      firstname: currentUser.value?.firstname ?? "",
+      lastname: currentUser.value?.lastname ?? "",
+      email: currentUser.value.email,
+      username: currentUser.value?.username ?? "",
     }) !== JSON.stringify(profile)
   );
 });
+
+const areChangesSaveInProgress = shallowRef(false);
+const save = async (): Promise<void> => {
+  areChangesSaveInProgress.value = true;
+
+  const response = await userStore.updateInfo({
+    lastname: profile.lastname,
+    firstname: profile.firstname,
+    username: profile.username,
+    user_id: currentUser.value?.id ?? "",
+  });
+
+  const toast = new useToast();
+  if (response.status === "success") {
+    profile.firstname = currentUser.value?.firstname ?? "";
+    profile.lastname = currentUser.value?.lastname ?? "";
+    profile.username = currentUser.value?.username ?? "";
+
+    toast.success(t("success"));
+  } else {
+    toast.error(t(`generic_errors.${response.message}`));
+  }
+  areChangesSaveInProgress.value = false;
+};
 </script>

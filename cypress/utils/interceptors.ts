@@ -22,6 +22,7 @@ export default function useCypressInterceptors() {
     const Content = content();
 
     cy.goToLogin();
+    stubGetProfile();
     loginAdminInterceptor("myemail@gmail.com", "myAmazing@password");
 
     Content.totalInterceptor(0);
@@ -29,6 +30,7 @@ export default function useCypressInterceptors() {
     totalBadgeInterceptor(0);
 
     cy.wait("@login");
+    cy.wait("@getProfile");
     cy.wait("@totalContent");
     cy.wait("@totalValidatedContent");
     cy.wait("@totalBadges");
@@ -177,6 +179,29 @@ export default function useCypressInterceptors() {
     ).as(alias);
   };
 
+  //profile
+  const PROFILE_URL = {
+    GET: "**/rest/v1/profile?select=email%2Cusername%2Clastname%2Cfirstname%2Ccreated_at&user_id=eq.b4ebcf93-7b09-4ee1-bbb3-0a67c1cb1748",
+    PATCH:
+      "**/rest/v1/profile?user_id=eq.b4ebcf93-7b09-4ee1-bbb3-0a67c1cb1748&select=*",
+  };
+
+  const stubGetProfile = () => {
+    cy.intercept(
+      {
+        method: "GET",
+        url: PROFILE_URL.GET,
+        https: true,
+      },
+      (request) => {
+        request.reply({
+          statusCode: 200,
+          fixture: "/users/profile.json",
+        });
+      },
+    ).as("getProfile");
+  };
+
   return {
     loginAdminInterceptor,
     logoutAdminInterceptor,
@@ -185,5 +210,7 @@ export default function useCypressInterceptors() {
     totalBadgeInterceptor,
     initAdminPart,
     badgeEditionInterceptor,
+    PROFILE_URL,
+    stubGetProfile,
   };
 }
