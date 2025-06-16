@@ -27,7 +27,7 @@ export type ResponseOnError = {
 
 type ResponseOnSuccess<T> = {
   status: "success";
-  data: T;
+  data: T | undefined;
 };
 
 export type ApiResponseResultWitForm<T, K = keyof T> =
@@ -35,7 +35,9 @@ export type ApiResponseResultWitForm<T, K = keyof T> =
   | ResponseOnSuccess<T>
   | ResponseErrorOnForm<K>;
 
-export type ApiResponseResult<T> = ResponseOnError | ResponseOnSuccess<T>;
+export type ApiResponseResult<T = undefined> =
+  | ResponseOnError
+  | ResponseOnSuccess<T>;
 
 export type GetContentListType = Omit<
   Tables<"contents">,
@@ -84,3 +86,11 @@ export type ContentEdition = {
 
 // Channel types
 export type SupabaseChannel = RealtimeChannel | null;
+
+export type GetProfile = Tables<"profile">;
+
+type UserDataInfo = Required<GetProfile>;
+
+export type EditUserInfoPayload = {
+  user_id: UserDataInfo["user_id"];
+} & Partial<Omit<UserDataInfo, "user_id" | "email">>;

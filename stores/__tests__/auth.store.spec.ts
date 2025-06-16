@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from "pinia";
 import { useAuthStore } from "../auth.store";
 import { authService } from "../../api/authService";
 import { GenericErrors } from "../../api/types";
-import { AuthError } from "@supabase/auth-js";
+import { AuthError, type AuthTokenResponsePassword } from "@supabase/auth-js";
 
 describe("AuthStore", () => {
   beforeEach(() => {
@@ -36,7 +36,8 @@ describe("AuthStore", () => {
       vi.spyOn(authService, "login").mockImplementationOnce(() =>
         Promise.resolve({
           data: successLoginData,
-        }),
+          error: null,
+        } as unknown as AuthTokenResponsePassword),
       );
 
       const responseOk = await authStore.login(
@@ -65,7 +66,7 @@ describe("AuthStore", () => {
         vi.spyOn(authService, "login").mockImplementationOnce(() =>
           Promise.resolve({
             ...errorLoginData,
-          }),
+          } as unknown as AuthTokenResponsePassword),
         );
 
         const responseError = await authStore.login(
@@ -93,7 +94,7 @@ describe("AuthStore", () => {
         vi.spyOn(authService, "login").mockImplementationOnce(() =>
           Promise.resolve({
             ...errorLoginData,
-          }),
+          } as unknown as AuthTokenResponsePassword),
         );
 
         const responseError = await authStore.login(

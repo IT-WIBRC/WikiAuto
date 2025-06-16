@@ -93,7 +93,8 @@ const login = async (): Promise<void> => {
   const response = await authStore.login(email, password);
 
   if (response.status === "success") {
-    useUserStore().currentUser = response.data;
+    const { email, id } = response.data!;
+    useUserStore().setCurrentUserIdAndEmail(id, email || "");
     await navigateTo("/dashboard");
   } else {
     apiResponseError.value = t(`generic_errors.${response.message}`);
