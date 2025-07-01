@@ -2,42 +2,37 @@ import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { imageService } from "~/api/imageService";
 
 const imagePath = "http://localhost/wikiAuto/0.269874.jpg";
-const mockGetPublicUrl = vi.fn(() => {
-  return {
-    error: null,
-    data: {
-      publicUrl: imagePath,
-    },
-  };
-});
+const mockGetPublicUrl = vi.fn();
 
 const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      getPublicUrl: mockGetPublicUrl,
-    };
-  }),
+  from: vi.fn(() => ({
+    getPublicUrl: mockGetPublicUrl,
+  })),
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return {
-      storage: mockFrom,
-    };
-  },
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => ({
+    storage: mockFrom,
+  }),
 }));
 
 describe("Get public url file", () => {
   afterAll(() => {
-    vi.doUnmock("~/api/supabaseInit");
+    vi.doUnmock("~/api/utils/supabaseInit");
   });
 
   afterEach(() => {
-    mockFrom.from.mockRestore();
-    mockGetPublicUrl.mockRestore();
+    mockFrom.from.mockClear();
+    mockGetPublicUrl.mockClear();
   });
 
   it("should return the public URL from image path", async () => {
+    mockGetPublicUrl.mockReturnValueOnce({
+      error: null,
+      data: {
+        publicUrl: imagePath,
+      },
+    });
     const fileUpload = await imageService.getPublicUrlFrom("0.269874.jpg");
 
     expect(mockFrom.from).toHaveBeenCalledTimes(1);
@@ -54,15 +49,13 @@ describe("Get public url file", () => {
     });
   });
 
-  it("should return an error when the image is not recognize", async () => {
-    mockGetPublicUrl.mockImplementation(() => {
-      return {
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-      };
+  it("should return an error when the image is not recognized", async () => {
+    mockGetPublicUrl.mockReturnValueOnce({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+      },
+      data: null,
     });
     const fileUpload = await imageService.getPublicUrlFrom("0.269874.jpg");
 

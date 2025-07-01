@@ -2,9 +2,14 @@ import type {
   ApiResponseResult,
   GetBadgeListTypeForOption,
   Badge,
-} from "~/api/types";
-import { GenericErrors } from "~/api/types";
+} from "~/api";
+import { GenericErrors } from "~/api";
 import { badgeService } from "~/api/badgeService";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
+import {
+  handleListResponse,
+  handleSingleItemResponse,
+} from "~/api/utils/serviceResponseUtilities";
 
 type BadgeState = {
   badgeList: Badge[];
@@ -15,39 +20,60 @@ export const useBadgeStore = defineStore("badge", {
     badgeList: [],
   }),
   actions: {
+    setBadges(badges: Badge[]) {
+      this.badgeList = badges;
+    },
     async fetchBadgeListForOptions(): Promise<
       ApiResponseResult<GetBadgeListTypeForOption[]>
-    > {
-      const response = await badgeService.getBadgeListForOptions();
+      > {
+      const response = await wrapServiceCall(
+        badgeService.getBadgeListForOptions(),
+      );
 
-      if (!response.error) {
-        return {
+      return handleListResponse<
+        GetBadgeListTypeForOption,
+        ApiResponseResult<GetBadgeListTypeForOption[]>
+      >(response, {
+        onFoundList: (data) => ({
           status: "success",
-          data: response.data,
-        };
-      } else {
-        return {
+          data,
+        }),
+        onEmptyList: () => {
+          return {
+            status: "success",
+            data: [],
+          };
+        },
+        onError: (message) => ({
           status: "error",
-          message: GenericErrors.REQUEST_FAILED,
-        };
-      }
+          message: message,
+        }),
+      });
     },
     async create(
       name: string,
       description: string,
     ): Promise<ApiResponseResult<undefined>> {
-      const response = await badgeService.create(name, description);
-
-      if (!response.error) {
-        return {
-          status: "success",
-        };
-      } else {
-        return {
-          status: "error",
-          message: GenericErrors.REQUEST_FAILED,
-        };
-      }
+      const response = await wrapServiceCall(
+        badgeService.create(name, description),
+      );
+      return handleSingleItemResponse<Badge, ApiResponseResult<undefined>>(
+        response,
+        {
+          onFound: () => {
+            return { status: "success" };
+          },
+          onNotFound: () => {
+            return { status: "success" };
+          },
+          onError: (errorMessage) => {
+            return {
+              status: "error",
+              message: errorMessage,
+            };
+          },
+        },
+      );
     },
     async edit({
       name,
@@ -58,59 +84,92 @@ export const useBadgeStore = defineStore("badge", {
       description: string;
       id: string;
     }): Promise<ApiResponseResult<undefined>> {
-      const response = await badgeService.edit(id, name, description);
+      const response = await wrapServiceCall(
+        badgeService.edit(id, name, description),
+      );
 
-      if (!response.error) {
-        return {
-          status: "success",
-        };
-      } else {
-        return {
-          status: "error",
-          message: GenericErrors.REQUEST_FAILED,
-        };
-      }
-    },
-    async fetchTotalBadges(): Promise<ApiResponseResult<number>> {
-      const response = await badgeService.statistics.getTotalBadge();
-
-      if (!response.error) {
-        return {
-          status: "success",
-          data: response.count,
-        };
-      } else {
-        switch (response.error.code) {
-          case "NoSuchKey":
-          case "InvalidKey": {
+      return handleSingleItemResponse<unknown, ApiResponseResult<undefined>>(
+        response,
+        {
+          onFound: () => {
+            return { status: "success" };
+          },
+          onNotFound: () => {
+            return { status: "success" };
+          },
+          onError: (errorMessage) => {
             return {
               status: "error",
-              message: GenericErrors.BAD_REQUEST,
+              message: errorMessage,
             };
-          }
-          default:
+          },
+        },
+      );
+    },
+    async fetchBadgeCount(): Promise<ApiResponseResult<number>> {
+      const response = await wrapServiceCall(
+        badgeService.statistics.countAllBadges(),
+      );
+
+      return handleSingleItemResponse<unknown, ApiResponseResult<number>>(
+        response,
+        {
+          onFound: (_, count) => {
+            if (typeof count === "number") {
+              return {
+                status: "success",
+                data: count,
+              };
+            }
             return {
               status: "error",
               message: GenericErrors.UNKNOWN_ERROR,
             };
-        }
-      }
+          },
+          onNotFound: (count) => {
+            if (typeof count === "number") {
+              return {
+                status: "success",
+                data: count,
+              };
+            }
+            return {
+              status: "error",
+              message: GenericErrors.NO_DATA_FOUND,
+            };
+          },
+          onError: (errorMessage) => {
+            return {
+              status: "error",
+              message: errorMessage,
+            };
+          },
+        },
+      );
     },
     async fetchBadgeList(): Promise<ApiResponseResult<Badge[]>> {
-      const response = await badgeService.getBadgeList();
+      const response = await wrapServiceCall(badgeService.getBadgeList());
 
-      if (!response.error) {
-        this.badgeList = response.data;
-        return {
-          status: "success",
-          data: response.data,
-        };
-      } else {
-        return {
+      return handleListResponse<Badge, ApiResponseResult<Badge[]>>(response, {
+        onFoundList: (data) => {
+          this.setBadges(data);
+          return {
+            status: "success",
+            data,
+          };
+        },
+        onEmptyList: () => {
+          this.setBadges([]);
+          return {
+            status: "success",
+            data: [],
+          };
+        },
+        onError: (message) => ({
           status: "error",
-          message: GenericErrors.REQUEST_FAILED,
-        };
-      }
+          message: message,
+        }),
+      });
     },
   },
 });

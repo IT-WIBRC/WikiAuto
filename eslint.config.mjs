@@ -74,10 +74,9 @@ export default withNuxt({
     "object-curly-newline": [
       "error",
       {
-        ImportDeclaration: {
-          consistent: true,
-          multiline: true,
-        },
+        minProperties: 3,
+        consistent: true,
+        multiline: true,
       },
     ],
 

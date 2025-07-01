@@ -1,30 +1,32 @@
-import useSupabase from "~/api/supabaseInit";
+import useSupabase from "~/api/utils/supabaseInit";
 import type {
-  AuthError,
+  AuthResponse,
   AuthTokenResponsePassword,
   PostgrestResponse,
   PostgrestSingleResponse,
 } from "@supabase/supabase-js";
-import type { EditUserInfoPayload, GetProfile } from "./types";
+import type { EditProfileInfoPayload, GetProfile } from "./";
 
 const login = async (
   email: string,
   password: string,
 ): Promise<AuthTokenResponsePassword> => {
-  return useSupabase().auth.signInWithPassword({
+  return await useSupabase().auth.signInWithPassword({
     email,
     password,
   });
 };
 
-const logout = (): Promise<{ error: AuthError | null }> => {
-  return useSupabase().auth.signOut({ scope: "global" });
+const logout = async () => {
+  return (await useSupabase().auth.signOut({
+    scope: "global",
+  })) as unknown as Promise<AuthResponse>;
 };
 
 const getUserProfile = async (
   userId: string,
-): Promise<PostgrestSingleResponse<GetProfile>> => {
-  return useSupabase()
+): Promise<PostgrestSingleResponse<GetProfile | null>> => {
+  return await useSupabase()
     .from("profile")
     .select("email, username, lastname, firstname, created_at")
     .eq("user_id", userId)
@@ -32,9 +34,9 @@ const getUserProfile = async (
 };
 
 const editUserInfo = async (
-  userData: EditUserInfoPayload,
+  userData: EditProfileInfoPayload,
 ): Promise<PostgrestResponse<GetProfile>> => {
-  return useSupabase()
+  return await useSupabase()
     .from("profile")
     .update({
       username: userData.username,

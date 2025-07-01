@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useContentStore } from "~/stores/content.store";
-import { imageService } from "~/api/imageService";
+import { GenericErrors, imageService } from "~/api";
+import { flushPromises } from "@vue/test-utils";
+import { StorageError } from "@supabase/storage-js";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -18,18 +20,17 @@ describe("ContentStore", () => {
       const result = {
         publicUrl: "http://localhost/image.png",
       };
-      const getImageURLFromMock = vi.fn(() => {
-        return {
-          error: null,
+
+      const getImageURLFromMock = vi
+        .spyOn(imageService, "getPublicUrlFrom")
+        .mockResolvedValueOnce({
           data: result,
-        };
-      });
-      vi.spyOn(imageService, "getPublicUrlFrom", "get").mockReturnValueOnce(
-        getImageURLFromMock,
-      );
+          error: null,
+        });
 
       const contentListResponse =
         await contentStore.getImageURLFrom("image.png");
+      await flushPromises();
 
       expect(getImageURLFromMock).toHaveBeenCalledTimes(1);
       expect(getImageURLFromMock).toHaveBeenCalledWith("image.png");
@@ -41,27 +42,23 @@ describe("ContentStore", () => {
 
     it("should return the awaited result on failure", async () => {
       const contentStore = useContentStore();
-      const getImageURLFromMock = vi.fn(() => {
-        return {
-          error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
-          },
+
+      const getImageURLFromMock = vi
+        .spyOn(imageService, "getPublicUrlFrom")
+        .mockResolvedValueOnce({
           data: null,
-        };
-      });
-      vi.spyOn(imageService, "getPublicUrlFrom", "get").mockReturnValueOnce(
-        getImageURLFromMock,
-      );
+          error: new StorageError("Unknown file path"),
+        });
 
       const contentListResponse =
         await contentStore.getImageURLFrom("image.png");
+      await flushPromises();
 
       expect(getImageURLFromMock).toHaveBeenCalledTimes(1);
       expect(getImageURLFromMock).toHaveBeenCalledWith("image.png");
       expect(contentListResponse).toEqual({
         status: "error",
-        message: "REQUEST_FAILED",
+        message: GenericErrors.UNKNOWN_ERROR,
       });
     });
   });

@@ -16,7 +16,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { CONTENT_STATUS } from "~/api/types";
+import type { CONTENT_STATUS } from "~/api";
 type STATUS_KEYS = keyof typeof CONTENT_STATUS;
 type StatusTheme = Lowercase<STATUS_KEYS>;
 

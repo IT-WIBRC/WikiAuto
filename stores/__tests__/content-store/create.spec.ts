@@ -6,215 +6,228 @@ import {
   expect,
   it,
   vi,
+  type MockInstance,
 } from "vitest";
+import { flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
-import { useContentStore } from "../../content.store";
-import { contentService } from "../../../api/contentService";
-import { imageService } from "../../../api/imageService";
-import { useAuthStore } from "../../auth.store";
-import { CONTENT_STATUS, GenericErrors } from "../../../api/types";
 
-describe("ContentStore", () => {
+import { useContentStore } from "~/stores/content.store";
+import { useAuthStore } from "~/stores/auth.store";
+import {
+  GenericErrors,
+  contentService,
+  type Badge,
+  type ContentCreation,
+  CONTENT_STATUS,
+} from "~/api";
+import { imageService } from "~/api/imageService";
+import { StorageError } from "@supabase/storage-js";
+
+describe("ContentStore create action", () => {
+  let imageServiceSpy: MockInstance;
+  let contentServiceCreateSpy: MockInstance;
+  let mathRandomSpy: MockInstance;
+
+  const getMockBadges = () =>
+    [
+      {
+        name: "Vue",
+        id: "vue-id",
+      },
+      {
+        name: "TypeScript",
+        id: "ts-id",
+      },
+    ] as unknown as Badge[];
+
+  const createMockContentPayload = (
+    illustrationFile: File,
+    title: string = "My amazing title",
+    explanation: string = "<p>My explanation</p>",
+    status = CONTENT_STATUS.PENDING,
+  ): ContentCreation => ({
+    title,
+    badges: getMockBadges(),
+    explanation,
+    illustration: illustrationFile,
+    status,
+  });
+
   beforeEach(() => {
-    vi.setSystemTime(new Date("2023-10-08"));
     setActivePinia(createPinia());
+    vi.setSystemTime(new Date("2023-10-08T00:00:00.000Z"));
+
+    imageServiceSpy = vi.spyOn(imageService, "uploadFile");
+    contentServiceCreateSpy = vi.spyOn(contentService, "create");
+    mathRandomSpy = vi.spyOn(Math, "random");
+
+    const authStore = useAuthStore();
+    authStore.session = {
+      access_token: "mock-access-token",
+      refresh_token: "mock-refresh-token",
+      expires_in: 3600,
+      token_type: "bearer",
+      user: {
+        email: "test@gmail.com",
+        id: "user-id-123",
+        app_metadata: {},
+        user_metadata: {},
+        aud: "",
+        created_at: "",
+      },
+    };
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
-
-  const badges = [
-    {
-      badge_id: "123456789",
-      name: "signalisation",
-    },
-    {
-      badge_id: "324456987",
-      name: "pneus",
-    },
-  ];
 
   afterAll(() => {
     vi.useRealTimers();
   });
 
-  describe("create", () => {
-    it("should return the awaited status on success", async () => {
-      const contentStore = useContentStore();
-      const createMock = vi.fn(() => {
-        return {
-          status: "completed",
-        };
-      });
+  it("should return success status on successful content creation", async () => {
+    const mockImageName = 0.18201;
+    mathRandomSpy.mockReturnValueOnce(mockImageName);
 
-      const uploadFileMock = vi.fn(() => {
-        return {
-          error: null,
-          data: {
-            path: "0.284815154.png",
-          },
-        };
-      });
+    imageServiceSpy.mockResolvedValueOnce({
+      error: null,
+      data: {
+        path: `mock_path_${mockImageName}.png`,
+        id: "mock_id_1",
+        fullPath: `mock_path_${mockImageName}.png`,
+      },
+    });
 
-      vi.spyOn(imageService, "uploadFile", "get").mockReturnValueOnce(
-        uploadFileMock,
-      );
-      vi.spyOn(contentService, "create", "get").mockReturnValueOnce(createMock);
+    contentServiceCreateSpy.mockResolvedValueOnce({
+      error: null,
+      data: {
+        content_id: "content-id-abc",
+      },
+      count: null,
+      status: 201,
+      statusText: "Created",
+    });
 
-      const authStore = useAuthStore();
-      authStore.session = {
-        user: {
-          email: "test@gmail.com",
-        },
-      };
+    const illustrationFile = new File(["dummy content"], "image.png", {
+      type: "image/png",
+    });
+    const contentPayload = createMockContentPayload(illustrationFile);
 
-      const imageName = 0.18201;
-      Math.random = vi.fn().mockReturnValueOnce(imageName);
+    const contentStore = useContentStore();
+    const creationResponse = await contentStore.create(contentPayload);
 
-      const creationResponse = await contentStore.create({
-        title: "My amazing title",
-        badges,
+    await flushPromises();
+
+    expect(imageServiceSpy).toHaveBeenCalledTimes(1);
+    expect(imageServiceSpy).toHaveBeenCalledWith(
+      illustrationFile,
+      `${mockImageName}.png`,
+    );
+
+    expect(contentServiceCreateSpy).toHaveBeenCalledTimes(1);
+    expect(contentServiceCreateSpy).toHaveBeenCalledWith(
+      {
+        badges: getMockBadges(),
         explanation: "<p>My explanation</p>",
-        illustration: new File([""], "image.png", { type: "image/png" }),
+        illustration: `mock_path_${mockImageName}.png`,
         status: "PENDING",
-      });
+        title: "My amazing title",
+      },
+      "test@gmail.com",
+    );
 
-      expect(uploadFileMock).toHaveBeenCalledTimes(1);
-      expect(uploadFileMock).toHaveBeenCalledWith(
-        new File([""], "image.png", {
-          type: "image/png",
-          lastModified: 1696723200000,
-        }),
-        `${imageName}.png`,
-      );
+    expect(creationResponse).toEqual({ status: "success" });
+  });
 
-      expect(createMock).toHaveBeenCalledTimes(1);
-      expect(createMock).toHaveBeenCalledWith(
-        {
-          title: "My amazing title",
-          explanation: "<p>My explanation</p>",
-          badges,
-          illustration: "0.284815154.png",
-          status: CONTENT_STATUS.PENDING,
-        },
-        "test@gmail.com",
-      );
-      expect(creationResponse).toEqual({
-        status: "success",
-      });
+  it("should return an error status when the image upload fails", async () => {
+    const mockImageName = 0.2584;
+    mathRandomSpy.mockReturnValueOnce(mockImageName);
+
+    imageServiceSpy.mockResolvedValueOnce({
+      error: new StorageError("upload failed"),
+      data: null,
     });
 
-    it("should return the awaited error when the image upload has failed", async () => {
-      const contentStore = useContentStore();
-      const uploadFileMock = vi.fn(() => {
-        return {
-          error: {},
-          data: null,
-        };
-      });
+    const illustrationFile = new File(["dummy content"], "image.png", {
+      type: "image/png",
+    });
+    const contentPayload = createMockContentPayload(illustrationFile);
 
-      const createMock = vi.fn();
-      vi.spyOn(imageService, "uploadFile", "get").mockReturnValueOnce(
-        uploadFileMock,
-      );
+    const contentStore = useContentStore();
+    const creationResponse = await contentStore.create(contentPayload);
 
-      const authStoreUseForImage = useAuthStore();
-      authStoreUseForImage.session = {
-        user: {
-          email: "test@gmail.com",
-        },
-      };
+    await flushPromises();
 
-      Math.random = vi.fn().mockReturnValueOnce(0.2584);
-      const creationResponse = await contentStore.create({
-        title: "My amazing title",
-        badges,
-        explanation: "<p>My explanation</p>",
-        illustration: new File([""], "image.png", { type: "image/png" }),
-        status: CONTENT_STATUS.PENDING,
-      });
+    expect(imageServiceSpy).toHaveBeenCalledTimes(1);
+    expect(imageServiceSpy).toHaveBeenCalledWith(
+      illustrationFile,
+      `${mockImageName}.png`,
+    );
 
-      expect(uploadFileMock).toHaveBeenCalledTimes(1);
-      expect(uploadFileMock).toHaveBeenCalledWith(
-        new File([""], "image.png", {
-          type: "image/png",
-          lastModified: 1696723200000,
-        }),
-        "0.2584.png",
-      );
+    expect(contentServiceCreateSpy).not.toHaveBeenCalled();
 
-      expect(createMock).toHaveBeenCalledTimes(0);
-      expect(creationResponse).toEqual({
-        status: "error",
-        message: GenericErrors.REQUEST_FAILED,
-      });
+    expect(creationResponse).toEqual({
+      status: "error",
+      message: GenericErrors.UPLOAD_FAILED_NO_PATH,
+    });
+  });
+
+  it("should return an error status when content creation fails after successful upload", async () => {
+    const mockImageName = 0.294815154;
+    mathRandomSpy.mockReturnValueOnce(mockImageName);
+
+    imageServiceSpy.mockResolvedValueOnce({
+      error: null,
+      data: {
+        path: `mock_path_${mockImageName}.png`,
+        id: "mock_id_2",
+        fullPath: `mock_path_${mockImageName}.png`,
+      },
     });
 
-    it("should return the awaited response when the creation is incomplete", async () => {
-      const contentStore = useContentStore();
-      const createMock = vi.fn(() => {
-        return {
-          status: "incomplete",
-        };
-      });
+    contentServiceCreateSpy.mockResolvedValueOnce({
+      error: {
+        details: "Invalid request details",
+        hint: "Check your payload",
+        code: "PGRST100",
+        name: "PostgrestError",
+        message: "Payload malformed",
+      },
+      data: null,
+      count: null,
+      statusText: "Bad Request",
+      status: 400,
+    });
 
-      const uploadFileMock = vi.fn(() => {
-        return {
-          error: null,
-          data: {
-            path: "0.294815154.png",
-          },
-        };
-      });
+    const illustrationFile = new File(["dummy content"], "another-image.png", {
+      type: "image/png",
+    });
+    const contentPayload = createMockContentPayload(illustrationFile);
 
-      vi.spyOn(imageService, "uploadFile", "get").mockReturnValueOnce(
-        uploadFileMock,
-      );
-      vi.spyOn(contentService, "create", "get").mockReturnValueOnce(createMock);
+    const contentStore = useContentStore();
+    const creationResponse = await contentStore.create(contentPayload);
 
-      const authStore = useAuthStore();
-      authStore.session = {
-        user: {
-          email: "test9@gmail.com",
-        },
-      };
+    await flushPromises();
 
-      const imageName2 = 0.38201;
-      Math.random = vi.fn().mockReturnValueOnce(imageName2);
+    expect(imageServiceSpy).toHaveBeenCalledTimes(1);
+    expect(imageServiceSpy).toHaveBeenCalledWith(
+      illustrationFile,
+      `${mockImageName}.png`,
+    );
 
-      const creationResponse = await contentStore.create({
-        title: "My amazing title",
-        badges,
-        explanation: "<p>My explanation</p>",
-        illustration: new File([""], "image.png", { type: "image/png" }),
-        status: CONTENT_STATUS.PENDING,
-      });
+    expect(contentServiceCreateSpy).toHaveBeenCalledTimes(1);
+    expect(contentServiceCreateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        illustration: `mock_path_${mockImageName}.png`,
+      }),
+      "test@gmail.com",
+    );
 
-      expect(uploadFileMock).toHaveBeenCalledTimes(1);
-      expect(uploadFileMock).toHaveBeenCalledWith(
-        new File([""], "image.png", {
-          type: "image/png",
-          lastModified: 1696723200000,
-        }),
-        `${imageName2}.png`,
-      );
-
-      expect(createMock).toHaveBeenCalledTimes(1);
-      expect(createMock).toHaveBeenCalledWith(
-        {
-          title: "My amazing title",
-          explanation: "<p>My explanation</p>",
-          badges,
-          illustration: "0.294815154.png",
-          status: CONTENT_STATUS.PENDING,
-        },
-        "test9@gmail.com",
-      );
-      expect(creationResponse).toEqual({
-        status: "error",
-        message: GenericErrors.REQUEST_FAILED,
-      });
+    expect(creationResponse).toEqual({
+      status: "error",
+      message: GenericErrors.BAD_REQUEST,
     });
   });
 });

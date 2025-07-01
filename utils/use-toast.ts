@@ -1,6 +1,7 @@
 type POSITION = "top left" | "top right" | "bottom left" | "bottom right";
 
 // TODO: Make that the application need to use one instance (Each creation get the last instance with default value)
+// TODO: Manage when there are many toast displayed at the same time
 export default class Toast {
   private targetToAttachTo: HTMLElement = document.body;
   private timeOut = 0;

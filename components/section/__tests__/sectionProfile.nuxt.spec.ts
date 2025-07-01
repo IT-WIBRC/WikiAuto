@@ -10,7 +10,7 @@ import {
 import { useUserStore } from "~/stores/user.store";
 import { nextTick } from "vue";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
-import { GenericErrors } from "~/api/types";
+import { GenericErrors } from "~/api";
 
 describe("SectionProfile", () => {
   let profileWrapper: VueWrapper;
@@ -99,7 +99,11 @@ describe("SectionProfile", () => {
 
     userStore.updateInfo = vi.fn().mockResolvedValueOnce({
       status: "success",
-      data: { firstname: "Jane", lastname: "Doe", username: "johndoe" },
+      data: {
+        firstname: "Jane",
+        lastname: "Doe",
+        username: "johndoe",
+      },
     });
 
     await profileWrapper.findComponent(InputText).setValue("Jane");

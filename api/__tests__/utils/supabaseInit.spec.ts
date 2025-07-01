@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
-import createSupabaseClient from "../supabaseInit";
+import createSupabaseClient from "~/api/utils/supabaseInit";
 
 const { mockClientCreation } = vi.hoisted(() => {
   return { mockClientCreation: vi.fn((url: string, key: string) => url + key) };

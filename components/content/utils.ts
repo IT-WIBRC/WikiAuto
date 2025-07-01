@@ -1,7 +1,7 @@
 import { toTypedSchema } from "@vee-validate/zod";
 import { array, custom, nativeEnum, object, string } from "zod";
-import type { Badge } from "~/api/types";
-import { CONTENT_STATUS } from "~/api/types";
+import type { Badge } from "~/api";
+import { CONTENT_STATUS } from "~/api";
 import type { Composer } from "vue-i18n";
 
 const ACCEPTED_IMAGE_TYPES = [

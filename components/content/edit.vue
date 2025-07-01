@@ -96,7 +96,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import type { GetContentDetailsType } from "~/api/types";
+import type { GetContentDetailsType } from "~/api";
 import {
   getContentValidation,
   contentTranslation,

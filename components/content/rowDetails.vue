@@ -183,7 +183,7 @@
   </tr>
 </template>
 <script lang="ts" setup>
-import type { GetContentDetailsType } from "~/api/types";
+import type { GetContentDetailsType } from "~/api";
 
 const emits = defineEmits<{
   (e: "edited", contentIdEdited: string): void;

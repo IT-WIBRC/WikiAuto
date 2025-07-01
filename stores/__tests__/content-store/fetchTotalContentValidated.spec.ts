@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useContentStore } from "../../content.store";
-import { CONTENT_STATUS } from "~/api/types";
-import { contentService } from "../../../api/contentService";
+import { useContentStore } from "~/stores/content.store";
+import { CONTENT_STATUS, contentService, GenericErrors } from "~/api";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -16,16 +15,15 @@ describe("ContentStore", () => {
   describe("fetchTotalContentValidated", () => {
     it("should return the awaited result on success", async () => {
       const contentStore = useContentStore();
-      const getTotalContentValidatedMock = vi.fn(() => {
-        return {
+      const getTotalContentValidatedMock = vi
+        .spyOn(contentService.statistics, "getTotalContentWithStatus")
+        .mockResolvedValueOnce({
           error: null,
           data: [],
           count: 15,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContentWithStatus: getTotalContentValidatedMock,
-      });
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse =
         await contentStore.fetchTotalContentValidated();
@@ -42,19 +40,21 @@ describe("ContentStore", () => {
 
     it("should return the awaited result on known error", async () => {
       const contentStore = useContentStore();
-      const getTotalContentValidatedMock = vi.fn(() => {
-        return {
+      const getTotalContentValidatedMock = vi
+        .spyOn(contentService.statistics, "getTotalContentWithStatus")
+        .mockResolvedValueOnce({
           error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
+            code: "PGRST301",
+            hint: "",
+            message: "",
+            details: "",
+            name: "",
           },
           data: null,
-          count: 0,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContentWithStatus: getTotalContentValidatedMock,
-      });
+          count: null,
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse =
         await contentStore.fetchTotalContentValidated();
@@ -63,28 +63,29 @@ describe("ContentStore", () => {
       expect(getTotalContentValidatedMock).toHaveBeenCalledWith(
         CONTENT_STATUS.VALIDATED,
       );
-
       expect(totalContentResponse).toEqual({
         status: "error",
-        message: "BAD_REQUEST",
+        message: GenericErrors.UNAUTHORIZED,
       });
     });
 
     it("should return the awaited result on unknown error", async () => {
       const contentStore = useContentStore();
-      const getTotalContentValidatedMock = vi.fn(() => {
-        return {
+      const getTotalContentValidatedMock = vi
+        .spyOn(contentService.statistics, "getTotalContentWithStatus")
+        .mockResolvedValueOnce({
           error: {
-            code: "ServerError",
-            message: "Unknown key",
+            code: "PGR",
+            hint: "",
+            message: "",
+            details: "",
+            name: "",
           },
           data: null,
-          count: 0,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContentWithStatus: getTotalContentValidatedMock,
-      });
+          count: null,
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse =
         await contentStore.fetchTotalContentValidated();
@@ -93,10 +94,9 @@ describe("ContentStore", () => {
       expect(getTotalContentValidatedMock).toHaveBeenCalledWith(
         CONTENT_STATUS.VALIDATED,
       );
-
       expect(totalContentResponse).toEqual({
         status: "error",
-        message: "UNKNOWN_ERROR",
+        message: GenericErrors.UNKNOWN_ERROR,
       });
     });
   });

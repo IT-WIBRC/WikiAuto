@@ -1,38 +1,34 @@
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "~/api/contentService";
 
-const mockSelect = vi.fn(() => {
-  return {
-    error: null,
-    data: [],
-  };
-});
+const mockSelect = vi.fn();
 
 const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      select: mockSelect,
-    };
-  }),
+  from: vi.fn(() => ({
+    select: mockSelect,
+  })),
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return mockFrom;
-  },
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => mockFrom,
 }));
 
 describe("Get content List", () => {
   afterAll(() => {
-    vi.doUnmock("~/api/supabaseInit");
+    vi.doUnmock("~/api/utils/supabaseInit");
   });
 
   afterEach(() => {
-    mockSelect.mockRestore();
-    mockFrom.from.mockRestore();
+    mockSelect.mockClear();
+    mockFrom.from.mockClear();
   });
 
   it("should return an empty array when there is no content", async () => {
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: [],
+    });
+
     const contentList = await contentService.getContentList();
 
     expect(mockFrom.from).toHaveBeenCalledTimes(1);
@@ -64,16 +60,16 @@ describe("Get content List", () => {
         badges: [
           {
             name: "badge-service 1",
+            badge_id: "b1",
+            description: "desc",
           },
         ],
         updated_at: "2024-12-14 13:25:08",
       },
     ];
-    mockSelect.mockImplementation(() => {
-      return {
-        error: null,
-        data: result,
-      };
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: result,
     });
     const contentList = await contentService.getContentList();
 
@@ -85,15 +81,15 @@ describe("Get content List", () => {
   });
 
   it("should return an error when failed", async () => {
-    mockSelect.mockImplementation(() => {
-      return {
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-        count: 0,
-      };
+    mockSelect.mockReturnValueOnce({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+        details: "",
+        hint: "",
+      },
+      data: null,
+      count: 0,
     });
     const contentList = await contentService.getContentList();
 
@@ -102,6 +98,8 @@ describe("Get content List", () => {
       error: {
         code: "InvalidToken",
         message: "Unknown key",
+        details: "",
+        hint: "",
       },
       data: null,
       count: 0,

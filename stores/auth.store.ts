@@ -1,10 +1,13 @@
+import { defineStore } from "pinia";
 import { authService } from "~/api/authService";
-import { GenericErrors, type ApiResponseResult } from "~/api/types";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
+import { GenericErrors, isObjectOfData, type ApiResponseResult } from "~/api";
 import type { Session, User } from "@supabase/auth-js";
 
 type AuthState = {
   session: Session | null;
 };
+
 export const useAuthStore = defineStore("auth", {
   state: (): AuthState => ({
     session: null,
@@ -15,50 +18,54 @@ export const useAuthStore = defineStore("auth", {
     },
   },
   actions: {
+    setSession(session: Session | null) {
+      this.session = session;
+    },
     async login(
       email: string,
       password: string,
     ): Promise<ApiResponseResult<User>> {
-      const response = await authService.login(email, password);
+      const response = await wrapServiceCall(
+        authService.login(email, password),
+      );
 
-      if (!response.error) {
-        this.session = response.data.session;
-        return {
-          status: "success",
-          data: response.data.user,
-        };
-      } else {
-        switch (response.error.code) {
-          case "invalid_credentials":
-          case "MissingParameter":
-          case "InvalidKey": {
+      return response.fold<ApiResponseResult<User>>(
+        (errorValue) => ({
+          status: "error",
+          message: errorValue.message,
+        }),
+        (successValue) => {
+          if (
+            successValue.data &&
+            isObjectOfData<User>(successValue.data.user) &&
+            isObjectOfData<Session>(successValue.data.session)
+          ) {
+            this.setSession(successValue.data.session);
             return {
-              status: "error",
-              message: GenericErrors.BAD_REQUEST,
+              status: "success",
+              data: successValue.data.user,
             };
           }
-          default:
-            return {
-              status: "error",
-              message: GenericErrors.UNKNOWN_ERROR,
-            };
-        }
-      }
+          return {
+            status: "error",
+            message: GenericErrors.SERVER_ERROR,
+          };
+        },
+      );
     },
-    async logout(): Promise<ApiResponseResult> {
-      const response = await authService.logout();
+    async logout(): Promise<ApiResponseResult<undefined>> {
+      const response = await wrapServiceCall(authService.logout());
 
-      if (!response.error) {
-        return {
-          status: "success",
-          data: undefined,
-        };
-      } else {
+      if (response.isLeft()) {
         return {
           status: "error",
-          message: GenericErrors.SERVER_ERROR,
+          message: GenericErrors.REQUEST_FAILED,
         };
       }
+      this.$reset();
+      return {
+        status: "success",
+      };
     },
   },
 });

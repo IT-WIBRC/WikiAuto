@@ -1,53 +1,59 @@
-import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { badgeService } from "~/api/badgeService";
 
-const mockSelect = vi.fn(() => {
+const { mockSelect, mockFrom } = vi.hoisted(() => {
+  const mockSelect = vi.fn();
+  const mockFrom = {
+    from: vi.fn(() => ({
+      select: mockSelect,
+    })),
+  };
   return {
-    error: null,
-    data: [],
+    mockSelect,
+    mockFrom,
   };
 });
 
-const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      select: mockSelect,
-    };
-  }),
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => mockFrom,
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return mockFrom;
-  },
-}));
+function expectBadgeListQuery() {
+  expect(mockFrom.from).toHaveBeenCalledTimes(1);
+  expect(mockFrom.from).toHaveBeenCalledWith("badges");
+  expect(mockSelect).toHaveBeenCalledTimes(1);
+  expect(mockSelect).toHaveBeenCalledWith("*");
+}
 
 describe("Get Badge List", () => {
-  afterAll(() => {
-    vi.doUnmock("~/api/supabaseInit");
-  });
-
   afterEach(() => {
-    mockSelect.mockRestore();
-    mockFrom.from.mockRestore();
+    mockSelect.mockClear();
+    mockFrom.from.mockClear();
   });
 
-  it("should return an empty array when there is no badge", async () => {
+  it("returns an empty array when there are no badges", async () => {
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: [],
+      count: null,
+      status: 200,
+      statusText: "OK",
+    });
+
     const badgeListResponse = await badgeService.getBadgeList();
 
-    expect(mockFrom.from).toHaveBeenCalledTimes(1);
-    expect(mockFrom.from).toHaveBeenCalledWith("badges");
-
-    expect(mockSelect).toHaveBeenCalledTimes(1);
-    expect(mockSelect).toHaveBeenCalledWith("*");
-
+    expectBadgeListQuery();
     expect(badgeListResponse).toEqual({
       error: null,
       data: [],
+      count: null,
+      status: 200,
+      statusText: "OK",
     });
   });
 
-  it("should return the badge list for option on success", async () => {
+  it("returns the badge list on success", async () => {
     const result = [
       {
         badge_id: "12345",
@@ -64,39 +70,41 @@ describe("Get Badge List", () => {
         updated_at: "2025-04-08 08:02:56",
       },
     ];
-    mockSelect.mockImplementation(() => {
-      return {
-        error: null,
-        data: result,
-      };
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: result,
+      count: 2,
+      status: 200,
+      statusText: "OK",
     });
+
     const badgeListResponse = await badgeService.getBadgeList();
 
-    expect(mockFrom.from).toHaveBeenCalledTimes(1);
-    expect(mockFrom.from).toHaveBeenCalledWith("badges");
-
-    expect(mockSelect).toHaveBeenCalledTimes(1);
-    expect(mockSelect).toHaveBeenCalledWith("*");
-
+    expectBadgeListQuery();
     expect(badgeListResponse).toEqual({
       error: null,
       data: result,
+      count: 2,
+      status: 200,
+      statusText: "OK",
     });
   });
 
-  it("should return an error when failed", async () => {
-    mockSelect.mockImplementation(() => {
-      return {
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-        count: 0,
-      };
+  it("returns an error when the query fails", async () => {
+    mockSelect.mockReturnValueOnce({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+      },
+      data: null,
+      count: 0,
+      status: 401,
+      statusText: "Unauthorized",
     });
+
     const badgeListResponse = await badgeService.getBadgeList();
-    expect(mockSelect).toHaveBeenCalledTimes(1);
+
+    expectBadgeListQuery();
     expect(badgeListResponse).toEqual({
       error: {
         code: "InvalidToken",
@@ -104,6 +112,34 @@ describe("Get Badge List", () => {
       },
       data: null,
       count: 0,
+      status: 401,
+      statusText: "Unauthorized",
     });
+  });
+
+  it("returns undefined if select returns undefined", async () => {
+    mockSelect.mockReturnValueOnce(undefined);
+
+    const badgeListResponse = await badgeService.getBadgeList();
+
+    expectBadgeListQuery();
+    expect(badgeListResponse).toBeUndefined();
+  });
+
+  it("throws if select throws", async () => {
+    mockSelect.mockImplementationOnce(() => {
+      throw new Error("DB connection lost");
+    });
+
+    let error;
+    try {
+      await badgeService.getBadgeList();
+    } catch (e) {
+      error = e;
+    }
+
+    expectBadgeListQuery();
+    expect(error).toBeInstanceOf(Error);
+    expect((error as { message: string }).message).toBe("DB connection lost");
   });
 });

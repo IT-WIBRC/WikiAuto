@@ -1,85 +1,110 @@
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "~/api/contentService";
 
-const mockSelect = vi.fn(() => {
-  return {
-    error: null,
-    data: [],
-    count: 20,
-  };
-});
-
+const mockSelect = vi.fn();
 const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      select: mockSelect,
-    };
-  }),
+  from: vi.fn(() => ({
+    select: mockSelect,
+  })),
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return mockFrom;
-  },
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => mockFrom,
 }));
 
-describe("Content services", () => {
-  describe("Statistics (getTotalContent)", () => {
-    afterAll(() => {
-      vi.doUnmock("~/api/supabaseInit");
+describe("Get content List", () => {
+  afterAll(() => {
+    vi.doUnmock("~/api/utils/supabaseInit");
+  });
+
+  afterEach(() => {
+    mockSelect.mockClear();
+    mockFrom.from.mockClear();
+  });
+
+  it("should return an empty array when there is no content", async () => {
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: [],
     });
 
-    afterEach(() => {
-      mockSelect.mockRestore();
-      mockFrom.from.mockRestore();
+    const contentList = await contentService.getContentList();
+
+    expect(mockFrom.from).toHaveBeenCalledTimes(1);
+    expect(mockFrom.from).toHaveBeenCalledWith("contents");
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(mockSelect).toHaveBeenCalledWith(`
+      content_id, status, title, user_email, updated_at, image, created_at, explanation,
+      badges (
+        name,
+        badge_id,
+        description
+      )
+    `);
+
+    expect(contentList).toEqual({
+      error: null,
+      data: [],
     });
+  });
 
-    it("should return the total content on success", async () => {
-      const totalContentResponse =
-        await contentService.statistics.getTotalContent();
-
-      expect(mockFrom.from).toHaveBeenCalledTimes(1);
-      expect(mockFrom.from).toHaveBeenCalledWith("contents");
-
-      expect(mockSelect).toHaveBeenCalledTimes(1);
-      expect(mockSelect).toHaveBeenCalledWith("content_id", {
-        count: "exact",
-      });
-
-      expect(totalContentResponse).toEqual({
-        error: null,
-        data: [],
-        count: 20,
-      });
-    });
-
-    it("should return an error when failed", async () => {
-      mockSelect.mockImplementation(() => {
-        return {
-          error: {
-            code: "InvalidToken",
-            message: "Unknown key",
+  it("should return the content list on success", async () => {
+    const result = [
+      {
+        content_id: "12345",
+        status: "VALIDATED",
+        title: "My title",
+        user_email: "email@email.com",
+        badges: [
+          {
+            name: "badge-service 1",
+            badge_id: "b1",
+            description: "desc",
           },
-          data: null,
-          count: 0,
-        };
-      });
-      const totalContentResponse =
-        await contentService.statistics.getTotalContent();
+        ],
+        updated_at: "2024-12-14 13:25:08",
+        image: "img.png",
+        created_at: "2024-12-14 13:00:00",
+        explanation: "Some explanation",
+      },
+    ];
+    mockSelect.mockReturnValueOnce({
+      error: null,
+      data: result,
+    });
+    const contentList = await contentService.getContentList();
 
-      expect(mockSelect).toHaveBeenCalledTimes(1);
-      expect(mockSelect).toHaveBeenCalledWith("content_id", {
-        count: "exact",
-      });
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(contentList).toEqual({
+      error: null,
+      data: result,
+    });
+  });
 
-      expect(totalContentResponse).toEqual({
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-        count: 0,
-      });
+  it("should return an error when failed", async () => {
+    mockSelect.mockReturnValueOnce({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+        details: "",
+        hint: "",
+      },
+      data: null,
+      count: 0,
+    });
+    const contentList = await contentService.getContentList();
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    expect(contentList).toEqual({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+        details: "",
+        hint: "",
+      },
+      data: null,
+      count: 0,
     });
   });
 });

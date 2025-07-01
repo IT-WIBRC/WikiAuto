@@ -1,4 +1,6 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll, beforeEach, describe, expect, it, vi
+} from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
@@ -21,7 +23,7 @@ describe("CardDashboardTotalBadge", () => {
   const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
 
   const badgeStore = useBadgeStore(pinia);
-  badgeStore.fetchTotalBadges = vi.fn().mockReturnValue({
+  badgeStore.fetchBadgeCount = vi.fn().mockReturnValue({
     status: "success",
     data: 178,
   });
@@ -40,7 +42,7 @@ describe("CardDashboardTotalBadge", () => {
   });
 
   it("shows loading skeleton while loading", async () => {
-    badgeStore.fetchTotalBadges.mockImplementationOnce(
+    badgeStore.fetchBadgeCount.mockImplementationOnce(
       () => new Promise(() => {}),
     );
     const loadingWrapper = await mountSuspended(CardDashboardTotalBadge, {
@@ -72,7 +74,7 @@ describe("CardDashboardTotalBadge", () => {
   });
 
   it("calls getTotalBadge and subscribes on mount", () => {
-    expect(badgeStore.fetchTotalBadges).toHaveBeenCalled();
+    expect(badgeStore.fetchBadgeCount).toHaveBeenCalled();
     expect(realtimeObserver.subscribe).toHaveBeenCalledWith({
       forEvents: ["INSERT", "DELETE"],
       onTable: "badges",

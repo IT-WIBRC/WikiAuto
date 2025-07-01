@@ -1,8 +1,8 @@
-import useSupabase from "~/api/supabaseInit";
+import useSupabase from "~/api/utils/supabaseInit";
 
 const BUCKET_NAME = "wikiAuto_images";
 const uploadFile = async (file: File, path: string) => {
-  return useSupabase().storage.from(BUCKET_NAME).upload(path, file, {
+  return await useSupabase().storage.from(BUCKET_NAME).upload(path, file, {
     upsert: true,
   });
 };

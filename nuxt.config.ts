@@ -3,6 +3,13 @@ import { resolve } from "path";
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
+  components: [
+    {
+      path: "~/components",
+      extensions: ["vue"],
+      ignore: ["**/*.spec.*", "**/__tests__/**"], // Exclude any __tests__ folder at any depth
+    },
+  ],
   modules: [
     "@nuxtjs/i18n",
     "@nuxt/test-utils/module",
@@ -27,7 +34,7 @@ export default defineNuxtConfig({
         language: "fr-FR",
       },
     ],
-    fallbackLocale: "en",
+    defaultLocale: "en",
     strategy: "no_prefix",
   },
   veeValidate: {

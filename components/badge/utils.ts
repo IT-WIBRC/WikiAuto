@@ -1,5 +1,5 @@
 import { object, string } from "zod";
-import type { Composer } from "vue-i18n";
+import type { TranslateFunction } from "~/types/components";
 
 export const MAX_TAG_LENGTH = 30;
 export const MAX_DESCRIPTION_LENGTH = 60;
@@ -39,7 +39,7 @@ export const badgeTranslation = {
   },
 };
 
-export const getBadgeValidation = (t: Composer) => {
+export const getBadgeValidation = (t: TranslateFunction) => {
   return toTypedSchema(
     object({
       title: string()
@@ -51,6 +51,7 @@ export const getBadgeValidation = (t: Composer) => {
           MAX_TAG_LENGTH,
           t("name.error.lessThan", { length: MAX_TAG_LENGTH }),
         ),
+      description: string(),
     }),
   );
 };

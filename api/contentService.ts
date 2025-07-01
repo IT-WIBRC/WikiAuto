@@ -1,12 +1,23 @@
-import useSupabase from "~/api/supabaseInit";
+import useSupabase from "~/api/utils/supabaseInit";
 import type {
   ContentCreation,
   CONTENT_STATUS,
   ContentEdition,
-  CONTENT_RESPONSE_STATUS,
-} from "~/api/types";
+  Content,
+  GetContentListItem,
+} from "~/api";
+import type {
+  PostgrestSingleResponse,
+  PostgrestError,
+} from "@supabase/supabase-js";
+import type { PostgrestResponseFailure } from "@supabase/postgrest-js";
 
-const getTotalContent = async () => {
+export type ContentIdResponse = { content_id: string };
+type ContentServiceResponse = PostgrestSingleResponse<ContentIdResponse | null>;
+
+const getTotalContent = async (): Promise<
+  PostgrestSingleResponse<Pick<Content, "content_id">[]>
+> => {
   return useSupabase()
     .from("contents")
     .select("content_id", { count: "exact" });
@@ -14,14 +25,18 @@ const getTotalContent = async () => {
 
 const getTotalContentWithStatus = async (
   status: keyof typeof CONTENT_STATUS,
-) => {
+): Promise<
+  PostgrestSingleResponse<Pick<Content, "content_id" | "status">[]>
+> => {
   return useSupabase()
     .from("contents")
     .select("content_id, status", { count: "exact" })
     .eq("status", status);
 };
 
-const getContentList = async () => {
+const getContentList = async (): Promise<
+  PostgrestSingleResponse<GetContentListItem[]>
+> => {
   return useSupabase().from("contents").select(`
       content_id, status, title, user_email, updated_at, image, created_at, explanation,
       badges (
@@ -32,7 +47,7 @@ const getContentList = async () => {
     `);
 };
 
-const saveInContentBadge = (contentId: string, badgeIds: string[]) => {
+const linkBadgesToContent = (contentId: string, badgeIds: string[]) => {
   return useSupabase()
     .from("content_badges")
     .upsert(
@@ -43,19 +58,83 @@ const saveInContentBadge = (contentId: string, badgeIds: string[]) => {
     );
 };
 
-type ContentCreationTypeForService = Omit<ContentCreation, "illustration"> & {
+const makePostgrestError = (
+  code: string,
+  message: string,
+  details: string,
+  status: number,
+  statusText: string,
+): PostgrestResponseFailure => ({
+  error: {
+    code,
+    message,
+    details,
+    hint: "",
+  } as PostgrestError,
+  data: null,
+  count: null,
+  status,
+  statusText,
+});
+
+const foreignKeyErrorResponse = (
+  badgeIds: string[],
+): PostgrestResponseFailure =>
+  makePostgrestError(
+    "23503",
+    'insert or update on table "content_badges" violates foreign key constraint',
+    `Key (badge_id)=(${badgeIds.join(", ")}) is not present in table "badges".`,
+    409,
+    "Conflict",
+  );
+
+const notNullErrorResponse = (): PostgrestResponseFailure =>
+  makePostgrestError(
+    "23502",
+    'null value in column "badge_id" violates not-null constraint',
+    "No badges provided.",
+    400,
+    "Bad Request",
+  );
+
+type ContentCreationInput = Omit<ContentCreation, "illustration"> & {
   illustration: string;
 };
 
-const create = async (
-  content: ContentCreationTypeForService,
+const createContent = async (
+  content: ContentCreationInput,
   userEmail: string,
-): Promise<{
-  status: keyof CONTENT_RESPONSE_STATUS;
-  error?: unknown;
-}> => {
-  const { title, explanation, illustration, badges, status } = content;
+): Promise<ContentServiceResponse> => {
+  if (!content.badges || content.badges.length === 0) {
+    return notNullErrorResponse();
+  }
 
+  const badgeIds = content.badges.map((badge) => badge.badge_id);
+
+  const { data: existingBadges, error: badgeCheckError } = await useSupabase()
+    .from("badges")
+    .select("badge_id")
+    .in("badge_id", badgeIds);
+
+  if (badgeCheckError) {
+    return makePostgrestError(
+      badgeCheckError.code || "400",
+      badgeCheckError.message,
+      badgeCheckError.details || "",
+      400,
+      "Bad Request",
+    );
+  }
+
+  const existingBadgeIds = (existingBadges ?? []).map((b) => b.badge_id);
+  const missingBadgeIds = badgeIds.filter(
+    (id) => !existingBadgeIds.includes(id),
+  );
+  if (missingBadgeIds.length > 0) {
+    return foreignKeyErrorResponse(missingBadgeIds);
+  }
+
+  const { title, explanation, illustration, status } = content;
   const contentCreated = await useSupabase()
     .from("contents")
     .insert({
@@ -69,42 +148,74 @@ const create = async (
     .limit(1)
     .single();
 
-  if (contentCreated.data && contentCreated.data.content_id) {
-    const badgeId = contentCreated.data.content_id;
-
-    const badgesCreated = await saveInContentBadge(
-      badgeId,
-      badges.map((badge) => badge.badge_id),
-    );
-
-    const haveBeenCreatedSuccessfully = badgesCreated.error === null;
-    if (haveBeenCreatedSuccessfully) {
-      return {
-        status: "completed",
-      };
-    }
+  if (!contentCreated.data || !contentCreated.data.content_id) {
     return {
-      status: "incomplete",
-      error: badgesCreated.error,
+      ...contentCreated,
+      data: null,
     };
   }
+
+  const badgeLinkResult = await linkBadgesToContent(
+    contentCreated.data.content_id,
+    badgeIds,
+  );
+
+  if (badgeLinkResult.error !== null) {
+    return makePostgrestError(
+      badgeLinkResult.error.code || "400",
+      badgeLinkResult.error.message,
+      badgeLinkResult.error.details || "",
+      400,
+      "Bad Request",
+    );
+  }
+
   return {
-    status: "failed",
-    error: contentCreated.error,
+    error: null,
+    data: { content_id: contentCreated.data.content_id },
+    count: null,
+    status: 201,
+    statusText: "Created",
   };
 };
 
-type ContentEditionTypeForService = Omit<ContentEdition, "illustration"> & {
+type ContentEditionInput = Omit<ContentEdition, "illustration"> & {
   illustration: string;
 };
-const edit = async (
-  content: ContentEditionTypeForService,
-): Promise<{
-  status: keyof CONTENT_RESPONSE_STATUS;
-  error?: unknown;
-}> => {
-  const { id, title, explanation, illustration, badges, status, userEmail } =
-    content;
+
+const editContent = async (
+  content: ContentEditionInput,
+): Promise<ContentServiceResponse> => {
+  if (!content.badges || content.badges.length === 0) {
+    return notNullErrorResponse();
+  }
+
+  const badgeIds = content.badges.map((badge) => badge.badge_id);
+
+  const { data: existingBadges, error: badgeCheckError } = await useSupabase()
+    .from("badges")
+    .select("badge_id")
+    .in("badge_id", badgeIds);
+
+  if (badgeCheckError) {
+    return makePostgrestError(
+      badgeCheckError.code || "400",
+      badgeCheckError.message,
+      badgeCheckError.details || "",
+      400,
+      "Bad Request",
+    );
+  }
+
+  const existingBadgeIds = (existingBadges ?? []).map((b) => b.badge_id);
+  const missingBadgeIds = badgeIds.filter(
+    (id) => !existingBadgeIds.includes(id),
+  );
+  if (missingBadgeIds.length > 0) {
+    return foreignKeyErrorResponse(missingBadgeIds);
+  }
+
+  const { id, title, explanation, illustration, status, userEmail } = content;
 
   const contentEdited = await useSupabase()
     .from("contents")
@@ -120,32 +231,41 @@ const edit = async (
     .limit(1)
     .single();
 
-  if (contentEdited.data && contentEdited.data.content_id) {
-    const badgeId = contentEdited.data.content_id;
-
-    const badgesCreated = await saveInContentBadge(
-      badgeId,
-      badges.map((badge) => badge.badge_id),
-    );
-
-    const haveBeenCreatedSuccessfully = badgesCreated.error === null;
-    if (haveBeenCreatedSuccessfully) {
-      return {
-        status: "completed",
-      };
-    }
+  if (!contentEdited.data || !contentEdited.data.content_id) {
     return {
-      status: "incomplete",
-      error: badgesCreated.error,
+      ...contentEdited,
+      data: null,
     };
   }
+
+  const badgeLinkResult = await linkBadgesToContent(
+    contentEdited.data.content_id,
+    badgeIds,
+  );
+
+  if (badgeLinkResult.error !== null) {
+    return makePostgrestError(
+      badgeLinkResult.error.code || "400",
+      badgeLinkResult.error.message,
+      badgeLinkResult.error.details || "",
+      400,
+      "Bad Request",
+    );
+  }
+
   return {
-    status: "failed",
-    error: contentEdited.error,
+    error: null,
+    data: { content_id: contentEdited.data.content_id },
+    count: null,
+    status: 200,
+    statusText: "OK",
   };
 };
 
-const editStatus = async (status: string, contentId: string) => {
+const editStatus = async (
+  status: keyof typeof CONTENT_STATUS,
+  contentId: string,
+): Promise<PostgrestSingleResponse<null>> => {
   return await useSupabase()
     .from("contents")
     .update({
@@ -160,7 +280,7 @@ export const contentService = {
     getTotalContentWithStatus,
   },
   getContentList,
-  create,
-  edit,
+  create: createContent,
+  edit: editContent,
   editStatus,
 };

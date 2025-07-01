@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { SelectCustomForContentStatus } from "#components";
-import { CONTENT_STATUS } from "~/api/types";
+import { CONTENT_STATUS } from "~/api";
 
 describe("CustomForContentStatus", () => {
   let selectCustomForContentStatus: VueWrapper;
