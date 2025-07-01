@@ -95,7 +95,10 @@ describe("CardDashboardTotalValidatedContent", () => {
       cardDashboardTotalValidatedContent.findComponent(CardDashboardBase);
     expect(cardDashboardBase.props().value).toBe(170);
 
-    handler({ eventType: "INSERT", new: { status: "VALIDATED" } });
+    handler({
+      eventType: "INSERT",
+      new: { status: "VALIDATED" },
+    });
     await cardDashboardTotalValidatedContent.vm.$nextTick();
     cardDashboardBase =
       cardDashboardTotalValidatedContent.findComponent(CardDashboardBase);

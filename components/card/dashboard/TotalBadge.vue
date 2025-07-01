@@ -19,7 +19,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+import { realtimeObserver, type ListenEvent } from "~/api";
 const badgeListRoute = "/badge";
 
 const { t } = useI18n({
@@ -41,14 +41,14 @@ const totalBadges = ref(0);
 const isTotalBadgeLoading = ref(false);
 const getTotalBadge = async (): Promise<void> => {
   isTotalBadgeLoading.value = true;
-  const totalBadgeErrorOrValue = await useBadgeStore().fetchTotalBadges();
+  const totalBadgeErrorOrValue = await useBadgeStore().fetchBadgeCount();
   if (totalBadgeErrorOrValue.status === "success") {
     totalBadges.value = totalBadgeErrorOrValue.data;
   }
   isTotalBadgeLoading.value = false;
 };
 
-const handler = ({ eventType }): void => {
+const handler = ({ eventType }: { eventType: ListenEvent }): void => {
   switch (eventType) {
     case "INSERT":
       totalBadges.value++;

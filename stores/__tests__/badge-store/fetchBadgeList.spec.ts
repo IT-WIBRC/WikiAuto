@@ -1,89 +1,113 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
+import { flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
-import { useBadgeStore } from "../../badge.store";
-import { badgeService } from "../../../api/badgeService";
+import { useBadgeStore } from "~/stores/badge.store";
+import { GenericErrors } from "~/api";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
+import type { Badge } from "~/api";
 
-describe("BadgeStore", () => {
+vi.mock("~/api/utils/wrapServiceCall", () => ({
+  wrapServiceCall: vi.fn(),
+}));
+
+vi.mock("~/api/badgeService", () => ({
+  badgeService: {
+    getBadgeList: vi.fn(),
+  },
+}));
+
+type FoldSuccess = { data: Badge[]; count: number | null };
+type FoldError = { message: string };
+
+describe("BadgeStore fetchBadgeList", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
-  describe("fetchBadgeList", () => {
-    it("should return the awaited list on success", async () => {
-      const badgeStore = useBadgeStore();
-      const result = [
-        {
-          content_id: "12345",
-          name: "My title",
-          description: "My description",
-        },
-      ];
-      const getBadgeListMock = vi.fn(() => {
-        return {
-          error: null,
+  it("returns the awaited list on success", async () => {
+    const result: Badge[] = [
+      {
+        badge_id: "12345",
+        name: "My title",
+        description: "My description",
+        created_at: "",
+        updated_at: "",
+      },
+    ];
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (
+        _onError: (err: FoldError) => unknown,
+        onSuccess: (res: FoldSuccess) => unknown,
+      ) =>
+        onSuccess({
           data: result,
-        };
-      });
-      vi.spyOn(badgeService, "getBadgeList", "get").mockReturnValueOnce(
-        getBadgeListMock,
-      );
-
-      const badgeListResponse = await badgeStore.fetchBadgeList();
-
-      expect(getBadgeListMock).toHaveBeenCalledTimes(1);
-      expect(badgeListResponse).toEqual({
-        status: "success",
-        data: result,
-      });
+          count: null,
+        }),
     });
 
-    it("should return the awaited result on failure", async () => {
-      const badgeStore = useBadgeStore();
-      const getBadgeListMock = vi.fn(() => {
-        return {
-          error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
-          },
-          data: null,
-        };
-      });
-      vi.spyOn(badgeService, "getBadgeList", "get").mockReturnValueOnce(
-        getBadgeListMock,
-      );
+    const badgeStore = useBadgeStore();
+    const badgeListResponse = await badgeStore.fetchBadgeList();
 
-      const badgeListResponse = await badgeStore.fetchBadgeList();
+    await flushPromises();
 
-      expect(getBadgeListMock).toHaveBeenCalledTimes(1);
-      expect(badgeListResponse).toEqual({
-        status: "error",
-        message: "REQUEST_FAILED",
-      });
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeListResponse).toEqual({
+      status: "success",
+      data: result,
+    });
+  });
+
+  it("returns the awaited result on failure", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (onError: (err: FoldError) => unknown) =>
+        onError({ message: GenericErrors.REQUEST_FAILED }),
     });
 
-    it("should return an empty content list where there is not", async () => {
-      const badgeStore = useBadgeStore();
-      const getBadgeListMock = vi.fn(() => {
-        return {
-          error: null,
+    const badgeStore = useBadgeStore();
+    const badgeListResponse = await badgeStore.fetchBadgeList();
+
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeListResponse).toEqual({
+      status: "error",
+      message: GenericErrors.REQUEST_FAILED,
+    });
+  });
+
+  it("returns an empty content list when there is none", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (
+        _onError: (err: FoldError) => unknown,
+        onSuccess: (res: FoldSuccess) => unknown,
+      ) =>
+        onSuccess({
           data: [],
-        };
-      });
-      vi.spyOn(badgeService, "getBadgeList", "get").mockReturnValueOnce(
-        getBadgeListMock,
-      );
+          count: null,
+        }),
+    });
 
-      const badgeListResponse = await badgeStore.fetchBadgeList();
+    const badgeStore = useBadgeStore();
+    const badgeListResponse = await badgeStore.fetchBadgeList();
 
-      expect(getBadgeListMock).toHaveBeenCalledTimes(1);
-      expect(badgeListResponse).toEqual({
-        status: "success",
-        data: [],
-      });
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeListResponse).toEqual({
+      status: "success",
+      data: [],
     });
   });
 });

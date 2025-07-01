@@ -6,7 +6,7 @@ import {
   SelectCustomForContentStatus,
 } from "#components";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import { CONTENT_STATUS } from "~/api/types";
+import { CONTENT_STATUS } from "~/api";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 describe("ModalStatusUpdate", () => {

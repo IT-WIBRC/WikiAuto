@@ -1,4 +1,4 @@
-import type { Badge as BadgeType } from "~/api/types";
+import type { Badge as BadgeType } from "~/api";
 import useString from "~/utils/useString";
 
 export interface CustomOption<T> {

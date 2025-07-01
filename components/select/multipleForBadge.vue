@@ -65,7 +65,7 @@
 </template>
 <script setup lang="ts">
 import { BadgeToOptionForList } from "~/components/select/type";
-import type { Badge as BadgeType } from "~/api/types";
+import type { Badge as BadgeType } from "~/api";
 
 defineProps<{
   label: string;

@@ -103,7 +103,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { CONTENT_STATUS } from "~/api/types";
+import { CONTENT_STATUS } from "~/api";
 import {
   getContentValidation,
   contentTranslation,

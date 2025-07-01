@@ -56,7 +56,7 @@ import {
   getBadgeValidation,
   badgeTranslation,
 } from "./utils";
-import type { Badge } from "~/api/types";
+import type { Badge } from "~/api";
 
 const props = defineProps<{
   id: string;

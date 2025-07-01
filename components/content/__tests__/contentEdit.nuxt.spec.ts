@@ -20,7 +20,7 @@ import {
 } from "#components";
 import { useContentStore } from "~/stores/content.store";
 import { flushPromises } from "@vue/test-utils";
-import { CONTENT_STATUS, GenericErrors } from "~/api/types";
+import { CONTENT_STATUS, GenericErrors } from "~/api";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 const contents = useUnitTestUtils.getMockContentList();

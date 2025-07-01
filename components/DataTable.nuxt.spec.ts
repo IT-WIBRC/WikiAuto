@@ -23,8 +23,16 @@ const headers: DataHeader[] = [
   },
 ];
 
+type Item = {
+  content_id: string;
+  status: string;
+  user_email: string;
+  title: string;
+  badges: string[];
+};
+
 class DataForContent implements DataItem<string> {
-  constructor(private content: unknown) {}
+  constructor(private content: Item) {}
 
   getTextFor(key: string): string | string[] | number {
     switch (key) {

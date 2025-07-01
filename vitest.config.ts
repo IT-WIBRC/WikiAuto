@@ -3,6 +3,7 @@ import { defineVitestConfig } from "@nuxt/test-utils/config";
 export default defineVitestConfig({
   test: {
     environment: "nuxt",
+    include: ["**/*.spec.ts", "**/*.test.ts", "**/*.nuxt.spec.ts"],
     setupFiles: ["dotenv/config", "./vitest.setup.ts"],
     environmentOptions: {
       nuxt: {
@@ -27,8 +28,8 @@ export default defineVitestConfig({
         "**/assets/**",
         "**/*.config.*",
         "*.d.ts",
-        "**/types.*",
-        "./api/wikiAutoType.ts",
+        "**/types/**",
+        "./api/utils/monads.ts",
         "./utils/useUnitTestUtils.ts",
         "**/__mocks__/**",
         "**/.nuxt/**",

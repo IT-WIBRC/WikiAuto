@@ -3,9 +3,10 @@ import {
   type ApiResponseResult,
   GenericErrors,
   type GetProfile,
-  type EditUserInfoPayload,
-} from "~/api/types";
-import { wrapServiceCall } from "~/api/wrapServiceCall";
+  type EditProfileInfoPayload,
+  handleSingleItemResponse,
+} from "~/api";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 
 type User = {
   id: string;
@@ -25,6 +26,7 @@ export const useUserStore = defineStore("user", {
     currentUser: {} as User,
     hasAlreadyFetchUserProfile: false,
   }),
+
   actions: {
     setCurrentUserIdAndEmail(userId: string, email: string): void {
       this.currentUser.id = userId;
@@ -42,46 +44,73 @@ export const useUserStore = defineStore("user", {
       this.hasAlreadyFetchUserProfile = true;
     },
     async getProfile(): Promise<ApiResponseResult<GetProfile>> {
+      if (!this.currentUser.id) {
+        return {
+          status: "error",
+          message: GenericErrors.BAD_REQUEST,
+        };
+      }
       const result = await wrapServiceCall(
         authService.getUserProfile(this.currentUser.id),
       );
 
-      if (result.status === "success") {
-        if (result.response.data) {
-          this.setCurrentOtherUserInfo(result.response.data);
+      return handleSingleItemResponse<
+        GetProfile,
+        ApiResponseResult<GetProfile>
+      >(result, {
+        onError: (errorValue) => {
+          return {
+            status: "error",
+            message: errorValue,
+          };
+        },
+        onFound: (successValue) => {
+          this.setCurrentOtherUserInfo(successValue);
           this.markProfileAsFetched();
 
           return {
             status: "success",
-            data: undefined,
+            data: successValue,
           };
-        }
-        return {
-          status: "error",
-          message: GenericErrors.UNKNOWN_ERROR,
-        };
-      } else return result;
+        },
+        onNotFound: () => {
+          return {
+            status: "error",
+            message: GenericErrors.NOT_FOUND,
+          };
+        },
+      });
     },
     async updateInfo(
-      infoToEdit: EditUserInfoPayload,
-    ): Promise<ApiResponseResult> {
+      infoToEdit: EditProfileInfoPayload,
+    ): Promise<ApiResponseResult<undefined>> {
       const result = await wrapServiceCall(
         authService.editUserInfo(infoToEdit),
       );
 
-      if (result.status === "success") {
-        if (result.response.data && !Array.isArray(result.response.data)) {
-          this.setCurrentOtherUserInfo(result.response.data);
-          return {
-            status: "success",
-            data: result.response.data,
-          };
-        }
-        return {
-          status: "error",
-          message: GenericErrors.UNKNOWN_ERROR,
-        };
-      } else return result;
+      return handleSingleItemResponse<GetProfile, ApiResponseResult<undefined>>(
+        result,
+        {
+          onError: (errorValue) => {
+            return {
+              status: "error",
+              message: errorValue,
+            };
+          },
+          onFound: (updatedUser) => {
+            this.setCurrentOtherUserInfo(updatedUser);
+            return {
+              status: "success",
+            };
+          },
+          onNotFound: () => {
+            return {
+              status: "error",
+              message: GenericErrors.NOT_FOUND,
+            };
+          },
+        },
+      );
     },
   },
   getters: {

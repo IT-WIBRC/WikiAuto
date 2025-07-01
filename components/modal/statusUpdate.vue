@@ -45,7 +45,7 @@
   </ModalLayout>
 </template>
 <script setup lang="ts">
-import type { CONTENT_STATUS } from "~/api/types";
+import type { CONTENT_STATUS } from "~/api";
 
 const props = defineProps<{
   contentId: string;

@@ -1,77 +1,74 @@
-import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { badgeService } from "~/api/badgeService";
 
-const mockSelect = vi.fn(() => {
+const { mockSelect, mockFrom } = vi.hoisted(() => {
+  const mockSelect = vi.fn();
+  const mockFrom = {
+    from: vi.fn(() => ({
+      select: mockSelect,
+    })),
+  };
   return {
-    error: null,
-    data: [],
-    count: 15,
+    mockSelect,
+    mockFrom,
   };
 });
 
-const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      select: mockSelect,
-    };
-  }),
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => mockFrom,
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return mockFrom;
-  },
-}));
+function expectTotalBadgeQuery() {
+  expect(mockFrom.from).toHaveBeenCalledTimes(1);
+  expect(mockFrom.from).toHaveBeenCalledWith("badges");
+  expect(mockSelect).toHaveBeenCalledTimes(1);
+  expect(mockSelect).toHaveBeenCalledWith("badge_id", { count: "exact" });
+}
 
 describe("Badge services", () => {
-  describe("getTotalBadges", () => {
-    afterAll(() => {
-      vi.doUnmock("~/api/supabaseInit");
-    });
-
+  describe("countAllBadges", () => {
     afterEach(() => {
-      mockSelect.mockRestore();
-      mockFrom.from.mockRestore();
+      mockSelect.mockClear();
+      mockFrom.from.mockClear();
     });
 
-    it("should return the total badges on success", async () => {
-      const totalBadgeResponse = await badgeService.statistics.getTotalBadge();
-
-      expect(mockFrom.from).toHaveBeenCalledTimes(1);
-      expect(mockFrom.from).toHaveBeenCalledWith("badges");
-
-      expect(mockSelect).toHaveBeenCalledTimes(1);
-      expect(mockSelect).toHaveBeenCalledWith("badge_id", {
-        count: "exact",
+    it("returns the total badges on success", async () => {
+      mockSelect.mockReturnValueOnce({
+        error: null,
+        data: [],
+        count: 15,
+        status: 200,
+        statusText: "OK",
       });
 
+      const totalBadgeResponse = await badgeService.statistics.countAllBadges();
+
+      expectTotalBadgeQuery();
       expect(totalBadgeResponse).toEqual({
         error: null,
         data: [],
         count: 15,
+        status: 200,
+        statusText: "OK",
       });
     });
 
-    it("should return an error when failed", async () => {
-      mockSelect.mockImplementation(() => {
-        return {
-          error: {
-            code: "InvalidToken",
-            message: "Unknown key",
-          },
-          data: null,
-          count: 0,
-        };
-      });
-      const totalBadgeResponse = await badgeService.statistics.getTotalBadge();
-      expect(mockFrom.from).toHaveBeenCalledTimes(1);
-      expect(mockFrom.from).toHaveBeenCalledWith("badges");
-
-      expect(mockSelect).toHaveBeenCalledTimes(1);
-      expect(mockSelect).toHaveBeenCalledWith("badge_id", {
-        count: "exact",
+    it("returns an error when the query fails", async () => {
+      mockSelect.mockReturnValueOnce({
+        error: {
+          code: "InvalidToken",
+          message: "Unknown key",
+        },
+        data: null,
+        count: 0,
+        status: 401,
+        statusText: "Unauthorized",
       });
 
+      const totalBadgeResponse = await badgeService.statistics.countAllBadges();
+
+      expectTotalBadgeQuery();
       expect(totalBadgeResponse).toEqual({
         error: {
           code: "InvalidToken",
@@ -79,7 +76,35 @@ describe("Badge services", () => {
         },
         data: null,
         count: 0,
+        status: 401,
+        statusText: "Unauthorized",
       });
+    });
+
+    it("returns undefined if select returns undefined", async () => {
+      mockSelect.mockReturnValueOnce(undefined);
+
+      const totalBadgeResponse = await badgeService.statistics.countAllBadges();
+
+      expectTotalBadgeQuery();
+      expect(totalBadgeResponse).toBeUndefined();
+    });
+
+    it("throws if select throws", async () => {
+      mockSelect.mockImplementationOnce(() => {
+        throw new Error("DB connection lost");
+      });
+
+      let error;
+      try {
+        await badgeService.statistics.countAllBadges();
+      } catch (e) {
+        error = e;
+      }
+
+      expectTotalBadgeQuery();
+      expect(error).toBeInstanceOf(Error);
+      expect((error as { message: string }).message).toBe("DB connection lost");
     });
   });
 });

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useContentStore } from "../../content.store";
-import { contentService } from "../../../api/contentService";
+import { useContentStore } from "~/stores/content.store";
+import { contentService } from "~/api";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -24,20 +24,23 @@ describe("ContentStore", () => {
           badges: [
             {
               name: "badge-service 1",
+              badge_id: "1235456",
+              description: "description 1",
             },
           ],
           updated_at: "2024-12-14 13:25:08",
+          image: "",
+          created_at: "",
+          explanation: "",
         },
       ];
-      const getContentListMock = vi.fn(() => {
-        return {
+
+      const getContentListMock = vi
+        .spyOn(contentService, "getContentList")
+        .mockResolvedValueOnce({
           error: null,
           data: result,
-        };
-      });
-      vi.spyOn(contentService, "getContentList", "get").mockReturnValueOnce(
-        getContentListMock,
-      );
+        });
 
       const contentListResponse = await contentStore.fetchContentList();
 
@@ -50,39 +53,42 @@ describe("ContentStore", () => {
 
     it("should return the awaited result on failure", async () => {
       const contentStore = useContentStore();
-      const getContentListMock = vi.fn(() => {
-        return {
+      const getContentListMock = vi
+        .spyOn(contentService, "getContentList")
+        .mockResolvedValueOnce({
           error: {
             code: "NoSuchKey",
             message: "Unknown key",
+            details: "",
+            hint: "",
+            name: "",
           },
           data: null,
-        };
-      });
-      vi.spyOn(contentService, "getContentList", "get").mockReturnValueOnce(
-        getContentListMock,
-      );
+          count: null,
+          status: 0,
+          statusText: "",
+        });
 
       const contentListResponse = await contentStore.fetchContentList();
 
       expect(getContentListMock).toHaveBeenCalledTimes(1);
       expect(contentListResponse).toEqual({
         status: "error",
-        message: "REQUEST_FAILED",
+        message: "UNKNOWN_ERROR",
       });
     });
 
     it("should return an empty content list where there is not", async () => {
       const contentStore = useContentStore();
-      const getContentListMock = vi.fn(() => {
-        return {
+      const getContentListMock = vi
+        .spyOn(contentService, "getContentList")
+        .mockResolvedValueOnce({
           error: null,
           data: [],
-        };
-      });
-      vi.spyOn(contentService, "getContentList", "get").mockReturnValueOnce(
-        getContentListMock,
-      );
+          count: null,
+          status: 0,
+          statusText: "",
+        });
 
       const contentListResponse = await contentStore.fetchContentList();
 

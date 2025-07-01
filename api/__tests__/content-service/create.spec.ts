@@ -1,215 +1,404 @@
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { contentService } from "../../contentService";
-import { CONTENT_STATUS } from "~/api/types";
+import { CONTENT_STATUS } from "~/api";
+import type { ContentCreation } from "~/api/types/content";
+import type { Badge } from "~/api/types/badge";
 
-const mockSingle = vi.fn(() => {
+const fullBadge = (
+  id: string,
+  name = "Badge1",
+  created_at: string | null = "",
+  description: string | null = "",
+  updated_at: string | null = "",
+): Badge => ({
+  badge_id: id,
+  name,
+  created_at,
+  description,
+  updated_at,
+});
+
+const {
+  mockSingle,
+  mockLimit,
+  mockSelect,
+  mockInsert,
+  mockUpsert,
+  mockIn,
+  mockFrom,
+} = vi.hoisted(() => {
+  const mockSingle = vi.fn();
+  const mockLimit = vi.fn(() => ({
+    single: mockSingle,
+  }));
+  const mockIn = vi.fn();
+  const mockSelect = vi.fn(() => ({
+    limit: mockLimit,
+    in: mockIn,
+  }));
+  const mockInsert = vi.fn(() => ({
+    select: mockSelect,
+  }));
+  const mockUpsert = vi.fn();
+  const mockFrom = {
+    from: vi.fn((table: string) => {
+      if (table === "badges") {
+        return { select: mockSelect };
+      }
+      if (table === "contents") {
+        return {
+          insert: mockInsert,
+          select: mockSelect,
+        };
+      }
+      if (table === "content_badges") {
+        return { upsert: mockUpsert };
+      }
+      return {};
+    }),
+  };
   return {
-    error: null,
-    data: {
-      content_id: "1324165498",
-    },
+    mockSingle,
+    mockLimit,
+    mockSelect,
+    mockInsert,
+    mockUpsert,
+    mockIn,
+    mockFrom,
   };
 });
 
-const mockLimit = vi.fn(() => ({
-  single: mockSingle,
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => mockFrom,
 }));
 
-const mockSelect = vi.fn(() => ({
-  limit: mockLimit,
-}));
+type TestPayload = Omit<ContentCreation, "illustration"> & {
+  illustration: string;
+};
 
-const mockInsert = vi.fn().mockImplementationOnce(() => ({
-  select: mockSelect,
-}));
+function expectContentInsert(payload: TestPayload, email: string) {
+  expect(mockFrom.from).toHaveBeenCalledWith("contents");
+  expect(mockInsert).toHaveBeenCalledWith({
+    title: payload.title,
+    explanation: payload.explanation,
+    user_email: email,
+    status: payload.status,
+    image: payload.illustration,
+  });
+  expect(mockSelect).toHaveBeenCalledWith("content_id");
+  expect(mockLimit).toHaveBeenCalledWith(1);
+  expect(mockSingle).toHaveBeenCalled();
+}
 
-const mockUpsert = vi.fn().mockImplementationOnce(() => ({
-  error: null,
-  data: {},
-}));
+function expectBadgeUpsert(badges: Badge[], content_id: string) {
+  expect(mockUpsert).toHaveBeenCalledWith(
+    badges.map((b) => ({
+      badge_id: b.badge_id,
+      content_id,
+    })),
+  );
+}
 
-const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      insert: mockInsert,
-      upsert: mockUpsert,
-    };
-  }),
-}));
-
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return mockFrom;
-  },
-}));
-
-describe("Create content", () => {
+describe("Content creation service", () => {
   afterAll(() => {
-    vi.doUnmock("~/api/supabaseInit");
+    vi.doUnmock("~/api/utils/supabaseInit");
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    mockFrom.from.mockRestore();
-    mockInsert.mockRestore();
-    mockUpsert.mockRestore();
-    mockSelect.mockRestore();
-    mockLimit.mockRestore();
-    mockSingle.mockRestore();
+    mockFrom.from.mockClear();
+    mockInsert.mockClear();
+    mockUpsert.mockClear();
+    mockSelect.mockClear();
+    mockLimit.mockClear();
+    mockSingle.mockClear();
+    mockIn.mockClear();
   });
 
-  it("should return the `completed` status when the creation is successful", async () => {
-    const badgeResponse = await contentService.create(
-      {
-        title: "Title",
-        explanation: "explanation",
-        badges: [{ badge_id: "123546" }, { badge_id: "1235468" }],
-        illustration: "0.2541654.png",
-        status: CONTENT_STATUS.PENDING,
-      },
-      "user@gmail.com",
-    );
+  it("returns a PostgREST success response when all badges exist, content is created, and badge linking succeeds", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }, { badge_id: "1235468" }],
+      error: null,
+    });
+    mockInsert.mockReturnValueOnce({
+      select: mockSelect,
+    });
+    mockSelect.mockReturnValueOnce({
+      limit: mockLimit,
+      in: mockIn,
+    });
+    mockLimit.mockReturnValueOnce({
+      single: mockSingle,
+    });
+    mockSingle.mockReturnValueOnce({
+      error: null,
+      data: { content_id: "1324165498" },
+    });
+    mockUpsert.mockReturnValueOnce({
+      error: null,
+      data: {},
+    });
 
-    expect(mockFrom.from).toHaveBeenCalledTimes(2);
-    expect(mockFrom.from).toHaveBeenCalledWith("contents");
-
-    expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith({
+    const payload: TestPayload = {
       title: "Title",
       explanation: "explanation",
-      user_email: "user@gmail.com",
-      image: "0.2541654.png",
+      badges: [fullBadge("123546", "Badge1"), fullBadge("1235468", "Badge2")],
+      illustration: "0.2541654.png",
       status: CONTENT_STATUS.PENDING,
-    });
+    };
+    const response = await contentService.create(payload, "user@gmail.com");
 
-    expect(mockSelect).toHaveBeenCalledTimes(1);
-    expect(mockSelect).toHaveBeenCalledWith("content_id");
-
-    expect(mockSingle).toHaveBeenCalledTimes(1);
-    expect(mockSingle).toHaveBeenCalledWith();
-
-    expect(mockLimit).toHaveBeenCalledTimes(1);
-    expect(mockLimit).toHaveBeenCalledWith(1);
-
-    expect(mockUpsert).toHaveBeenCalledTimes(1);
-    expect(mockUpsert).toHaveBeenLastCalledWith([
-      {
-        badge_id: "123546",
-        content_id: "1324165498",
-      },
-      {
-        badge_id: "1235468",
-        content_id: "1324165498",
-      },
-    ]);
-
-    expect(badgeResponse).toEqual({
-      status: "completed",
+    expectContentInsert(payload, "user@gmail.com");
+    expectBadgeUpsert(payload.badges, "1324165498");
+    expect(response).toMatchObject({
+      error: null,
+      data: { content_id: "1324165498" },
+      status: 201,
+      statusText: "Created",
     });
   });
 
-  it("should return the `incomplete` status when the creation badges failed", async () => {
-    mockInsert.mockImplementationOnce(() => ({
-      select: vi.fn(() => ({
-        limit: vi.fn(() => ({
-          single: vi.fn(() => {
-            return {
-              error: null,
-              data: {
-                content_id: "1324165498",
-              },
-            };
-          }),
-        })),
-      })),
-    }));
+  it("returns a PostgREST foreign key error if some badges do not exist", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }],
+      error: null,
+    });
 
-    mockUpsert.mockImplementationOnce(() => ({
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation",
+      badges: [fullBadge("123546", "Badge1"), fullBadge("1235468", "Badge2")],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
+    };
+    const response = await contentService.create(payload, "user@gmail.com");
+
+    expect(response.error).toMatchObject({
+      code: "23503",
+      message: expect.stringContaining("violates foreign key constraint"),
+      details: expect.stringContaining("1235468"),
+      hint: "",
+    });
+    expect(response.status).toBe(409);
+    expect(response.statusText).toBe("Conflict");
+    expect(response.data).toBeNull();
+  });
+
+  it("returns a PostgREST error if badge existence check fails", async () => {
+    mockIn.mockReturnValueOnce({
+      data: null,
+      error: {
+        code: "400",
+        message: "DB error",
+        details: "details",
+        hint: "",
+      },
+    });
+
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation",
+      badges: [fullBadge("123546", "Badge1")],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
+    };
+    const response = await contentService.create(payload, "user@gmail.com");
+
+    expect(response.error).toMatchObject({
+      code: "400",
+      message: "DB error",
+      details: "details",
+      hint: "",
+    });
+    expect(response.status).toBe(400);
+    expect(response.statusText).toBe("Bad Request");
+    expect(response.data).toBeNull();
+  });
+
+  it("returns a PostgREST error if content creation fails", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }],
+      error: null,
+    });
+    mockInsert.mockReturnValueOnce({
+      select: mockSelect,
+    });
+    mockSelect.mockReturnValueOnce({
+      limit: mockLimit,
+      in: mockIn,
+    });
+    mockLimit.mockReturnValueOnce({
+      single: mockSingle,
+    });
+    mockSingle.mockReturnValueOnce({
       error: {
         code: "InvalidToken",
         message: "Unknown key",
+        details: "details",
+        hint: "",
       },
       data: null,
-    }));
-
-    const badgeResponse = await contentService.create(
-      {
-        title: "Title",
-        explanation: "explanation0",
-        badges: [{ badge_id: "123546" }],
-        illustration: "0.2541654.png",
-        status: CONTENT_STATUS.VALIDATED,
-      },
-      "user@gmail.com",
-    );
-    expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith({
-      title: "Title",
-      explanation: "explanation0",
-      user_email: "user@gmail.com",
-      image: "0.2541654.png",
-      status: CONTENT_STATUS.VALIDATED,
     });
 
-    expect(mockUpsert).toHaveBeenCalledTimes(1);
-    expect(mockUpsert).toHaveBeenLastCalledWith([
-      {
-        badge_id: "123546",
-        content_id: "1324165498",
-      },
-    ]);
-
-    expect(badgeResponse).toEqual({
-      status: "incomplete",
-      error: {
-        code: "InvalidToken",
-        message: "Unknown key",
-      },
-    });
-  });
-
-  it("should return the `failed` status when the creation has failed", async () => {
-    mockInsert.mockImplementationOnce(() => ({
-      select: vi.fn(() => ({
-        limit: vi.fn(() => ({
-          single: vi.fn(() => {
-            return {
-              error: {
-                code: "InvalidToken",
-                message: "Unknown key",
-              },
-              data: null,
-            };
-          }),
-        })),
-      })),
-    }));
-
-    const badgeResponse = await contentService.create(
-      {
-        title: "Title",
-        explanation: "explanation1",
-        badges: [{ badge_id: "123546" }],
-        illustration: "0.2541654.png",
-        status: CONTENT_STATUS.VALIDATED,
-      },
-      "user@gmail.com",
-    );
-    expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith({
+    const payload: TestPayload = {
       title: "Title",
       explanation: "explanation1",
-      user_email: "user@gmail.com",
-      image: "0.2541654.png",
+      badges: [fullBadge("123546", "Badge1")],
+      illustration: "0.2541654.png",
       status: CONTENT_STATUS.VALIDATED,
-    });
+    };
+    const response = await contentService.create(payload, "user@gmail.com");
 
-    expect(badgeResponse).toEqual({
-      status: "failed",
+    expectContentInsert(payload, "user@gmail.com");
+    expect(response.error).toMatchObject({
+      code: "InvalidToken",
+      message: "Unknown key",
+      details: "details",
+      hint: "",
+    });
+    expect(response.data).toBeNull();
+  });
+
+  it("returns a PostgREST error if badge linking fails after content creation", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }],
+      error: null,
+    });
+    mockInsert.mockReturnValueOnce({
+      select: mockSelect,
+    });
+    mockSelect.mockReturnValueOnce({
+      limit: mockLimit,
+      in: mockIn,
+    });
+    mockLimit.mockReturnValueOnce({
+      single: mockSingle,
+    });
+    mockSingle.mockReturnValueOnce({
+      error: null,
+      data: { content_id: "1324165498" },
+    });
+    mockUpsert.mockReturnValueOnce({
       error: {
         code: "InvalidToken",
         message: "Unknown key",
+        details: "details",
+        hint: "",
       },
+      data: null,
     });
+
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation0",
+      badges: [fullBadge("123546", "Badge1")],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.VALIDATED,
+    };
+    const response = await contentService.create(payload, "user@gmail.com");
+
+    expectContentInsert(payload, "user@gmail.com");
+    expectBadgeUpsert(payload.badges, "1324165498");
+    expect(response.error).toMatchObject({
+      code: "InvalidToken",
+      message: "Unknown key",
+      details: "details",
+      hint: "",
+    });
+    expect(response.data).toBeNull();
+  });
+
+  it("throws if content insert throws an exception", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }],
+      error: null,
+    });
+    mockInsert.mockImplementationOnce(() => {
+      throw new Error("DB connection lost");
+    });
+
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation2",
+      badges: [fullBadge("123546", "Badge1")],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
+    };
+
+    let error: unknown;
+    try {
+      await contentService.create(payload, "user@gmail.com");
+    } catch (e) {
+      error = e;
+    }
+
+    expect(mockFrom.from).toHaveBeenCalledWith("contents");
+    expect(error).toBeInstanceOf(Error);
+    expect((error as { message: string }).message).toBe("DB connection lost");
+  });
+
+  it("throws if badge upsert throws an exception", async () => {
+    mockIn.mockReturnValueOnce({
+      data: [{ badge_id: "123546" }],
+      error: null,
+    });
+    mockInsert.mockReturnValueOnce({
+      select: mockSelect,
+    });
+    mockSelect.mockReturnValueOnce({
+      limit: mockLimit,
+      in: mockIn,
+    });
+    mockLimit.mockReturnValueOnce({
+      single: mockSingle,
+    });
+    mockSingle.mockReturnValueOnce({
+      error: null,
+      data: { content_id: "1324165498" },
+    });
+    mockUpsert.mockImplementationOnce(() => {
+      throw Error("Upsert failed");
+    });
+
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation3",
+      badges: [fullBadge("123546", "Badge1")],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
+    };
+
+    let error: unknown;
+    try {
+      await contentService.create(payload, "user@gmail.com");
+    } catch (e) {
+      error = e;
+    }
+
+    expectContentInsert(payload, "user@gmail.com");
+    expect(error).toBeInstanceOf(Error);
+    expect((error as { message: string }).message).toBe("Upsert failed");
+  });
+
+  it("returns a PostgREST not-null error if no badges are provided", async () => {
+    const payload: TestPayload = {
+      title: "Title",
+      explanation: "explanation4",
+      badges: [],
+      illustration: "0.2541654.png",
+      status: CONTENT_STATUS.PENDING,
+    };
+
+    const response = await contentService.create(payload, "user@gmail.com");
+
+    expect(response.error).toMatchObject({
+      code: "23502",
+      message: expect.stringContaining("not-null constraint"),
+      details: "No badges provided.",
+      hint: "",
+    });
+    expect(response.status).toBe(400);
+    expect(response.statusText).toBe("Bad Request");
+    expect(response.data).toBeNull();
   });
 });

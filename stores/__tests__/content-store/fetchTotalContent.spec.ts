@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useContentStore } from "../../content.store";
-import { contentService } from "../../../api/contentService";
+import { useContentStore } from "~/stores/content.store";
+import { contentService, GenericErrors } from "~/api";
 
 describe("ContentStore", () => {
   beforeEach(() => {
@@ -15,16 +15,15 @@ describe("ContentStore", () => {
   describe("fetchTotalContent", () => {
     it("should return the awaited result on success", async () => {
       const contentStore = useContentStore();
-      const getTotalContentMock = vi.fn(() => {
-        return {
+      const getTotalContentMock = vi
+        .spyOn(contentService.statistics, "getTotalContent")
+        .mockResolvedValueOnce({
           error: null,
           data: [],
           count: 15,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContent: getTotalContentMock,
-      });
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse = await contentStore.fetchTotalContent();
 
@@ -37,51 +36,55 @@ describe("ContentStore", () => {
 
     it("should return the awaited result on known error", async () => {
       const contentStore = useContentStore();
-      const getTotalContentMock = vi.fn(() => {
-        return {
+      const getTotalContentMock = vi
+        .spyOn(contentService.statistics, "getTotalContent")
+        .mockResolvedValueOnce({
           error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
+            code: "PGRST301",
+            hint: "",
+            message: "",
+            details: "",
+            name: "",
           },
           data: null,
-          count: 0,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContent: getTotalContentMock,
-      });
+          count: null,
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse = await contentStore.fetchTotalContent();
 
       expect(getTotalContentMock).toHaveBeenCalledTimes(1);
       expect(totalContentResponse).toEqual({
         status: "error",
-        message: "BAD_REQUEST",
+        message: GenericErrors.UNAUTHORIZED,
       });
     });
 
     it("should return the awaited result on unknown error", async () => {
       const contentStore = useContentStore();
-      const getTotalContentMock = vi.fn(() => {
-        return {
+      const getTotalContentMock = vi
+        .spyOn(contentService.statistics, "getTotalContent")
+        .mockResolvedValueOnce({
           error: {
-            code: "ServerError",
-            message: "Unknown key",
+            code: "PGR",
+            hint: "",
+            message: "",
+            details: "",
+            name: "",
           },
           data: null,
-          count: 0,
-        };
-      });
-      vi.spyOn(contentService, "statistics", "get").mockReturnValueOnce({
-        getTotalContent: getTotalContentMock,
-      });
+          count: null,
+          status: 10,
+          statusText: "",
+        });
 
       const totalContentResponse = await contentStore.fetchTotalContent();
 
       expect(getTotalContentMock).toHaveBeenCalledTimes(1);
       expect(totalContentResponse).toEqual({
         status: "error",
-        message: "UNKNOWN_ERROR",
+        message: GenericErrors.UNKNOWN_ERROR,
       });
     });
   });

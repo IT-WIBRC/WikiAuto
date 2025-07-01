@@ -1,4 +1,4 @@
-import useSupabase from "~/api/supabaseInit";
+import useSupabase from "~/api/utils/supabaseInit";
 import {
   type ListenEvent,
   type TableName,
@@ -205,9 +205,6 @@ class RealtimeObserver {
     }
   }
 
-  /**
-   * Unsubscribes from all channels and clears all known subscriptions.
-   */
   public async unsubscribeToAll(): Promise<void> {
     try {
       await useSupabase().removeAllChannels();
@@ -221,7 +218,4 @@ class RealtimeObserver {
   }
 }
 
-/**
- * Singleton instance of RealtimeObserver for use throughout the app.
- */
 export const realtimeObserver = RealtimeObserver.getMonitor();

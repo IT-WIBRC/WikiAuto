@@ -19,7 +19,7 @@ import {
   SelectCustomForContentStatus,
   SelectMultipleForBadge,
 } from "#components";
-import { CONTENT_STATUS, GenericErrors } from "~/api/types";
+import { CONTENT_STATUS, GenericErrors } from "~/api";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 const badges = useUnitTestUtils.getMockBadges();

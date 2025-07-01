@@ -1,64 +1,108 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
+import { flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import { useBadgeStore } from "~/stores/badge.store";
-import { badgeService } from "~/api/badgeService";
+import { GenericErrors } from "~/api";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 
-describe("BadgeStore", () => {
+vi.mock("~/api/utils/wrapServiceCall", () => ({
+  wrapServiceCall: vi.fn(),
+}));
+
+vi.mock("~/api/badgeService", () => ({
+  badgeService: {
+    edit: vi.fn(),
+  },
+}));
+
+type FoldSuccess = { data: object; count: number | null };
+type FoldError = { message: string };
+
+describe("BadgeStore edit", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
-  describe("Edit", () => {
-    it("should return the awaited status with data on success", async () => {
-      const badgeStore = useBadgeStore();
-      const editBadgeMock = vi.fn(() => {
-        return {
-          error: null,
-          data: [],
-        };
-      });
-      vi.spyOn(badgeService, "edit", "get").mockReturnValueOnce(editBadgeMock);
-
-      const badgeEditionResponse = await badgeStore.edit({
-        id: "32145",
-        name: "name",
-        description: "description",
-      });
-
-      expect(editBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeEditionResponse).toEqual({
-        status: "success",
-      });
+  it("returns success status on successful badge edit", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (
+        _onError: (err: FoldError) => unknown,
+        onSuccess: (res: FoldSuccess) => unknown,
+      ) =>
+        onSuccess({
+          data: {},
+          count: null,
+        }),
     });
 
-    it("should return the awaited result on failure", async () => {
-      const badgeStore = useBadgeStore();
-      const editBadgeMock = vi.fn(() => {
-        return {
-          error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
-          },
-          data: null,
-        };
-      });
-      vi.spyOn(badgeService, "edit", "get").mockReturnValueOnce(editBadgeMock);
+    const badgeStore = useBadgeStore();
+    const badgeEditionResponse = await badgeStore.edit({
+      id: "32145",
+      name: "name",
+      description: "description",
+    });
 
-      const badgeEditionResponse = await badgeStore.edit({
-        id: "32145",
-        name: "name",
-        description: "description",
-      });
+    await flushPromises();
 
-      expect(editBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeEditionResponse).toEqual({
-        status: "error",
-        message: "REQUEST_FAILED",
-      });
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeEditionResponse).toEqual({
+      status: "success",
+    });
+  });
+
+  it("returns an error status with REQUEST_FAILED message on failure", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (onError: (err: FoldError) => unknown) =>
+        onError({ message: GenericErrors.REQUEST_FAILED }),
+    });
+
+    const badgeStore = useBadgeStore();
+    const badgeEditionResponse = await badgeStore.edit({
+      id: "32145",
+      name: "name",
+      description: "description",
+    });
+
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeEditionResponse).toEqual({
+      status: "error",
+      message: GenericErrors.REQUEST_FAILED,
+    });
+  });
+
+  it("returns an error status with UNKNOWN_ERROR message on generic failure", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (onError: (err: FoldError) => unknown) =>
+        onError({ message: GenericErrors.UNKNOWN_ERROR }),
+    });
+
+    const badgeStore = useBadgeStore();
+    const badgeEditionResponse = await badgeStore.edit({
+      id: "32145",
+      name: "name",
+      description: "description",
+    });
+
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeEditionResponse).toEqual({
+      status: "error",
+      message: GenericErrors.UNKNOWN_ERROR,
     });
   });
 });

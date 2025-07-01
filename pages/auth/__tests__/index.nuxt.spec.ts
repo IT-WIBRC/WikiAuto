@@ -8,7 +8,7 @@ import AlertError from "~/components/alert/error.vue";
 import { useAuthStore } from "~/stores/auth.store";
 import { useUserStore } from "~/stores/user.store";
 import useUnitTestUtils from "~/utils/useUnitTestUtils";
-import { GenericErrors } from "~/api/types";
+import { GenericErrors } from "~/api";
 
 describe("AuthPage", () => {
   const { mockNavigateTo } = vi.hoisted(() => ({

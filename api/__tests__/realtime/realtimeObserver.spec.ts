@@ -10,7 +10,7 @@ import useUnitTestUtils from "~/utils/useUnitTestUtils";
 
 const removeAllChannels = vi.fn().mockResolvedValue(undefined);
 
-vi.mock("~/api/supabaseInit", () => ({
+vi.mock("~/api/utils/supabaseInit", () => ({
   default: () => ({
     channel: vi.fn().mockReturnValue({
       subscribe: vi.fn(),
@@ -22,18 +22,24 @@ vi.mock("~/api/supabaseInit", () => ({
   }),
 }));
 
-vi.mock("./liveChannel", () => {
-  return {
-    LiveChannel: vi.fn().mockImplementation((tableName: TableName) => {
-      return {
-        tableName: tableName,
-        openConduit: vi.fn().mockResolvedValue(() => {}),
-        establishConduit: vi.fn(),
-        watch: vi.fn(),
-        closeConduit: vi.fn().mockResolvedValue(undefined),
-      };
-    }),
-  };
+vi.mock("../../realtime/liveChannel", () => {
+  class LiveChannelMock {
+    tableName: TableName;
+    constructor(tableName: TableName) {
+      this.tableName = tableName;
+    }
+
+    openConduit() {
+      return Promise.resolve(undefined);
+    }
+
+    establishConduit() {}
+    watch() {}
+    closeConduit() {
+      return Promise.resolve(undefined);
+    }
+  }
+  return { LiveChannel: LiveChannelMock };
 });
 
 describe("realtimeObserver", () => {
@@ -334,7 +340,6 @@ describe("realtimeObserver", () => {
   describe("unsubscribeToAll", () => {
     it("should call removeAllChannels on the Supabase client", async () => {
       await observer.unsubscribeToAll();
-
       expect(removeAllChannels).toHaveBeenCalledTimes(1);
     });
 

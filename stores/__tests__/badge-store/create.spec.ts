@@ -1,66 +1,105 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
+import { flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import { useBadgeStore } from "~/stores/badge.store";
-import { badgeService } from "~/api/badgeService";
+import { GenericErrors } from "~/api";
+import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 
-describe("BadgeStore", () => {
+vi.mock("~/api/utils/wrapServiceCall", () => ({
+  wrapServiceCall: vi.fn(),
+}));
+
+vi.mock("~/api/badgeService", () => ({
+  badgeService: {
+    create: vi.fn(),
+  },
+}));
+
+type FoldSuccess = { data: object; count: number | null };
+type FoldError = { message: string };
+
+describe("BadgeStore create", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
-  describe("Create", () => {
-    it("should return the awaited status with data on success", async () => {
-      const badgeStore = useBadgeStore();
-      const getCreateBadgeMock = vi.fn(() => {
-        return {
-          error: null,
-          data: [],
-        };
-      });
-      vi.spyOn(badgeService, "create", "get").mockReturnValueOnce(
-        getCreateBadgeMock,
-      );
-
-      const badgeCreationResponse = await badgeStore.create(
-        "name",
-        "description",
-      );
-
-      expect(getCreateBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeCreationResponse).toEqual({
-        status: "success",
-      });
+  it("returns success status on successful badge creation", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (
+        _onError: (err: FoldError) => unknown,
+        onSuccess: (res: FoldSuccess) => unknown,
+      ) =>
+        onSuccess({
+          data: {},
+          count: null,
+        }),
     });
 
-    it("should return the awaited result on failure", async () => {
-      const badgeStore = useBadgeStore();
-      const getCreateBadgeMock = vi.fn(() => {
-        return {
-          error: {
-            code: "NoSuchKey",
-            message: "Unknown key",
-          },
-          data: null,
-        };
-      });
-      vi.spyOn(badgeService, "create", "get").mockReturnValueOnce(
-        getCreateBadgeMock,
-      );
+    const badgeStore = useBadgeStore();
+    const badgeCreationResponse = await badgeStore.create(
+      "name",
+      "description",
+    );
 
-      const badgeCreationResponse = await badgeStore.create(
-        "name",
-        "description",
-      );
+    await flushPromises();
 
-      expect(getCreateBadgeMock).toHaveBeenCalledTimes(1);
-      expect(badgeCreationResponse).toEqual({
-        status: "error",
-        message: "REQUEST_FAILED",
-      });
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeCreationResponse).toEqual({
+      status: "success",
+    });
+  });
+
+  it("returns an error status with BAD_REQUEST message on failure", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (onError: (err: FoldError) => unknown) =>
+        onError({ message: GenericErrors.BAD_REQUEST }),
+    });
+
+    const badgeStore = useBadgeStore();
+    const badgeCreationResponse = await badgeStore.create(
+      "name",
+      "description",
+    );
+
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeCreationResponse).toEqual({
+      status: "error",
+      message: GenericErrors.BAD_REQUEST,
+    });
+  });
+
+  it("returns an error status with UNKNOWN_ERROR message on generic failure", async () => {
+    (wrapServiceCall as unknown as Mock).mockResolvedValue({
+      fold: (onError: (err: FoldError) => unknown) =>
+        onError({ message: GenericErrors.UNKNOWN_ERROR }),
+    });
+
+    const badgeStore = useBadgeStore();
+    const badgeCreationResponse = await badgeStore.create(
+      "name",
+      "description",
+    );
+
+    await flushPromises();
+
+    expect(wrapServiceCall).toHaveBeenCalledTimes(1);
+    expect(badgeCreationResponse).toEqual({
+      status: "error",
+      message: GenericErrors.UNKNOWN_ERROR,
     });
   });
 });

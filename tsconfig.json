@@ -2,18 +2,22 @@
   // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
+    "types": ["@nuxt/schema"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./*"]
+      "~/*": ["./*"],
+      "@/*": ["./*"],
+      "#components": ["./.nuxt/components.d.ts"] // Make `#components` available inside unit tests files
     }
   },
   "exclude": [
     "dist",
     "node_modules",
+    "output",
     "test",
-    "test.ts",
-    "**/*.spec.ts",
+    "tests",
     "**/*.cy.ts",
+    "**/*.worker.ts",
     "**/*.worker.ts",
     "**/cypress/**"
   ]

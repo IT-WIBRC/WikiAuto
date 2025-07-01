@@ -10,31 +10,17 @@ import {
 import { imageService } from "~/api/imageService";
 
 const imagePath = "0.269874.jpg";
-const mockUpload = vi.fn(() => {
-  return {
-    error: null,
-    data: {
-      path: imagePath,
-      fullPath: `/wikiAuto/${imagePath}`,
-      id: "5465654164",
-    },
-  };
-});
-
+const mockUpload = vi.fn();
 const mockFrom = vi.hoisted(() => ({
-  from: vi.fn(() => {
-    return {
-      upload: mockUpload,
-    };
-  }),
+  from: vi.fn(() => ({
+    upload: mockUpload,
+  })),
 }));
 
-vi.mock("~/api/supabaseInit", () => ({
-  default: () => {
-    return {
-      storage: mockFrom,
-    };
-  },
+vi.mock("~/api/utils/supabaseInit", () => ({
+  default: () => ({
+    storage: mockFrom,
+  }),
 }));
 
 describe("Upload file", () => {
@@ -43,13 +29,13 @@ describe("Upload file", () => {
   });
 
   afterAll(() => {
-    vi.doUnmock("~/api/supabaseInit");
+    vi.doUnmock("~/api/utils/supabaseInit");
     vi.useRealTimers();
   });
 
   afterEach(() => {
-    mockFrom.from.mockRestore();
-    mockUpload.mockRestore();
+    mockFrom.from.mockClear();
+    mockUpload.mockClear();
   });
 
   const imageFile = new File([""], "image.png", {
@@ -57,7 +43,16 @@ describe("Upload file", () => {
     lastModified: 1696723200000,
   });
 
-  it("should return an empty array when there is no content", async () => {
+  it("should return upload result on success", async () => {
+    mockUpload.mockReturnValueOnce({
+      error: null,
+      data: {
+        path: imagePath,
+        fullPath: `/wikiAuto/${imagePath}`,
+        id: "5465654164",
+      },
+    });
+
     const fileUpload = await imageService.uploadFile(imageFile, imagePath);
 
     expect(mockFrom.from).toHaveBeenCalledTimes(1);
@@ -79,15 +74,14 @@ describe("Upload file", () => {
   });
 
   it("should return an error when the upload failed", async () => {
-    mockUpload.mockImplementation(() => {
-      return {
-        error: {
-          code: "InvalidToken",
-          message: "Unknown key",
-        },
-        data: null,
-      };
+    mockUpload.mockReturnValueOnce({
+      error: {
+        code: "InvalidToken",
+        message: "Unknown key",
+      },
+      data: null,
     });
+
     const fileUpload = await imageService.uploadFile(imageFile, imagePath);
 
     expect(mockUpload).toHaveBeenCalledTimes(1);

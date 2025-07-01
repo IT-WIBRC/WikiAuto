@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
-import { useAuthStore } from "../auth.store";
-import { authService } from "../../api/authService";
-import { GenericErrors } from "../../api/types";
+import { useAuthStore } from "~/stores/auth.store";
+import { GenericErrors, authService } from "~/api";
 import { AuthError, type AuthTokenResponsePassword } from "@supabase/auth-js";
 
 describe("AuthStore", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    vi.resetAllMocks();
   });
 
   describe("Login", () => {
-    it("should send the user data with status `success` when the login succeed ans set the user session", async () => {
+    it("should send the user data with status `success` when the login succeeds and set the user session", async () => {
       const authStore = useAuthStore();
       expect(authStore.session).toBeNull();
       const successLoginData = {
@@ -44,93 +44,117 @@ describe("AuthStore", () => {
         "myemail@gmail.com",
         "myHigh@1Password",
       );
-      expect(responseOk.status).toBe("success");
+      expect(responseOk).toEqual({
+        status: "success",
+        data: successLoginData.user,
+      });
       expect(authStore.session).toEqual(successLoginData.session);
-      expect(responseOk.data).toEqual(successLoginData.user);
+      authStore.$dispose();
     });
 
-    describe("On Error", () => {
-      it("should return an error on bad request", async () => {
-        const authStore = useAuthStore();
-        expect(authStore.session).toBeNull();
-        const errorLoginData = {
+    it("should return an error if login returns no user", async () => {
+      const authStore = useAuthStore();
+      expect(authStore.session).toBeNull();
+      vi.spyOn(authService, "login").mockImplementationOnce(() =>
+        Promise.resolve({
           data: {
             user: null,
             session: null,
           },
-          error: {
-            code: "invalid_credentials",
-            status: 400,
-          },
-        };
-        vi.spyOn(authService, "login").mockImplementationOnce(() =>
-          Promise.resolve({
-            ...errorLoginData,
-          } as unknown as AuthTokenResponsePassword),
-        );
+          error: null,
+          status: 200,
+          statusText: "OK",
+        } as unknown as AuthTokenResponsePassword),
+      );
 
-        const responseError = await authStore.login(
-          "myemail@gmail.com",
-          "myHigh@1Password",
-        );
-        expect(responseError.status).toBe("error");
-        expect(authStore.session).toBeNull();
-        expect(responseError.message).toBe(GenericErrors.BAD_REQUEST);
+      const responseError = await authStore.login(
+        "myemail@gmail.com",
+        "myHigh@1Password",
+      );
+      expect(responseError).toEqual({
+        status: "error",
+        message: GenericErrors.SERVER_ERROR,
       });
+      expect(authStore.session).toBeNull();
 
-      it("should return an error on bad unknown error", async () => {
-        const authStore = useAuthStore();
-        expect(authStore.session).toBeNull();
-        const errorLoginData = {
-          data: {
-            user: null,
-            session: null,
-          },
-          error: {
-            code: "AuthError",
-            status: 500,
-          },
-        };
-        vi.spyOn(authService, "login").mockImplementationOnce(() =>
-          Promise.resolve({
-            ...errorLoginData,
-          } as unknown as AuthTokenResponsePassword),
-        );
+      authStore.$dispose();
+    });
 
-        const responseError = await authStore.login(
-          "myemail@gmail.com",
-          "myHigh@1Password",
-        );
-        expect(responseError.status).toBe("error");
-        expect(authStore.session).toBeNull();
-        expect(responseError.message).toBe(GenericErrors.UNKNOWN_ERROR);
+    it("should return an error if login returns error", async () => {
+      const authStore = useAuthStore();
+      expect(authStore.session).toBeNull();
+      vi.spyOn(authService, "login").mockImplementationOnce(() =>
+        Promise.resolve({
+          data: null,
+          error: new AuthError("invalid_credentials"),
+          status: 400,
+          statusText: "Bad Request",
+        } as unknown as AuthTokenResponsePassword),
+      );
+
+      const responseError = await authStore.login(
+        "myemail@gmail.com",
+        "myHigh@1Password",
+      );
+      expect(responseError).toEqual({
+        status: "error",
+        message: GenericErrors.UNAUTHORIZED,
       });
+      expect(authStore.session).toBeNull();
+
+      authStore.$dispose();
     });
   });
 
   describe("Logout", () => {
     it("should return success when the logout is successful", async () => {
       const authStore = useAuthStore();
+      const authStoreResetFnMock = vi.spyOn(authStore, "$reset");
 
       vi.spyOn(authService, "logout").mockImplementationOnce(() =>
-        Promise.resolve({ error: null }),
+        Promise.resolve({
+          error: null,
+          status: 200,
+          statusText: "OK",
+          data: {
+            session: null,
+            user: null,
+          },
+        }),
       );
 
       const responseOk = await authStore.logout();
-      expect(responseOk.status).toBe("success");
-      expect(responseOk.data).toBeUndefined();
+      expect(responseOk).toEqual({
+        status: "success",
+        data: undefined,
+      });
+      expect(authStore.session).toBeNull();
+      expect(authStoreResetFnMock).toHaveBeenCalledOnce();
+
+      authStore.$dispose();
     });
 
     it("should return server error when the logout has failed", async () => {
       const authStore = useAuthStore();
 
       vi.spyOn(authService, "logout").mockImplementationOnce(() =>
-        Promise.resolve({ error: new AuthError("Session error") }),
+        Promise.resolve({
+          error: new AuthError("Session error"),
+          status: 500,
+          statusText: "Server Error",
+          data: {
+            session: null,
+            user: null,
+          },
+        }),
       );
 
       const responseOk = await authStore.logout();
-      expect(responseOk.status).toBe("error");
-      expect(responseOk.message).toBe("SERVER_ERROR");
+      expect(responseOk).toEqual({
+        status: "error",
+        message: GenericErrors.REQUEST_FAILED,
+      });
+      authStore.$dispose();
     });
   });
 });
