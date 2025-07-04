@@ -124,7 +124,7 @@ const createTag = async (): Promise<void> => {
     title.value,
     description.value || "",
   );
-  const toast = new useToast();
+  const toast = useToast();
   if (creationResponse.status === "error") {
     toast.error(t("failed"));
     isCreationProcessing.value = false;

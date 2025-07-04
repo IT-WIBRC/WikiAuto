@@ -1,6 +1,7 @@
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { describe, expect, it } from "vitest";
 import App from "~/app.vue";
+import { ToastContainer } from "#components";
 
 describe("App", () => {
   it("should render correctly", async () => {
@@ -11,5 +12,10 @@ describe("App", () => {
   it("should display the awaited content", async () => {
     const appWrapper = await mountSuspended(App);
     expect(appWrapper.text()).toBe("Welcome to the starter page Login");
+  });
+
+  it("Should render the toast container", async () => {
+    const appWrapper = await mountSuspended(App);
+    expect(appWrapper.findComponent(ToastContainer).exists()).toBe(true);
   });
 });

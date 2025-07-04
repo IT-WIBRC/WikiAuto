@@ -8,7 +8,10 @@ import {
   it,
   vi,
 } from "vitest";
-import { flushPromises, type VueWrapper } from "@vue/test-utils";
+import {
+  flushPromises as vueFlushPromises,
+  type VueWrapper,
+} from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
   ContentCreate,
@@ -20,12 +23,25 @@ import {
   SelectMultipleForBadge,
 } from "#components";
 import { CONTENT_STATUS, GenericErrors } from "~/api";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import testUtils from "~/tests/utils";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
 
-const badges = useUnitTestUtils.getMockBadges();
+const {
+  getPiniaInstance,
+  toastAssertions,
+  getMockBadges,
+  flushPromises,
+  createFile,
+} = testUtils;
+const mockUseToast = getMockUseToastInstance();
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
+
+const badges = getMockBadges();
 
 describe("ContentCreate", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const badgeSore = useBadgeStore(pinia);
   badgeSore.fetchBadgeListForOptions = vi.fn().mockReturnValue({
@@ -41,6 +57,10 @@ describe("ContentCreate", () => {
         plugins: [pinia],
       },
     });
+  });
+
+  beforeEach(() => {
+    mockUseToast.reset();
   });
 
   afterAll(() => {
@@ -164,7 +184,7 @@ describe("ContentCreate", () => {
     it("should display an error message when we want to submit an empty form", async () => {
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      await useUnitTestUtils.flushPromises(contentCreate);
+      await flushPromises(contentCreate);
 
       expect(contentCreate.findComponent(InputText).props().errorMessage).toBe(
         "_min",
@@ -194,7 +214,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        await useUnitTestUtils.flushPromises(contentCreate);
+        await flushPromises(contentCreate);
 
         title = contentCreate.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_min");
@@ -214,7 +234,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        await useUnitTestUtils.flushPromises(contentCreate);
+        await flushPromises(contentCreate);
 
         title = contentCreate.findComponent(InputText);
         expect(title.props().errorMessage).toBe("_max");
@@ -232,7 +252,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        await useUnitTestUtils.flushPromises(contentCreate);
+        await flushPromises(contentCreate);
 
         explanation = contentCreate.findComponent(InputRichText);
         expect(explanation.props().errorMessage).toBe("_min");
@@ -258,7 +278,7 @@ describe("ContentCreate", () => {
 
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        await useUnitTestUtils.flushPromises(contentCreate);
+        await flushPromises(contentCreate);
 
         illustration = contentCreate.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_size");
@@ -267,7 +287,7 @@ describe("ContentCreate", () => {
       it("should display an error message when the illustration has a non supported extension", async () => {
         let illustration = contentCreate.findComponent(InputFileImage);
 
-        const fakeFile = useUnitTestUtils.createFile({
+        const fakeFile = createFile({
           name: "fake.ts",
           type: "text/pts",
           size: 1024 * 100,
@@ -276,7 +296,7 @@ describe("ContentCreate", () => {
         await illustration.setValue(fakeFile);
         await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-        await useUnitTestUtils.flushPromises(contentCreate);
+        await flushPromises(contentCreate);
 
         illustration = contentCreate.findComponent(InputFileImage);
         expect(illustration.props().errorMessage).toBe("_fileTypes");
@@ -285,8 +305,6 @@ describe("ContentCreate", () => {
 
     it("should display an error message when we receive one from the api", async () => {
       const contentStore = useContentStore(pinia);
-      const toastError = useUnitTestUtils.spyOnToastFn("error");
-
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
           plugins: [pinia],
@@ -294,7 +312,7 @@ describe("ContentCreate", () => {
         attachTo: document.body,
       });
 
-      const imageTestFile = useUnitTestUtils.createFile({
+      const imageTestFile = createFile({
         name: "image.png",
         type: "image/png",
         size: 1024 * 100,
@@ -307,7 +325,7 @@ describe("ContentCreate", () => {
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
 
-      await flushPromises();
+      await vueFlushPromises();
 
       await contentCreate
         .findComponent(InputRichText)
@@ -319,13 +337,12 @@ describe("ContentCreate", () => {
       });
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      await useUnitTestUtils.flushPromises(contentCreate);
+      await flushPromises(contentCreate);
 
-      expect(toastError).toHaveBeenCalledTimes(1);
-      expect(toastError).toHaveBeenCalledWith(
-        "generic_errors.BAD_REQUEST",
-        false,
-      );
+      toastAssertions.expectErrorCalled("generic_errors.BAD_REQUEST", {
+        durationInSecond: 5,
+        position: "top-right",
+      });
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({
@@ -343,12 +360,11 @@ describe("ContentCreate", () => {
     let contentStore: ReturnType<typeof useContentStore>;
     let imageFile = new File([""], "image.png", { type: "image/png" });
 
-    let toastSuccess = null;
     beforeEach(async () => {
       vi.useRealTimers();
       vi.useFakeTimers();
       vi.setSystemTime(new Date(2023, 10, 8, 0, 0, 0, 0));
-      imageFile = useUnitTestUtils.createFile({
+      imageFile = createFile({
         name: "image.png",
         type: "image/png",
         size: 1024 * 110,
@@ -359,7 +375,6 @@ describe("ContentCreate", () => {
         status: "success",
       });
 
-      toastSuccess = useUnitTestUtils.spyOnToastFn("success");
       contentCreate = await mountSuspended(ContentCreate, {
         global: {
           plugins: [pinia],
@@ -375,7 +390,7 @@ describe("ContentCreate", () => {
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
 
-      await flushPromises();
+      await vueFlushPromises();
 
       await contentCreate.find("[data-cy-id='pending']").trigger("click");
       await contentCreate
@@ -384,10 +399,12 @@ describe("ContentCreate", () => {
 
       await contentCreate.find("[data-cy='create-btn']").trigger("submit");
 
-      await useUnitTestUtils.flushPromises(contentCreate);
+      await flushPromises(contentCreate);
 
-      expect(toastSuccess).toHaveBeenCalledOnce();
-      expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
+      toastAssertions.expectSuccessCalled("succeed", {
+        durationInSecond: 5,
+        position: "top-right",
+      });
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({
@@ -410,7 +427,7 @@ describe("ContentCreate", () => {
         .findComponent(SelectMultipleForBadge)
         .setValue(selectedBadges);
 
-      await flushPromises();
+      await vueFlushPromises();
 
       await contentCreate
         .findComponent(InputRichText)
@@ -420,10 +437,12 @@ describe("ContentCreate", () => {
         .find("[data-cy='create-continue-btn']")
         .trigger("click");
 
-      await useUnitTestUtils.flushPromises(contentCreate);
+      await flushPromises(contentCreate);
 
-      expect(toastSuccess).toHaveBeenCalledTimes(1);
-      expect(toastSuccess).toHaveBeenCalledWith("succeed", false);
+      toastAssertions.expectSuccessCalled("succeed", {
+        durationInSecond: 5,
+        position: "top-right",
+      });
 
       expect(contentStore.create).toHaveBeenCalledTimes(1);
       expect(contentStore.create).toHaveBeenCalledWith({

@@ -23,7 +23,7 @@ const props = defineProps<{
   badgeLengthOnMoreThanXL: number;
 }>();
 
-const displayedBadges = reactive([]);
+const displayedBadges = reactive<string[]>([]);
 const setTheNumberOfBadgeToDisplay = (): void => {
   const width = window.innerWidth;
   displayedBadges.splice(0);

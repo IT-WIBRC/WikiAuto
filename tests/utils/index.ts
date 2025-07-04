@@ -1,9 +1,19 @@
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import {
   flushPromises as vueFlushPromises,
   type VueWrapper,
 } from "@vue/test-utils";
 import { createTestingPinia, type TestingPinia } from "@pinia/testing";
+
+import {
+  mockSuccess,
+  mockError,
+  mockInfo,
+  mockWarning,
+  mockDismissAll,
+  mockRemoveToastById,
+} from "~/tests/mocks/mockUseToast";
+import type { ToastOptionParam } from "~/types/toast";
 
 export default (() => {
   const mockFetch = (returnValue: Blob) => {
@@ -22,12 +32,6 @@ export default (() => {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 0));
-  };
-
-  const spyOnToastFn = (
-    functionName: "error" | "success" = "success",
-  ): ReturnType<typeof vi.spyOn> => {
-    return vi.spyOn(useToast.prototype, functionName);
   };
 
   const spyOnScreenSize = (width: number): void => {
@@ -136,14 +140,93 @@ export default (() => {
     ] as const;
   };
 
+  const toastAssertions = {
+    _expectToastCalledWithArgs: (
+      mockFn: ReturnType<typeof vi.fn>,
+      message?: string,
+      options?: ToastOptionParam,
+    ) => {
+      expect(mockFn).toHaveBeenCalledTimes(1);
+      if (message !== undefined) {
+        if (options !== undefined) {
+          expect(mockFn).toHaveBeenCalledWith(message, options);
+        } else {
+          expect(mockFn).toHaveBeenCalledWith(message);
+        }
+      }
+    },
+
+    expectSuccessCalled: (message?: string, options?: ToastOptionParam) => {
+      toastAssertions._expectToastCalledWithArgs(mockSuccess, message, options);
+    },
+
+    expectErrorCalled: (message?: string, options?: ToastOptionParam) => {
+      toastAssertions._expectToastCalledWithArgs(mockError, message, options);
+    },
+
+    expectInfoCalled: (message?: string, options?: ToastOptionParam) => {
+      toastAssertions._expectToastCalledWithArgs(mockInfo, message, options);
+    },
+
+    expectWarningCalled: (message?: string, options?: ToastOptionParam) => {
+      toastAssertions._expectToastCalledWithArgs(mockWarning, message, options);
+    },
+
+    expectDismissAllCalled: () => {
+      expect(mockDismissAll).toHaveBeenCalledTimes(1);
+    },
+
+    expectRemoveToastByIdCalled: (id: string) => {
+      expect(mockRemoveToastById).toHaveBeenCalledTimes(1);
+      expect(mockRemoveToastById).toHaveBeenCalledWith(id);
+    },
+
+    expectNoToastCalled: () => {
+      expect(mockSuccess).not.toHaveBeenCalled();
+      expect(mockError).not.toHaveBeenCalled();
+      expect(mockInfo).not.toHaveBeenCalled();
+      expect(mockWarning).not.toHaveBeenCalled();
+    },
+
+    expectAnyToastCalled: () => {
+      expect(
+        mockSuccess.mock.calls.length > 0 ||
+          mockError.mock.calls.length > 0 ||
+          mockInfo.mock.calls.length > 0 ||
+          mockWarning.mock.calls.length > 0,
+      ).toBe(true);
+    },
+
+    expectToastOfTypeCalled: (
+      type: "success" | "error" | "info" | "warning",
+      message?: string,
+      options?: ToastOptionParam,
+    ) => {
+      switch (type) {
+        case "success":
+          toastAssertions.expectSuccessCalled(message, options);
+          break;
+        case "error":
+          toastAssertions.expectErrorCalled(message, options);
+          break;
+        case "info":
+          toastAssertions.expectInfoCalled(message, options);
+          break;
+        case "warning":
+          toastAssertions.expectWarningCalled(message, options);
+          break;
+      }
+    },
+  };
+
   return {
     mockFetch,
     flushPromises,
-    spyOnToastFn,
     createFile,
     spyOnScreenSize,
     getPiniaInstance,
     getMockBadges,
     getMockContentList,
+    toastAssertions,
   };
 })();

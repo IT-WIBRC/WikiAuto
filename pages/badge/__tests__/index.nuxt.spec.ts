@@ -13,7 +13,6 @@ import { flushPromises } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import BadgeList from "../index.vue";
 import { useBadgeStore } from "~/stores/badge.store";
-import useToast from "~/utils/use-toast";
 import IconBadge from "~/components/icon/badge.vue";
 import BaseNoData from "~/components/base/no-data.vue";
 import BaseButtonIcon from "~/components/base/button/icon.vue";
@@ -21,10 +20,20 @@ import CardBadge from "~/components/card/badge.vue";
 import BadgeCreate from "~/components/badge/create.vue";
 import BadgeEdit from "~/components/badge/edit.vue";
 import { nextTick } from "vue";
-import useUnitTestUtils from "../../../utils/useUnitTestUtils";
+
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+import testUtils from "~/tests/utils";
+
+const { toastAssertions, getPiniaInstance } = testUtils;
+
+const mockUseToast = getMockUseToastInstance();
+
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("BadgeList", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const badgeStore = useBadgeStore(pinia);
   badgeStore.fetchBadgeList = vi.fn().mockResolvedValueOnce({
@@ -41,6 +50,10 @@ describe("BadgeList", () => {
         },
       },
     });
+  });
+
+  beforeEach(() => {
+    mockUseToast.reset();
   });
 
   afterAll(() => {
@@ -71,18 +84,16 @@ describe("BadgeList", () => {
         status: "error",
         message: "REQUEST_FAILED",
       });
-      const toastError = vi.spyOn(useToast.prototype, "error");
       badgeListWrapper = await mountSuspended(BadgeList, {
         shallow: true,
         global: {
           plugins: [pinia],
         },
       });
-      expect(toastError).toHaveBeenCalledTimes(1);
-      expect(toastError).toHaveBeenCalledWith(
-        "generic_errors.REQUEST_FAILED",
-        false,
-      );
+      toastAssertions.expectErrorCalled("generic_errors.REQUEST_FAILED", {
+        durationInSecond: 15,
+        position: "bottom-right",
+      });
     });
   });
 
@@ -289,7 +300,7 @@ describe("BadgeList", () => {
     it("should open the badge edition form when we click on the edit icon on a tag card", async () => {
       expect(badgeStore.fetchBadgeList).toHaveBeenCalledTimes(1);
 
-      await badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
+      badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
       await vi.dynamicImportSettled();
 
       const editForm = badgeListWrapper.findComponent(BadgeEdit);
@@ -298,7 +309,7 @@ describe("BadgeList", () => {
     });
 
     it("should close the badge edit form when we click on the 'close' icon on a tag card", async () => {
-      await badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
+      badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
       await vi.dynamicImportSettled();
 
       let editForm = badgeListWrapper.findComponent(BadgeEdit);
@@ -312,7 +323,7 @@ describe("BadgeList", () => {
     });
 
     it("should close the badge edit form and get the new list when the edition has been done successfully", async () => {
-      await badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
+      badgeListWrapper.findComponent(CardBadge).vm.$emit("wantEdit");
       await vi.dynamicImportSettled();
 
       let editForm = badgeListWrapper.findComponent(BadgeEdit);

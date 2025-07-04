@@ -6,7 +6,7 @@ import type {
   TableName,
   SubscriptionCallback,
 } from "../../realtime/liveChannel";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import useUnitTestUtils from "~/tests/utils";
 
 const removeAllChannels = vi.fn().mockResolvedValue(undefined);
 

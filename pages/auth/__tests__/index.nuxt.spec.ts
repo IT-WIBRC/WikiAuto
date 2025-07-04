@@ -7,7 +7,7 @@ import InputPassword from "~/components/input/password.vue";
 import AlertError from "~/components/alert/error.vue";
 import { useAuthStore } from "~/stores/auth.store";
 import { useUserStore } from "~/stores/user.store";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import useUnitTestUtils from "~/tests/utils";
 import { GenericErrors } from "~/api";
 
 describe("AuthPage", () => {

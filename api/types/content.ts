@@ -28,9 +28,9 @@ export type ContentEdition = {
   userEmail: string;
 } & ContentCreation;
 
-export type GetContentListItem = (Content & {
+export type GetContentListItem = Content & {
   badges: Pick<Badge, "badge_id" | "description" | "name">[];
-})[];
+};
 
 export type GetContentDetailsType = Tables<"contents"> & {
   badges: Tables<"badges">[];

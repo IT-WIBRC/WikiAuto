@@ -15,20 +15,28 @@ import ContentList from "../index.vue";
 import { useContentStore } from "~/stores/content.store";
 import IconBlankContent from "~/components/icon/BlankContent.vue";
 import DataTable, { type DataItem } from "~/components/DataTable.vue";
-import type { GetContentListType } from "../../../api/types";
+import type { GetContentListItem } from "~/api";
 import BadgeStatus from "~/components/badge/Status.vue";
 import BaseButtonIcon from "~/components/base/button/icon.vue";
 import BadgeList from "~/components/badge/list.vue";
-import useToast from "~/utils/use-toast";
 import ContentCreate from "~/components/content/create.vue";
 import IconKeyboardArrowDown from "~/components/icon/KeyboardArrowDown.vue";
 import ContentRowDetails from "~/components/content/rowDetails.vue";
 import BaseNoData from "~/components/base/no-data.vue";
 import { nextTick } from "vue";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+import testUtils from "~/tests/utils";
+
+const { toastAssertions, getPiniaInstance, getMockContentList } = testUtils;
+
+const mockUseToast = getMockUseToastInstance();
+
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("ContentList", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
   const contentStore = useContentStore(pinia);
   contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
     status: "success",
@@ -71,23 +79,21 @@ describe("ContentList", () => {
         status: "error",
         message: "REQUEST_FAILED",
       });
-      const toastError = vi.spyOn(useToast.prototype, "error");
       contentListWrapper = await mountSuspended(ContentList, {
         shallow: true,
         global: {
           plugins: [pinia],
         },
       });
-      expect(toastError).toHaveBeenCalledTimes(1);
-      expect(toastError).toHaveBeenCalledWith(
-        "generic_errors.REQUEST_FAILED",
-        false,
-      );
+      toastAssertions.expectErrorCalled("generic_errors.REQUEST_FAILED", {
+        position: "bottom-right",
+        durationInSecond: 15,
+      });
     });
   });
 
   describe("With data", () => {
-    const contents = useUnitTestUtils.getMockContentList();
+    const contents = getMockContentList();
     const mountWithData = async (isShallowMontage = true): Promise<void> => {
       contentStore.fetchContentList = vi.fn().mockResolvedValueOnce({
         status: "success",
@@ -123,10 +129,11 @@ describe("ContentList", () => {
     });
 
     it("should render the awaited props", () => {
+      type HeaderKeys = "title" | "email" | "badges" | "status";
       class DataForContent implements DataItem<string> {
-        constructor(private content: GetContentListType) {}
+        constructor(private content: GetContentListItem) {}
 
-        getTextFor(key: Keys): string | string[] | number {
+        getTextFor(key: HeaderKeys): string | string[] | number {
           switch (key) {
             case "title":
               return this.content.title;
@@ -181,7 +188,7 @@ describe("ContentList", () => {
         expect(tableData.length).toBe(5);
 
         expect(
-          tableData.at(0).findComponent(IconKeyboardArrowDown).exists(),
+          tableData.at(0)?.findComponent(IconKeyboardArrowDown).exists(),
         ).toBe(true);
 
         expect(tableData[1].text()).toBe(contents[index].title);

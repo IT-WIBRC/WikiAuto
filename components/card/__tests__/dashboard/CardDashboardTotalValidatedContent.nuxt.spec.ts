@@ -7,8 +7,10 @@ import {
   SkeletonDashboardCard,
 } from "#components";
 import { useContentStore } from "~/stores/content.store";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
 import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+import testUtils from "~/tests/utils";
+
+const { getPiniaInstance } = testUtils;
 
 vi.mock("~/api/realtime/realtimeObserver", () => ({
   realtimeObserver: {
@@ -18,7 +20,7 @@ vi.mock("~/api/realtime/realtimeObserver", () => ({
 }));
 
 describe("CardDashboardTotalValidatedContent", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.fetchTotalContentValidated = vi.fn().mockReturnValue({

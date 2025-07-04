@@ -19,13 +19,23 @@ import {
   BadgeEdit,
 } from "#components";
 import { useBadgeStore } from "~/stores/badge.store";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import testUtils from "~/tests/utils";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+
+const { getPiniaInstance, toastAssertions, getMockBadges, flushPromises } =
+  testUtils;
+
+const mockUseToast = getMockUseToastInstance();
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("BadgeEdit", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  mockUseToast.reset();
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const badgeStore = useBadgeStore(pinia);
-  badgeStore.badgeList = useUnitTestUtils.getMockBadges();
+  badgeStore.badgeList = getMockBadges();
 
   let badgeEdit: VueWrapper;
   beforeEach(async () => {
@@ -104,7 +114,7 @@ describe("BadgeEdit", () => {
     await name.setValue("n");
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    await useUnitTestUtils.flushPromises(badgeEdit);
+    await flushPromises(badgeEdit);
 
     name = badgeEdit.findComponent(InputText);
     expect(name.exists()).toBe(true);
@@ -120,7 +130,7 @@ describe("BadgeEdit", () => {
     );
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    await useUnitTestUtils.flushPromises(badgeEdit);
+    await flushPromises(badgeEdit);
 
     description = badgeEdit.findAllComponents(InputText)[1];
     expect(description.exists()).toBe(true);
@@ -135,15 +145,15 @@ describe("BadgeEdit", () => {
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "success",
     });
-    const toastSuccess = useUnitTestUtils.spyOnToastFn("success");
+
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
     expect(badgeEdit.findComponent(LazyLoaderFade).exists()).toBe(true);
 
-    await useUnitTestUtils.flushPromises(badgeEdit);
+    await flushPromises(badgeEdit);
 
-    expect(toastSuccess).toHaveBeenCalledTimes(1);
-    expect(toastSuccess).toHaveBeenCalledWith("success");
+    toastAssertions.expectSuccessCalled("success");
+
     expect(badgeEdit.emitted()).toHaveProperty("edited");
     expect(badgeEdit.emitted()).toHaveProperty("closed");
 
@@ -159,21 +169,21 @@ describe("BadgeEdit", () => {
     await badgeEdit.findAllComponents(InputText)[1].setValue("Everything");
 
     const badgeStore = useBadgeStore(pinia);
-    const toastSuccess = useUnitTestUtils.spyOnToastFn("success");
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "success",
     });
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    await useUnitTestUtils.flushPromises(badgeEdit);
+    await flushPromises(badgeEdit);
 
     expect(badgeStore.edit).toHaveBeenCalledWith({
       id: "1",
       name: "js",
       description: "Everything",
     });
-    expect(toastSuccess).toHaveBeenCalledTimes(1);
-    expect(toastSuccess).toHaveBeenCalledWith("success");
+    expect(mockUseToast.success).toHaveBeenCalledTimes(2);
+    expect(mockUseToast.success).toHaveBeenCalledWith("success");
+
     expect(badgeEdit.emitted()).toHaveProperty("edited");
     expect(badgeEdit.emitted()).toHaveProperty("closed");
   });
@@ -186,13 +196,11 @@ describe("BadgeEdit", () => {
     badgeStore.edit = vi.fn().mockReturnValueOnce({
       status: "error",
     });
-    const toastError = useUnitTestUtils.spyOnToastFn("error");
     await badgeEdit.findComponent(BaseButtonIcon).trigger("click");
 
-    await useUnitTestUtils.flushPromises(badgeEdit);
+    await flushPromises(badgeEdit);
 
-    expect(toastError).toHaveBeenCalledTimes(1);
-    expect(toastError).toHaveBeenCalledWith("failed");
+    toastAssertions.expectErrorCalled("failed");
     expect(badgeStore.edit).toHaveBeenCalledWith({
       id: "1",
       name: "js",

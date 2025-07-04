@@ -22,13 +22,15 @@ import {
   ModalStatusUpdate,
 } from "#components";
 import type { VueWrapper } from "@vue/test-utils";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import testUtils from "~/tests/utils";
 
-const contents = useUnitTestUtils.getMockContentList();
+const { getPiniaInstance, getMockContentList } = testUtils;
+
+const contents = getMockContentList();
 
 describe("ContentRowDetails", () => {
   let contentRowDetailsWrapper: VueWrapper;
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.contentList = contents;

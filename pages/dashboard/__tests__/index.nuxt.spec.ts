@@ -1,20 +1,42 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import Dashboard from "../index.vue";
 import CardDashboardTotalContent from "~/components/card/dashboard/TotalContent.vue";
 import CardDashboardTotalValidatedContent from "~/components/card/dashboard/TotalValidatedContent.vue";
 import CardDashboardTotalBadge from "~/components/card/dashboard/TotalBadge.vue";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
 import { useUserStore } from "~/stores/user.store";
+
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+import testUtils from "~/tests/utils";
+
+const { toastAssertions, getPiniaInstance } = testUtils;
+
+const mockUseToast = getMockUseToastInstance();
+
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("Dashboard", () => {
   let dashboard: VueWrapper;
-  let pinia: ReturnType<typeof useUnitTestUtils.getPiniaInstance>;
+  let pinia: ReturnType<typeof getPiniaInstance>;
   let userStore: ReturnType<typeof useUserStore>;
 
+  beforeEach(() => {
+    mockUseToast.reset();
+  });
+
   beforeAll(async () => {
-    pinia = useUnitTestUtils.getPiniaInstance({ stubActions: false });
+    pinia = getPiniaInstance({ stubActions: false });
     userStore = useUserStore(pinia);
     userStore.getProfile = vi.fn();
 
@@ -29,6 +51,7 @@ describe("Dashboard", () => {
 
   afterAll(() => {
     vi.resetModules();
+    vi.clearAllMocks();
   });
 
   it("shows the dashboard page when you visit", () => {
@@ -68,7 +91,6 @@ describe("Dashboard", () => {
       status: "error",
       message: "SERVER_ERROR",
     });
-    const toastError = useUnitTestUtils.spyOnToastFn("error");
     await mountSuspended(Dashboard, {
       shallow: true,
       global: {
@@ -76,7 +98,7 @@ describe("Dashboard", () => {
       },
     });
     await flushPromises();
-
-    expect(toastError).toHaveBeenCalledWith("generic_errors.SERVER_ERROR");
+    expect(userStore.getProfile).toHaveBeenCalledTimes(1);
+    toastAssertions.expectErrorCalled("generic_errors.SERVER_ERROR");
   });
 });

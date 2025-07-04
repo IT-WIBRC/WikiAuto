@@ -134,7 +134,7 @@ const save = async (): Promise<void> => {
     user_id: currentUser.value?.id ?? "",
   });
 
-  const toast = new useToast();
+  const toast = useToast();
   if (editionRequest.status === "success") {
     toast.success(t("success"));
   } else {
