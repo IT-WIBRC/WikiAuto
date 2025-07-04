@@ -138,7 +138,7 @@
 </template>
 <script setup lang="ts">
 import type { DataHeader, DataItem } from "~/components/DataTable.vue";
-import type { Badge, GetContentListType } from "~/api/types";
+import type { GetContentListItem } from "~/api";
 
 definePageMeta({
   layout: "admin",
@@ -198,12 +198,12 @@ const headers: DataHeader<HeaderKeys>[] = Object.seal([
     key: "status",
     value: t("headers.status_th"),
   },
-]) as const;
+]);
 
 class DataForContent implements DataItem<HeaderKeys> {
-  constructor(private content: GetContentListType) {}
+  constructor(private content: GetContentListItem) {}
 
-  getTextFor(key: HeaderKeys): string | Badge[] | number {
+  getTextFor(key: HeaderKeys): string | string[] {
     switch (key) {
       case "title":
         return this.content.title;
@@ -223,19 +223,22 @@ class DataForContent implements DataItem<HeaderKeys> {
   }
 }
 
-const contentList = ref<GetContentListType[]>([]);
+const contentList = ref<GetContentListItem[]>([]);
 const getContentList = async (): Promise<void> => {
   const contents = await useContentStore().fetchContentList();
   if (contents.status === "success") {
     contentList.value = contents.data.sort((firstContent, secondContent) =>
-      useDate.difference(secondContent.updated_at, firstContent.updated_at),
+      useDate.difference(
+        secondContent.updated_at || "",
+        firstContent.updated_at || "",
+      ),
     );
     return;
   }
-  new useToast()
-    .setDuration(15)
-    .setPosition("bottom right")
-    .error(t(`generic_errors.${t(contents.message)}`), false);
+  useToast().error(t(`generic_errors.${t(contents.message)}`), {
+    position: "bottom-right",
+    durationInSecond: 15,
+  });
 };
 
 const isContentListLoading = shallowRef(false);

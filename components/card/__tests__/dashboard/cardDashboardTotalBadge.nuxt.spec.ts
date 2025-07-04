@@ -1,6 +1,4 @@
-import {
-  afterAll, beforeEach, describe, expect, it, vi
-} from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import {
@@ -9,8 +7,10 @@ import {
   IconBadge,
   SkeletonDashboardCard,
 } from "#components";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
 import { realtimeObserver } from "~/api/realtime/realtimeObserver";
+import testUtils from "~/tests/utils";
+
+const { getPiniaInstance } = testUtils;
 
 vi.mock("~/api/realtime/realtimeObserver", () => ({
   realtimeObserver: {
@@ -20,7 +20,7 @@ vi.mock("~/api/realtime/realtimeObserver", () => ({
 }));
 
 describe("CardDashboardTotalBadge", () => {
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const badgeStore = useBadgeStore(pinia);
   badgeStore.fetchBadgeCount = vi.fn().mockReturnValue({

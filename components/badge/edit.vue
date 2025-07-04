@@ -102,10 +102,10 @@ const { errors: badgeToCreateErrors, validate } = useForm({
   },
 });
 
-const { value: title } = useField("title");
-const { value: description } = useField("description");
+const { value: title } = useField<string>("title");
+const { value: description } = useField<string>("description");
 
-const toast = new useToast();
+const toast = useToast();
 const currentBadge = ref({
   name: "",
   description: "",

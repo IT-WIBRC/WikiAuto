@@ -10,6 +10,15 @@ import {
 } from "#components";
 import { createTestingPinia } from "@pinia/testing";
 import { useAuthStore } from "~/stores/auth.store";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+import testUtils from "~/tests/utils";
+
+const { toastAssertions, getPiniaInstance } = testUtils;
+
+const mockUseToast = getMockUseToastInstance();
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("MenuSide", () => {
   const { mockNavigateTo } = vi.hoisted(() => {
@@ -142,21 +151,18 @@ describe("MenuSide", () => {
   });
 
   it("should toast an error when the logout failed", async () => {
-    const pinia = createTestingPinia({
-      createSpy: vi.fn,
-      stubActions: true,
-    });
+    const pinia = getPiniaInstance({ stubActions: true });
     const authStore = useAuthStore(pinia);
     authStore.logout = vi.fn().mockReturnValueOnce({
       status: "error",
     });
-    const toastError = vi.spyOn(useToast.prototype, "error");
     const menuSideCustom = await mountSuspended(MenuSide);
     const logOutButton = menuSideCustom.find("[data-cy='logout-btn']");
     expect(logOutButton.exists()).toBe(true);
     await logOutButton.trigger("click");
-    expect(toastError).toHaveBeenCalledTimes(1);
-    expect(toastError).toHaveBeenCalledWith("failed_logout", false);
+    toastAssertions.expectErrorCalled("failed_logout", {
+      durationInSecond: 7,
+    });
   });
 
   describe("Menu items", () => {

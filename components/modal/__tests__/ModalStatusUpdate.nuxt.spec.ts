@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import {
   ModalLayout,
@@ -7,12 +15,20 @@ import {
 } from "#components";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { CONTENT_STATUS } from "~/api";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import testUtils from "~/tests/utils";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+
+const { getPiniaInstance, toastAssertions } = testUtils;
+const mockUseToast = getMockUseToastInstance();
+
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("ModalStatusUpdate", () => {
   let modalStatusUpdate: VueWrapper;
 
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });
+  const pinia = getPiniaInstance({ stubActions: true });
 
   const contentStore = useContentStore(pinia);
   contentStore.editStatus = vi.fn().mockReturnValue({
@@ -25,6 +41,10 @@ describe("ModalStatusUpdate", () => {
         currentStatus: CONTENT_STATUS.PENDING,
       },
     });
+  });
+
+  beforeEach(() => {
+    mockUseToast.reset();
   });
 
   afterAll(() => {
@@ -86,7 +106,6 @@ describe("ModalStatusUpdate", () => {
     updateBtn = modalStatusUpdate.find("[data-cy='update-btn']");
     expect(updateBtn.element.disabled).toBe(false);
 
-    const toastSuccess = vi.spyOn(useToast.prototype, "success");
     await updateBtn.trigger("click");
 
     await flushPromises();
@@ -97,9 +116,7 @@ describe("ModalStatusUpdate", () => {
       "135246546",
     );
 
-    expect(toastSuccess).toHaveBeenCalledOnce();
-    expect(toastSuccess).toHaveBeenCalledWith("response.success");
-
+    toastAssertions.expectSuccessCalled("response.success");
     expect(modalStatusUpdate.emitted()).toHaveProperty("updated");
   });
 
@@ -125,8 +142,6 @@ describe("ModalStatusUpdate", () => {
     updateBtn = modalStatusUpdate.find("[data-cy='update-btn']");
     expect(updateBtn.element.disabled).toBe(false);
 
-    const toastError = vi.spyOn(useToast.prototype, "error");
-
     await updateBtn.trigger("click");
 
     await flushPromises();
@@ -137,7 +152,6 @@ describe("ModalStatusUpdate", () => {
       "135246546",
     );
 
-    expect(toastError).toHaveBeenCalledOnce();
-    expect(toastError).toHaveBeenCalledWith("response.failure");
+    toastAssertions.expectErrorCalled("response.failure");
   });
 });

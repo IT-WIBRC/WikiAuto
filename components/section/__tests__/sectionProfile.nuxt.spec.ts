@@ -9,21 +9,24 @@ import {
 } from "#components";
 import { useUserStore } from "~/stores/user.store";
 import { nextTick } from "vue";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import testUtils from "~/tests/utils";
 import { GenericErrors } from "~/api";
+import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
+
+const { getPiniaInstance, toastAssertions } = testUtils;
+const mockUseToast = getMockUseToastInstance();
+
+vi.mock("~/composables/useToast", () => ({
+  useToast: vi.fn(() => mockUseToast),
+}));
 
 describe("SectionProfile", () => {
   let profileWrapper: VueWrapper;
   let userStore: ReturnType<typeof useUserStore>;
-  const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: false });
-
-  let toastSuccess: ReturnType<typeof useUnitTestUtils.spyOnToastFn>;
-  let toastError: ReturnType<typeof useUnitTestUtils.spyOnToastFn>;
+  const pinia = getPiniaInstance({ stubActions: false });
 
   beforeEach(async () => {
-    toastSuccess = useUnitTestUtils.spyOnToastFn("success");
-    toastError = useUnitTestUtils.spyOnToastFn("error");
-
+    mockUseToast.reset();
     userStore = useUserStore();
     userStore.currentUser = {
       id: "id1",
@@ -117,8 +120,9 @@ describe("SectionProfile", () => {
       username: "johndoe",
       user_id: "id1",
     });
-    expect(toastSuccess).toHaveBeenCalledWith("success");
-    expect(toastError).not.toHaveBeenCalled();
+
+    toastAssertions.expectSuccessCalled("success");
+    expect(mockUseToast.error).not.toHaveBeenCalled();
   });
 
   it("shows an error message if something goes wrong while saving", async () => {
@@ -140,8 +144,8 @@ describe("SectionProfile", () => {
       username: "johndoe",
       user_id: "id1",
     });
-    expect(toastSuccess).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith("generic_errors.SERVER_ERROR");
+    expect(mockUseToast.success).not.toHaveBeenCalled();
+    toastAssertions.expectErrorCalled("generic_errors.SERVER_ERROR");
   });
 
   it("does nothing if you try to save without making changes", async () => {
@@ -152,8 +156,7 @@ describe("SectionProfile", () => {
     await button.trigger("click");
 
     expect(userStore.updateInfo).not.toHaveBeenCalled();
-    expect(toastSuccess).not.toHaveBeenCalled();
-    expect(toastError).not.toHaveBeenCalled();
+    toastAssertions.expectNoToastCalled();
   });
 
   it("still shows a happy message if the server says it worked but returns no data", async () => {
@@ -170,8 +173,8 @@ describe("SectionProfile", () => {
     await flushPromises();
 
     expect(userStore.updateInfo).toHaveBeenCalled();
-    expect(toastSuccess).toHaveBeenCalledWith("success");
-    expect(toastError).not.toHaveBeenCalled();
+    toastAssertions.expectSuccessCalled("success");
+    expect(mockUseToast.error).not.toHaveBeenCalled();
   });
 
   it("shows a generic error message if something unexpected happens while saving", async () => {
@@ -188,6 +191,6 @@ describe("SectionProfile", () => {
     await flushPromises();
 
     expect(userStore.updateInfo).toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith("generic_errors.SERVER_ERROR");
+    toastAssertions.expectErrorCalled("generic_errors.SERVER_ERROR");
   });
 });

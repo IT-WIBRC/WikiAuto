@@ -169,11 +169,11 @@ const {
   },
 });
 
-const { value: title } = useField("title");
-const { value: explanation } = useField("explanation");
+const { value: title } = useField<string>("title");
+const { value: explanation } = useField<string>("explanation");
 const { value: badges } = useField("badges");
 const { value: illustration } = useField("illustration");
-const { value: status } = useField("status");
+const { value: status } = useField<string>("status");
 
 const handleFormValidation = async (): Promise<boolean> => {
   const { valid } = await validate();
@@ -181,7 +181,7 @@ const handleFormValidation = async (): Promise<boolean> => {
 };
 
 const contentStore = useContentStore();
-const toast = new useToast();
+const toast = useToast();
 const manageCreation = async (): Promise<"success" | "failed"> => {
   const isValid = await handleFormValidation();
   if (!isValid) return "failed";
@@ -196,13 +196,16 @@ const manageCreation = async (): Promise<"success" | "failed"> => {
 
   if (creationResponse.status === "success") {
     emits("created");
-    toast.setDuration(5).setPosition("top right").success(t("succeed"), false);
+    toast.success(t("succeed"), {
+      durationInSecond: 5,
+      position: "top-right",
+    });
     return "success";
   }
-  toast
-    .setDuration(5)
-    .setPosition("top right")
-    .error(t("generic_errors." + creationResponse.message), false);
+  toast.error(t("generic_errors." + creationResponse.message), {
+    durationInSecond: 5,
+    position: "top-right",
+  });
   return "failed";
 };
 

@@ -122,10 +122,10 @@ const getBadgeList = async (): Promise<void> => {
     return;
   }
 
-  new useToast()
-    .setDuration(15)
-    .setPosition("bottom right")
-    .error(t(`generic_errors.${t(badgeListOrError.message)}`), false);
+  useToast().error(t(`generic_errors.${t(badgeListOrError.message)}`), {
+    position: "bottom-right",
+    durationInSecond: 15,
+  });
 };
 
 const isBadgeListLoading = shallowRef(false);

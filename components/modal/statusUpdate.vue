@@ -49,7 +49,7 @@ import type { CONTENT_STATUS } from "~/api";
 
 const props = defineProps<{
   contentId: string;
-  currentStatus: keyof CONTENT_STATUS;
+  currentStatus: keyof typeof CONTENT_STATUS;
 }>();
 const emits = defineEmits<{
   (e: "close" | "updated"): void;
@@ -89,13 +89,15 @@ const close = (): void => {
   emits("close");
 };
 
-const statusChose = shallowRef<keyof CONTENT_STATUS>(props.currentStatus);
+const statusChose = shallowRef<keyof typeof CONTENT_STATUS>(
+  props.currentStatus,
+);
 const unableToSave = computed<boolean>(
   () => props.currentStatus === statusChose.value,
 );
 
 const statusUpdateProcessing = shallowRef(false);
-const toast = new useToast();
+const toast = useToast();
 const save = async (): Promise<void> => {
   statusUpdateProcessing.value = true;
   const statusUpdateResponse = await useContentStore().editStatus(

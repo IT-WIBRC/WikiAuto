@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { Badge, BadgeList } from "#components";
-import useUnitTestUtils from "~/utils/useUnitTestUtils";
+import useUnitTestUtils from "~/tests/utils";
 
 describe("BadgeList", () => {
   let badgeListWrapper: VueWrapper;

@@ -199,11 +199,11 @@ const { errors: contentToEditErrors, validate } = useForm({
   },
 });
 
-const { value: title } = useField("title");
-const { value: explanation } = useField("explanation");
+const { value: title } = useField<string>("title");
+const { value: explanation } = useField<string>("explanation");
 const { value: badges } = useField("badges");
 const { value: illustration } = useField("illustration");
-const { value: status } = useField("status");
+const { value: status } = useField<string>("status");
 
 onBeforeMount(async () => {
   await findContentInTheList();
@@ -257,17 +257,20 @@ const edit = async (): Promise<void> => {
     userEmail: currentContent.value.user_email,
   });
 
-  const toast = new useToast();
+  const toast = useToast();
   if (editionResponse.status === "success") {
-    toast.setDuration(12).setPosition("top right").success(t("succeed"), false);
+    toast.success(t("succeed"), {
+      durationInSecond: 12,
+      position: "top-right",
+    });
     emits("edited");
     closeEditionContentForm();
     return;
   }
-  toast
-    .setDuration(10)
-    .setPosition("top right")
-    .error(t("generic_errors." + editionResponse.message), false);
+  toast.error(t("generic_errors." + editionResponse.message), {
+    durationInSecond: 10,
+    position: "top-right",
+  });
   isEditionLoading.value = false;
 };
 </script>

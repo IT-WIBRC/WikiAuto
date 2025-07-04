@@ -35,9 +35,7 @@ import {
   handleSingleItemResponse,
   handleListResponse,
 } from "./utils/serviceResponseUtilities";
-import {
-  type IEither, Either, Maybe
-} from "./utils/monads";
+import { type IEither, Either, Maybe } from "./utils/monads";
 
 import { realtimeObserver } from "./realtime/realtimeObserver";
 import type { ListenEvent } from "./realtime/liveChannel";
