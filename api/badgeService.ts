@@ -3,7 +3,7 @@ import type {
   PostgrestSingleResponse,
 } from "@supabase/supabase-js";
 import useSupabase from "~/api/utils/supabaseInit";
-import type { Badge, GetBadgeListTypeForOption } from ".";
+import type { Badge, GetBadgeListTypeForOption } from "./types/badge";
 
 const getBadgeListForOptions = async (): Promise<
   PostgrestSingleResponse<GetBadgeListTypeForOption[]>

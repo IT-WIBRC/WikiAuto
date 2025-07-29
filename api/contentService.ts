@@ -5,7 +5,7 @@ import type {
   ContentEdition,
   Content,
   GetContentListItem,
-} from "~/api";
+} from "./types/content";
 import type {
   PostgrestSingleResponse,
   PostgrestError,

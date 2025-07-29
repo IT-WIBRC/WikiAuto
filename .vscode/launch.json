@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach Vitest Debugger",
+      "type": "node",
+      "request": "attach",
+      "port": 9229, // Must match the port in your terminal output
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**" // Avoid stepping into node_modules by default
+      ],
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "protocol": "inspector"
+    }
+  ]
+}

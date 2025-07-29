@@ -13,6 +13,8 @@
         :placeholder="placeholder"
         :required="isRequired"
         :disabled="isDisabled"
+        autocomplete="on"
+        inputmode="email"
         :class="[
           'mt-1 block w-full px-5 font-Poppins py-3 border rounded-xl text-sm md:text-base shadow-sm focus:outline-none placeholder-slate-400 disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none',
           errorMessage?.length || hasError

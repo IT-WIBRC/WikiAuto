@@ -27,19 +27,32 @@ type ResponseErrorOnForm<K> = {
   errors: FormError<K>[];
 };
 
+export type GenericErrorsKeys = keyof typeof GenericErrors;
 export type ResponseOnError = {
   status: "error";
-  message: string;
+  message?: string;
+  code: GenericErrorsKeys;
+};
+
+export type UIResponseOnError = Omit<ResponseOnError, "code"> & { message: string };
+
+export type ApiRouteErrorBody = {
+  code: GenericErrorsKeys;
+  message?: string;
+};
+
+type ResponseOnSuccessWithData<T> = {
+  status: "success";
+  data: T;
+};
+
+type ResponseOnSuccessWithNoData = {
+  status: "success";
 };
 
 type ResponseOnSuccess<T> = T extends undefined
-  ? {
-      status: "success";
-    }
-  : {
-      status: "success";
-      data: T;
-    };
+  ? ResponseOnSuccessWithNoData
+  : ResponseOnSuccessWithData<T>;
 
 export type ApiResponseResultWitForm<T, K = keyof T> =
   | ResponseOnError
@@ -47,5 +60,6 @@ export type ApiResponseResultWitForm<T, K = keyof T> =
   | ResponseErrorOnForm<K>;
 
 export type ApiResponseResult<T> = ResponseOnError | ResponseOnSuccess<T>;
+export type UIApiResponseResult<T> = UIResponseOnError | ResponseOnSuccess<T>;
 
 export type SupabaseChannel = RealtimeChannel | null;

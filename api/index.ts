@@ -4,6 +4,10 @@ import {
   type ApiResponseResult,
   type ApiResponseResultWitForm,
   type ResponseOnError,
+  type ApiRouteErrorBody,
+  type GenericErrorsKeys,
+  type UIResponseOnError,
+  type UIApiResponseResult,
 } from "./types/apiResponse";
 
 import type { Badge, GetBadgeListTypeForOption } from "./types/badge";
@@ -35,7 +39,9 @@ import {
   handleSingleItemResponse,
   handleListResponse,
 } from "./utils/serviceResponseUtilities";
-import { type IEither, Either, Maybe } from "./utils/monads";
+import {
+  type IEither, Either, Maybe
+} from "./utils/monads";
 
 import { realtimeObserver } from "./realtime/realtimeObserver";
 import type { ListenEvent } from "./realtime/liveChannel";
@@ -47,6 +53,10 @@ export {
   type ApiResponseResult,
   type SupabaseChannel,
   type ResponseOnError,
+  type ApiRouteErrorBody,
+  type GenericErrorsKeys,
+  type UIApiResponseResult,
+  type UIResponseOnError,
 
   //content
   CONTENT_RESPONSE_STATUS,

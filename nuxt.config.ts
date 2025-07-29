@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     {
       path: "~/components",
       extensions: ["vue"],
-      ignore: ["**/*.spec.*", "**/__tests__/**"], // Exclude any __tests__ folder at any depth
+      ignore: ["**/*.spec.*", "**/__tests__/**"],
     },
   ],
   modules: [
@@ -52,7 +52,7 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    public: {
+    private: {
       supabaseUrl: "",
       supabaseKey: "",
     },

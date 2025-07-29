@@ -1,10 +1,9 @@
 import type { ServiceWrapperSuccess } from "./wrapServiceCall";
 import {
   GenericErrors,
-  type ApiResponseResult,
-  type ResponseOnError,
-} from "~/api";
+} from "../types/apiResponse";
 import { type IEither, Maybe } from "./monads";
+import type { UIApiResponseResult, UIResponseOnError } from "../types/apiResponse";
 
 export function isArrayOfData<TItem>(
   data: TItem[] | TItem | unknown,
@@ -23,36 +22,37 @@ type CommonHandlers<TResult> = {
 };
 
 type SingleItemHandlers<TItem, TResult> = {
-  onFound: (data: TItem, count: number | null | undefined) => TResult;
-  onNotFound?: (count: number | null | undefined) => TResult;
+  onFound: (data: TItem) => TResult;
+  onNotFound?: () => TResult;
 } & CommonHandlers<TResult>;
 
 type ListHandlers<TItem, TResult> = {
-  onFoundList: (data: TItem[], count: number | null | undefined) => TResult;
-  onEmptyList?: (count: number | null | undefined) => TResult;
+  onFoundList: (data: TItem[] | number) => TResult;
+  onEmptyList?: () => TResult;
+  onListCount?: (data: number) => TResult;
 } & CommonHandlers<TResult>;
 
 export function handleSingleItemResponse<TItem, TResult>(
   eitherResponse: IEither<
-    ResponseOnError,
+    UIResponseOnError,
     ServiceWrapperSuccess<TItem | TItem[]>
   >,
   handlers: SingleItemHandlers<TItem, TResult>,
 ): TResult {
   return eitherResponse.fold(
-    (error) => handlers.onError(error.message),
+    (error) => handlers.onError(error.message ?? GenericErrors.UNKNOWN_ERROR),
     (successResponse) => {
       return Maybe.fromNullable(successResponse.data).fold(
         () =>
           handlers.onNotFound
-            ? handlers.onNotFound(successResponse.count)
+            ? handlers.onNotFound()
             : handlers.onError(GenericErrors.NOT_FOUND),
         (data) => {
           if (isObjectOfData<TItem>(data)) {
-            return handlers.onFound(data, successResponse.count);
+            return handlers.onFound(data);
           } else {
             return handlers.onNotFound
-              ? handlers.onNotFound(successResponse.count)
+              ? handlers.onNotFound()
               : handlers.onError(GenericErrors.NOT_FOUND);
           }
         },
@@ -63,30 +63,38 @@ export function handleSingleItemResponse<TItem, TResult>(
 
 export function handleListResponse<TItem, TResult>(
   eitherResponse: IEither<
-    ResponseOnError,
-    ServiceWrapperSuccess<TItem | TItem[]>
+    UIResponseOnError,
+    ServiceWrapperSuccess<TItem | TItem[] | number>
   >,
   handlers: ListHandlers<TItem, TResult>,
 ): TResult {
   return eitherResponse.fold(
-    (error) => handlers.onError(error.message),
+    (error) => handlers.onError(error.message ?? GenericErrors.UNKNOWN_ERROR),
     (successResponse) => {
       return Maybe.fromNullable(successResponse.data).fold(
         () =>
           handlers.onEmptyList
-            ? handlers.onEmptyList(successResponse.count)
-            : handlers.onFoundList([], successResponse.count),
+            ? handlers.onEmptyList()
+            : handlers.onFoundList([]),
         (data) => {
+          if (typeof data === "number" && !isNaN(data)) {
+            if (handlers.onListCount) {
+              return handlers.onListCount(data);
+            }
+            return handlers.onEmptyList
+              ? handlers.onEmptyList()
+              : handlers.onFoundList([]);
+          }
           if (isArrayOfData<TItem>(data)) {
             if (data.length === 0) {
               return handlers.onEmptyList
-                ? handlers.onEmptyList(successResponse.count)
-                : handlers.onFoundList([], successResponse.count);
+                ? handlers.onEmptyList()
+                : handlers.onFoundList([]);
             }
-            return handlers.onFoundList(data, successResponse.count);
+            return handlers.onFoundList(data);
           } else {
             return handlers.onEmptyList
-              ? handlers.onEmptyList(successResponse.count)
+              ? handlers.onEmptyList()
               : handlers.onError(GenericErrors.UNKNOWN_ERROR);
           }
         },
@@ -96,35 +104,34 @@ export function handleListResponse<TItem, TResult>(
 }
 
 export function processEitherResult<TSuccessData, TReturnData>(
-  eitherResult: IEither<ResponseOnError, ServiceWrapperSuccess<TSuccessData>>,
+  eitherResult: IEither<UIResponseOnError, ServiceWrapperSuccess<TSuccessData>>,
   onSuccessTransform: (
     data: TSuccessData | null,
     count?: number | null,
   ) => TReturnData,
-): ApiResponseResult<TReturnData> {
+): UIApiResponseResult<TReturnData> {
   function onError(
-    errorValue: ResponseOnError,
-  ): ApiResponseResult<TReturnData> {
+    errorValue: UIResponseOnError,
+  ): UIApiResponseResult<TReturnData> {
     return {
       status: "error",
-      message: errorValue.message,
+      message: errorValue.message ?? GenericErrors.UNKNOWN_ERROR,
     };
   }
 
   function onSuccess(
     successValue: ServiceWrapperSuccess<TSuccessData>,
-  ): ApiResponseResult<TReturnData> {
+  ): UIApiResponseResult<TReturnData> {
     const transformedData = onSuccessTransform(
       successValue.data,
-      successValue.count,
     );
     if (typeof transformedData === "undefined") {
-      return { status: "success" } as ApiResponseResult<TReturnData>;
+      return { status: "success" } as UIApiResponseResult<TReturnData>;
     } else {
       return {
         status: "success",
         data: transformedData,
-      } as ApiResponseResult<TReturnData>;
+      } as UIApiResponseResult<TReturnData>;
     }
   }
   return eitherResult.fold(onError, onSuccess);

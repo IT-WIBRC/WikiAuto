@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
   editor.value.destroy();
 });
 </script>
-<style lang="scss">
+<style lang="css">
 .tiptap {
   :first-child {
     margin-top: 0;

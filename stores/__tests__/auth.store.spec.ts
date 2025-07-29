@@ -1,13 +1,29 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  beforeEach, describe, expect, it, vi
+} from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useAuthStore } from "~/stores/auth.store";
-import { GenericErrors, authService } from "~/api";
-import { AuthError, type AuthTokenResponsePassword } from "@supabase/auth-js";
+import { GenericErrors } from "~/api";
+import useTestUtils from "~/tests/utils";
+
+const { fetchMock } = vi.hoisted(() => {
+  const fetchMock = vi.fn();
+
+  return { fetchMock };
+});
+
+vi.mock("ofetch", async () => {
+  const originalModule = await vi.importActual("ofetch");
+  return {
+    ...originalModule,
+    $fetch: fetchMock
+  };
+});
 
 describe("AuthStore", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("Login", () => {
@@ -33,17 +49,26 @@ describe("AuthStore", () => {
           },
         },
       };
-      vi.spyOn(authService, "login").mockImplementationOnce(() =>
-        Promise.resolve({
-          data: successLoginData,
-          error: null,
-        } as unknown as AuthTokenResponsePassword),
+      fetchMock.mockResolvedValueOnce(successLoginData);
+
+      const credentials = {
+        email: "myemail@gmail.com",
+        password: "myHigh@1Password"
+      };
+      const responseOk = await authStore.login(
+        credentials.email,
+        credentials.password,
       );
 
-      const responseOk = await authStore.login(
-        "myemail@gmail.com",
-        "myHigh@1Password",
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/auth/login",
+        {
+          method: "POST",
+          body: credentials
+        },
       );
+
       expect(responseOk).toEqual({
         status: "success",
         data: successLoginData.user,
@@ -52,45 +77,38 @@ describe("AuthStore", () => {
       authStore.$dispose();
     });
 
-    it("should return an error if login returns no user", async () => {
+    it("should return an error if the credentials are malformed", async () => {
       const authStore = useAuthStore();
       expect(authStore.session).toBeNull();
-      vi.spyOn(authService, "login").mockImplementationOnce(() =>
-        Promise.resolve({
-          data: {
-            user: null,
-            session: null,
-          },
-          error: null,
-          status: 200,
-          statusText: "OK",
-        } as unknown as AuthTokenResponsePassword),
-      );
+      const credentialsFetchError = useTestUtils.getFetchError({
+        message: "Credential",
+        statusCode: "BAD_REQUEST",
+        code: "BAD_REQUEST"
+      });
+      fetchMock.mockRejectedValueOnce(credentialsFetchError);
 
       const responseError = await authStore.login(
-        "myemail@gmail.com",
+        "myemail@gmai",
         "myHigh@1Password",
       );
       expect(responseError).toEqual({
         status: "error",
-        message: GenericErrors.SERVER_ERROR,
+        message: GenericErrors.BAD_REQUEST,
       });
       expect(authStore.session).toBeNull();
 
       authStore.$dispose();
     });
 
-    it("should return an error if login returns error", async () => {
+    it("should return the awaited error on native error(network)", async () => {
       const authStore = useAuthStore();
       expect(authStore.session).toBeNull();
-      vi.spyOn(authService, "login").mockImplementationOnce(() =>
-        Promise.resolve({
-          data: null,
-          error: new AuthError("invalid_credentials"),
-          status: 400,
-          statusText: "Bad Request",
-        } as unknown as AuthTokenResponsePassword),
-      );
+      const networkError = useTestUtils.getFetchError({
+        message: "Credential",
+        statusCode: "NETWORK_AUTHENTICATION_REQUIRED",
+        code: "NETWORK_ERROR"
+      });
+      fetchMock.mockRejectedValueOnce(networkError);
 
       const responseError = await authStore.login(
         "myemail@gmail.com",
@@ -98,7 +116,30 @@ describe("AuthStore", () => {
       );
       expect(responseError).toEqual({
         status: "error",
-        message: GenericErrors.UNAUTHORIZED,
+        message: GenericErrors.NETWORK_ERROR,
+      });
+      expect(authStore.session).toBeNull();
+
+      authStore.$dispose();
+    });
+
+    it("should return the awaited object on unmanaged error", async () => {
+      const authStore = useAuthStore();
+      expect(authStore.session).toBeNull();
+      const networkError = useTestUtils.getFetchError({
+        message: "Credential",
+        statusCode: "SERVICE_UNAVAILABLE",
+        code: "UNKNOWN_ERROR"
+      });
+      fetchMock.mockRejectedValueOnce(networkError);
+
+      const responseError = await authStore.login(
+        "myemail@gmail.com",
+        "myHigh@1Password",
+      );
+      expect(responseError).toEqual({
+        status: "error",
+        message: GenericErrors.UNKNOWN_ERROR,
       });
       expect(authStore.session).toBeNull();
 
@@ -111,19 +152,19 @@ describe("AuthStore", () => {
       const authStore = useAuthStore();
       const authStoreResetFnMock = vi.spyOn(authStore, "$reset");
 
-      vi.spyOn(authService, "logout").mockImplementationOnce(() =>
-        Promise.resolve({
-          error: null,
-          status: 200,
-          statusText: "OK",
-          data: {
-            session: null,
-            user: null,
-          },
-        }),
-      );
+      fetchMock.mockResolvedValueOnce({
+        message: "Logout successful"
+      });
 
       const responseOk = await authStore.logout();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/auth/logout",
+        {
+          method: "POST",
+        },
+      );
+
       expect(responseOk).toEqual({
         status: "success",
         data: undefined,
@@ -134,25 +175,38 @@ describe("AuthStore", () => {
       authStore.$dispose();
     });
 
-    it("should return server error when the logout has failed", async () => {
+    it("should return the awaited error message when the logout failed", async () => {
       const authStore = useAuthStore();
 
-      vi.spyOn(authService, "logout").mockImplementationOnce(() =>
-        Promise.resolve({
-          error: new AuthError("Session error"),
-          status: 500,
-          statusText: "Server Error",
-          data: {
-            session: null,
-            user: null,
-          },
-        }),
-      );
+      const serverError = useTestUtils.getFetchError({
+        message: "Credential",
+        statusCode: "INTERNAL_SERVER_ERROR",
+        code: "SERVER_ERROR"
+      });
+      fetchMock.mockRejectedValueOnce(serverError);
 
       const responseOk = await authStore.logout();
       expect(responseOk).toEqual({
         status: "error",
-        message: GenericErrors.REQUEST_FAILED,
+        message: GenericErrors.SERVER_ERROR,
+      });
+      authStore.$dispose();
+    });
+
+    it("should return the awaited error message when the logout failed due to a timeout", async () => {
+      const authStore = useAuthStore();
+
+      const timeOutError = useTestUtils.getFetchError({
+        message: "Credential",
+        statusCode: "REQUEST_TIMEOUT",
+        code: "TIMEOUT"
+      });
+      fetchMock.mockRejectedValueOnce(timeOutError);
+
+      const responseOk = await authStore.logout();
+      expect(responseOk).toEqual({
+        status: "error",
+        message: GenericErrors.TIMEOUT,
       });
       authStore.$dispose();
     });

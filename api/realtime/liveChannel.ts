@@ -1,6 +1,6 @@
 import useSupabase from "~/api/utils/supabaseInit";
-import type { SupabaseChannel } from "~/api";
-import type { Database, Tables } from "~/api/types/db";
+import type { SupabaseChannel } from "../types/apiResponse";
+import type { Database, Tables } from "~/server/types/db";
 import type {
   RealtimePostgresChangesPayload,
   RealtimeChannel,

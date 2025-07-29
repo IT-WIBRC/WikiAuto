@@ -12,6 +12,7 @@
     "test:e2e": "cypress open --e2e",
     "test:e2e:ci": "cypress run",
     "test:unit": "TZ=Africa vitest",
+    "test:debug": "vitest --inspect-brk",
     "test:ci": "bun run prepare && TZ=Africa vitest run",
     "test:coverage": "TZ=Africa vitest run --coverage.enabled",
     "pre-commit": "lint-staged --allow-empty",
@@ -32,8 +33,10 @@
     "@tiptap/vue-3": "^2.10.4",
     "@vee-validate/nuxt": "^4.15.0",
     "@vee-validate/zod": "^4.15.0",
+    "add": "^2.0.6",
     "caniuse-lite": "^1.0.30001720",
     "dayjs": "^1.11.13",
+    "http-status-codes": "^2.3.0",
     "nuxt": "^3.14.159",
     "vue": "latest",
     "vue-router": "latest",
@@ -54,11 +57,11 @@
     "jsdom": "^26.0.0",
     "lint-staged": "^15.2.10",
     "postcss": "^8.4.49",
-    "sass-embedded": "^1.83.0",
     "supabase": "^2.20.12",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.6"
+    "vitest": "^2.1.6",
+    "@types/bun": "latest"
   },
   "lint-staged": {
     "*.{json,ts,vue,mjs,cjs,json}": [

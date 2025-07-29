@@ -3,13 +3,13 @@ import type {
   GetBadgeListTypeForOption,
   Badge,
 } from "~/api";
-import { GenericErrors } from "~/api";
 import { badgeService } from "~/api/badgeService";
 import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 import {
   handleListResponse,
   handleSingleItemResponse,
-} from "~/api/utils/serviceResponseUtilities";
+  GenericErrors
+} from "~/api";
 
 type BadgeState = {
   badgeList: Badge[];
@@ -25,7 +25,7 @@ export const useBadgeStore = defineStore("badge", {
     },
     async fetchBadgeListForOptions(): Promise<
       ApiResponseResult<GetBadgeListTypeForOption[]>
-      > {
+    > {
       const response = await wrapServiceCall(
         badgeService.getBadgeListForOptions(),
       );

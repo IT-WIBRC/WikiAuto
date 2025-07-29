@@ -13,6 +13,8 @@
         type="text"
         :placeholder="placeholder"
         :required="isRequired"
+        autocomplete="on"
+        inputmode="text"
         :class="[
           'mt-1 block w-full px-5 font-dm-sans font-medium py-2.5 border border-transparent rounded-lg text-sm md:text-base shadow-sm focus:outline-none placeholder-[#788B9A] disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none',
           errorMessage?.length || hasError
@@ -20,7 +22,7 @@
             : 'bg-[#F1F4FA] focus:border-sky-500 focus:ring-1 focus:ring-sky-500',
         ]"
         @input="($event) => updateModelValue($event)"
-      />
+      >
       <span
         v-if="limitCharacter"
         class="absolute top-2 right-0 font-medium font-dm-sans text-sm"
@@ -53,7 +55,7 @@ const model = defineModel<string>({
   default: "",
 });
 
-const inputRef = ref<HTMLInputElement>(null);
+const inputRef = ref<HTMLInputElement | null>(null);
 const updateModelValue = ($event: Event): void => {
   const limitation = props.limitCharacter;
   const inputText = ($event.target as HTMLInputElement).value;

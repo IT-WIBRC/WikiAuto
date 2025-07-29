@@ -90,14 +90,17 @@ const login = async (): Promise<void> => {
   isLoggedInProcessing.value = true;
   const { email, password } = credentials;
 
-  const response = await authStore.login(email, password);
+  const { data: loginResponse } = await useAsyncData(
+    "login",
+    () => authStore.login(email, password)
+  );
 
-  if (response.status === "success") {
-    const { email, id } = response.data!;
+  if (loginResponse.value?.status === "success") {
+    const { email, id } = loginResponse.value.data!;
     useUserStore().setCurrentUserIdAndEmail(id, email || "");
     await navigateTo("/dashboard");
   } else {
-    apiResponseError.value = t(`generic_errors.${response.message}`);
+    apiResponseError.value = t(`generic_errors.${loginResponse.value?.message}`);
   }
   isLoggedInProcessing.value = false;
 };

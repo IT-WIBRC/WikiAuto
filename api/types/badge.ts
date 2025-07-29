@@ -1,4 +1,4 @@
-import type { Tables } from "./db";
+import type { Tables } from "../../server/types/db";
 
 export type Badge = Tables<"badges">;
 export type GetBadgeListTypeForOption = Omit<

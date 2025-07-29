@@ -1,4 +1,4 @@
-import type { Tables } from "./db";
+import type { Tables } from "../../server/types/db";
 import type { Badge } from "./badge";
 
 export const CONTENT_STATUS = {

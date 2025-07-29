@@ -1,12 +1,15 @@
 import { authService } from "~/api/authService";
 import {
-  type ApiResponseResult,
+  type UIApiResponseResult,
   GenericErrors,
   type GetProfile,
   type EditProfileInfoPayload,
   handleSingleItemResponse,
+  wrapServiceCall,
+  type ServiceWrapperSuccess,
+  type UIResponseOnError,
+  type IEither
 } from "~/api";
-import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 
 type User = {
   id: string;
@@ -17,6 +20,13 @@ type User = {
   created_at?: string;
 };
 
+interface GetUserProfileApiRawResponse {
+  profile: GetProfile;
+  error?: {
+    message: string;
+  } | null;
+}
+
 type State = {
   currentUser: User;
   hasAlreadyFetchUserProfile: boolean;
@@ -26,14 +36,20 @@ export const useUserStore = defineStore("user", {
     currentUser: {} as User,
     hasAlreadyFetchUserProfile: false,
   }),
-
+  getters: {
+    isAuthenticated(state): boolean {
+      return !!state.currentUser;
+    },
+  },
   actions: {
     setCurrentUserIdAndEmail(userId: string, email: string): void {
       this.currentUser.id = userId;
       this.currentUser.email = email;
     },
     setCurrentOtherUserInfo(userInfos: GetProfile): void {
-      const { firstname, lastname, username, created_at } = userInfos!;
+      const {
+        firstname, lastname, username, created_at
+      } = userInfos!;
 
       this.currentUser.username = username ?? "";
       this.currentUser.firstname = firstname ?? "";
@@ -43,21 +59,26 @@ export const useUserStore = defineStore("user", {
     markProfileAsFetched() {
       this.hasAlreadyFetchUserProfile = true;
     },
-    async getProfile(): Promise<ApiResponseResult<GetProfile>> {
+    async getProfile(): Promise<UIApiResponseResult<GetProfile>> {
       if (!this.currentUser.id) {
         return {
           status: "error",
           message: GenericErrors.BAD_REQUEST,
         };
       }
-      const result = await wrapServiceCall(
-        authService.getUserProfile(this.currentUser.id),
-      );
+      const fetchPromise = $fetch<GetUserProfileApiRawResponse>("/api/auth/profile", {
+        method: "GET",
+      });
+
+      const response: IEither<
+            UIResponseOnError,
+            ServiceWrapperSuccess<GetUserProfileApiRawResponse>
+        > = await wrapServiceCall(fetchPromise);
 
       return handleSingleItemResponse<
-        GetProfile,
-        ApiResponseResult<GetProfile>
-      >(result, {
+        GetUserProfileApiRawResponse,
+        UIApiResponseResult<GetProfile>
+      >(response, {
         onError: (errorValue) => {
           return {
             status: "error",
@@ -65,12 +86,12 @@ export const useUserStore = defineStore("user", {
           };
         },
         onFound: (successValue) => {
-          this.setCurrentOtherUserInfo(successValue);
+          this.setCurrentOtherUserInfo(successValue.profile);
           this.markProfileAsFetched();
 
           return {
             status: "success",
-            data: successValue,
+            data: successValue.profile,
           };
         },
         onNotFound: () => {
@@ -83,39 +104,35 @@ export const useUserStore = defineStore("user", {
     },
     async updateInfo(
       infoToEdit: EditProfileInfoPayload,
-    ): Promise<ApiResponseResult<undefined>> {
+    ): Promise<UIApiResponseResult<undefined>> {
       const result = await wrapServiceCall(
         authService.editUserInfo(infoToEdit),
       );
 
-      return handleSingleItemResponse<GetProfile, ApiResponseResult<undefined>>(
-        result,
-        {
-          onError: (errorValue) => {
-            return {
-              status: "error",
-              message: errorValue,
-            };
-          },
-          onFound: (updatedUser) => {
-            this.setCurrentOtherUserInfo(updatedUser);
-            return {
-              status: "success",
-            };
-          },
-          onNotFound: () => {
-            return {
-              status: "error",
-              message: GenericErrors.NOT_FOUND,
-            };
-          },
+      return handleSingleItemResponse<
+      GetProfile,
+      UIApiResponseResult<undefined>
+      >(result,{
+        onError: (errorValue) => {
+          return {
+            status: "error",
+            message: errorValue,
+          };
         },
+        onFound: (updatedUser) => {
+          this.setCurrentOtherUserInfo(updatedUser);
+          return {
+            status: "success",
+          };
+        },
+        onNotFound: () => {
+          return {
+            status: "error",
+            message: GenericErrors.NOT_FOUND,
+          };
+        },
+      },
       );
-    },
-  },
-  getters: {
-    isAuthenticated(state): boolean {
-      return !!state.currentUser;
     },
   },
 });

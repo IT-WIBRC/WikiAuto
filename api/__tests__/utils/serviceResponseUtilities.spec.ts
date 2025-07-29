@@ -4,10 +4,16 @@ import {
   handleSingleItemResponse,
   handleListResponse,
 } from "~/api/utils/serviceResponseUtilities";
-import { GenericErrors, type ResponseOnError } from "~/api";
+import {
+  GenericErrors, type ResponseOnError, type UIResponseOnError
+} from "~/api";
 import type { ServiceWrapperSuccess } from "~/api/utils/wrapServiceCall";
-import { Either, Maybe, type IEither } from "~/api/utils/monads";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  Either, Maybe, type IEither
+} from "~/api/utils/monads";
+import {
+  describe, it, expect, vi, beforeEach
+} from "vitest";
 
 type Item = { id: number; name: string };
 
@@ -21,7 +27,7 @@ beforeEach(() => {
 
 const successResponseStatus: Omit<
   ServiceWrapperSuccess<Item | Item>,
-  "data" | "count"
+  "data"
 > = {
   status: "success",
 };
@@ -82,13 +88,13 @@ describe("serviceResponseUtilities", () => {
     };
 
     type Response = IEither<
-      ResponseOnError,
+      UIResponseOnError,
       ServiceWrapperSuccess<Item | Item[]>
     >;
 
     let handlers: {
-      onFound: (item: Item, count: number | null | undefined) => void;
-      onNotFound?: (count: number | null | undefined) => void;
+      onFound: (item: Item) => void;
+      onNotFound?: () => void;
       onError: (error: string) => void;
     };
 
@@ -119,7 +125,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item> = {
         ...successResponseStatus,
         data: item,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -127,27 +132,9 @@ describe("serviceResponseUtilities", () => {
 
       handleSingleItemResponse(either, handlers);
       expect(handlers.onFound).toHaveBeenCalledTimes(1);
-      expect(handlers.onFound).toHaveBeenCalledWith(item, 1);
+      expect(handlers.onFound).toHaveBeenCalledWith(item);
       expect(handlers.onError).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledWith(item);
-    });
-
-    it("tells us nothing was found when the response data is null", () => {
-      const successResponse: ServiceWrapperSuccess<Item> = {
-        ...successResponseStatus,
-        data: null,
-        count: 0,
-      };
-      const either: Response = Either.right(successResponse);
-
-      fromNullableSpy.mockReturnValue(Maybe.none());
-
-      handleSingleItemResponse(either, handlers);
-      expect(handlers.onNotFound).toHaveBeenCalledWith(0);
-      expect(handlers.onFound).not.toHaveBeenCalled();
-      expect(handlers.onError).not.toHaveBeenCalled();
-      expect(fromNullableSpy).toHaveBeenCalledTimes(1);
-      expect(fromNullableSpy).toHaveBeenCalledWith(null);
     });
 
     it("tells us nothing was found when we expected a single item but got a list, and we provided a handler for not found", () => {
@@ -155,7 +142,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item[]> = {
         ...successResponseStatus,
         data: arrayItem,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -163,7 +149,6 @@ describe("serviceResponseUtilities", () => {
 
       handleSingleItemResponse(either, handlers);
       expect(handlers.onNotFound).toHaveBeenCalledTimes(1);
-      expect(handlers.onNotFound).toHaveBeenCalledWith(1);
       expect(handlers.onFound).not.toHaveBeenCalled();
       expect(handlers.onError).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledWith(arrayItem);
@@ -174,7 +159,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item[]> = {
         ...successResponseStatus,
         data: arrayItem,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -196,7 +180,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<symbol> = {
         ...successResponseStatus,
         data: unknownData,
-        count: 1,
       };
       const either: IEither<
         ResponseOnError,
@@ -227,13 +210,14 @@ describe("serviceResponseUtilities", () => {
     };
 
     type Response = IEither<
-      ResponseOnError,
-      ServiceWrapperSuccess<Item[] | Item>
+      UIResponseOnError,
+      ServiceWrapperSuccess<Item[] | Item | number>
     >;
 
     let handlers: {
-      onFoundList: (items: Item[], count: number | null | undefined) => void;
-      onEmptyList?: (count: number | null | undefined) => void;
+      onFoundList: (items: Item[] | number) => void;
+      onEmptyList?: () => void;
+      onListCount?: (data: number) => void;
       onError: (error: string) => void;
     };
 
@@ -241,6 +225,7 @@ describe("serviceResponseUtilities", () => {
       handlers = {
         onFoundList: vi.fn(),
         onEmptyList: vi.fn(),
+        onListCount: vi.fn(),
         onError: vi.fn(),
       };
       vi.clearAllMocks();
@@ -265,7 +250,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item[]> = {
         ...successResponseStatus,
         data: arrayItem,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -273,7 +257,7 @@ describe("serviceResponseUtilities", () => {
 
       handleListResponse(either, handlers);
       expect(handlers.onFoundList).toHaveBeenCalledTimes(1);
-      expect(handlers.onFoundList).toHaveBeenCalledWith([item], 1);
+      expect(handlers.onFoundList).toHaveBeenCalledWith([item]);
       expect(handlers.onError).not.toHaveBeenCalled();
       expect(handlers.onEmptyList).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledWith(arrayItem);
@@ -284,7 +268,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item[]> = {
         ...successResponseStatus,
         data: emptyArray,
-        count: 0,
       };
       const either: Response = Either.right(successResponse);
 
@@ -292,30 +275,28 @@ describe("serviceResponseUtilities", () => {
 
       handleListResponse(either, handlers);
       expect(handlers.onEmptyList).toHaveBeenCalledTimes(1);
-      expect(handlers.onEmptyList).toHaveBeenCalledWith(0);
       expect(handlers.onFoundList).not.toHaveBeenCalled();
       expect(handlers.onError).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledTimes(1);
       expect(fromNullableSpy).toHaveBeenCalledWith(emptyArray);
     });
 
-    it("lets us know the list is empty when data is null and we did not provide a handler for empty", () => {
-      const successResponse: ServiceWrapperSuccess<Item[]> = {
+    it("lets us know the number of element on the list", () => {
+      const successResponse: ServiceWrapperSuccess<number> = {
         ...successResponseStatus,
-        data: null,
-        count: 0,
+        data: 108,
       };
       const either: Response = Either.right(successResponse);
 
       const { onEmptyList, ...handlersWithoutEmptyList } = handlers;
-      fromNullableSpy.mockReturnValue(Maybe.none());
 
       handleListResponse(either, handlersWithoutEmptyList);
-      expect(handlersWithoutEmptyList.onFoundList).toHaveBeenCalledWith([], 0);
+      expect(handlersWithoutEmptyList.onListCount).toHaveBeenCalledTimes(1);
+      expect(handlersWithoutEmptyList.onListCount).toHaveBeenCalledWith(108);
       expect(handlersWithoutEmptyList.onError).not.toHaveBeenCalled();
       expect(handlers.onEmptyList).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledTimes(1);
-      expect(fromNullableSpy).toHaveBeenCalledWith(null);
+      expect(fromNullableSpy).toHaveBeenCalledWith(108);
     });
 
     it("tells us the list is empty when the response contains a single item and we provided a handler for empty", () => {
@@ -323,7 +304,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item> = {
         ...successResponseStatus,
         data: singleItem,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -331,7 +311,6 @@ describe("serviceResponseUtilities", () => {
 
       handleListResponse(either, handlers);
       expect(handlers.onEmptyList).toHaveBeenCalledTimes(1);
-      expect(handlers.onEmptyList).toHaveBeenCalledWith(1);
       expect(handlers.onFoundList).not.toHaveBeenCalled();
       expect(handlers.onError).not.toHaveBeenCalled();
       expect(fromNullableSpy).toHaveBeenCalledWith(singleItem);
@@ -342,7 +321,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<Item> = {
         ...successResponseStatus,
         data: singleItem,
-        count: 1,
       };
       const either: Response = Either.right(successResponse);
 
@@ -363,7 +341,6 @@ describe("serviceResponseUtilities", () => {
       const successResponse: ServiceWrapperSuccess<symbol> = {
         ...successResponseStatus,
         data: unknownData,
-        count: 1,
       };
       const either: IEither<
         ResponseOnError,
