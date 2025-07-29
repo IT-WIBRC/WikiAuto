@@ -16,7 +16,7 @@
     "test:ci": "bun run prepare && TZ=Africa vitest run",
     "test:coverage": "TZ=Africa vitest run --coverage.enabled",
     "pre-commit": "lint-staged --allow-empty",
-    "generate:types": "supabase gen types typescript --project-id bgebiukwfhdwkwxtnyhy > ./api/wikiAutoType.ts",
+    "generate:types": "supabase gen types typescript --project-id bgebiukwfhdwkwxtnyhy > ./server/types/database.types.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "bunx prettier . -w"

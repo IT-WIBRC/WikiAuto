@@ -52,9 +52,9 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    private: {
-      supabaseUrl: "",
-      supabaseKey: "",
+    public: {
+      databaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
+      databaseClientKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },
   },
 });
