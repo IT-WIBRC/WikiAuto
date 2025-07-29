@@ -1,9 +1,10 @@
 import type { ServiceWrapperSuccess } from "./wrapServiceCall";
-import {
-  GenericErrors,
-} from "../types/apiResponse";
+import { GenericErrors } from "../types/apiResponse";
 import { type IEither, Maybe } from "./monads";
-import type { UIApiResponseResult, UIResponseOnError } from "../types/apiResponse";
+import type {
+  UIApiResponseResult,
+  UIResponseOnError,
+} from "../types/apiResponse";
 
 export function isArrayOfData<TItem>(
   data: TItem[] | TItem | unknown,
@@ -122,9 +123,7 @@ export function processEitherResult<TSuccessData, TReturnData>(
   function onSuccess(
     successValue: ServiceWrapperSuccess<TSuccessData>,
   ): UIApiResponseResult<TReturnData> {
-    const transformedData = onSuccessTransform(
-      successValue.data,
-    );
+    const transformedData = onSuccessTransform(successValue.data);
     if (typeof transformedData === "undefined") {
       return { status: "success" } as UIApiResponseResult<TReturnData>;
     } else {

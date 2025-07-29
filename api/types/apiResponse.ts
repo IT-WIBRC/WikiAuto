@@ -34,7 +34,9 @@ export type ResponseOnError = {
   code: GenericErrorsKeys;
 };
 
-export type UIResponseOnError = Omit<ResponseOnError, "code"> & { message: string };
+export type UIResponseOnError = Omit<ResponseOnError, "code"> & {
+  message: string;
+};
 
 export type ApiRouteErrorBody = {
   code: GenericErrorsKeys;

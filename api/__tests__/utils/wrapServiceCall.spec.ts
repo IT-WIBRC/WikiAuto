@@ -1,7 +1,4 @@
-import {
-  describe, it, expect,
-  vi
-} from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { wrapServiceCall, GenericErrors } from "~/api";
 import type { IEither } from "~/api/utils/monads";
 import useTestUtils from "~/tests/utils";
@@ -42,7 +39,7 @@ describe("wrapServiceCall", () => {
     const fetchErrorClassMock = useTestUtils.getFetchError({
       message: "User cannot have access to this.",
       statusCode: "UNAUTHORIZED",
-      code: "UNAUTHORIZED"
+      code: "UNAUTHORIZED",
     });
 
     const servicePromise = Promise.reject(fetchErrorClassMock);
@@ -78,7 +75,7 @@ describe("wrapServiceCall", () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Caught an unexpected error type in mapErrorToResponseOnError:",
       unknownErrorClassMock.message,
-      unknownErrorClassMock
+      unknownErrorClassMock,
     );
   });
 
@@ -86,7 +83,7 @@ describe("wrapServiceCall", () => {
     const fetchUnknownErrorClassMock = useTestUtils.getFetchError({
       message: "User cannot have access to this.",
       statusCode: "UNAUTHORIZED",
-      code: "UNKNOWN_ERROR"
+      code: "UNKNOWN_ERROR",
     });
 
     const servicePromise = Promise.reject(fetchUnknownErrorClassMock);

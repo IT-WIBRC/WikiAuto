@@ -1,6 +1,4 @@
-import {
-  beforeEach, describe, expect, it, vi
-} from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useAuthStore } from "~/stores/auth.store";
 import { GenericErrors } from "~/api";
@@ -16,7 +14,7 @@ vi.mock("ofetch", async () => {
   const originalModule = await vi.importActual("ofetch");
   return {
     ...originalModule,
-    $fetch: fetchMock
+    $fetch: fetchMock,
   };
 });
 
@@ -53,7 +51,7 @@ describe("AuthStore", () => {
 
       const credentials = {
         email: "myemail@gmail.com",
-        password: "myHigh@1Password"
+        password: "myHigh@1Password",
       };
       const responseOk = await authStore.login(
         credentials.email,
@@ -61,13 +59,10 @@ describe("AuthStore", () => {
       );
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/auth/login",
-        {
-          method: "POST",
-          body: credentials
-        },
-      );
+      expect(fetchMock).toHaveBeenCalledWith("/api/auth/login", {
+        method: "POST",
+        body: credentials,
+      });
 
       expect(responseOk).toEqual({
         status: "success",
@@ -83,7 +78,7 @@ describe("AuthStore", () => {
       const credentialsFetchError = useTestUtils.getFetchError({
         message: "Credential",
         statusCode: "BAD_REQUEST",
-        code: "BAD_REQUEST"
+        code: "BAD_REQUEST",
       });
       fetchMock.mockRejectedValueOnce(credentialsFetchError);
 
@@ -106,7 +101,7 @@ describe("AuthStore", () => {
       const networkError = useTestUtils.getFetchError({
         message: "Credential",
         statusCode: "NETWORK_AUTHENTICATION_REQUIRED",
-        code: "NETWORK_ERROR"
+        code: "NETWORK_ERROR",
       });
       fetchMock.mockRejectedValueOnce(networkError);
 
@@ -129,7 +124,7 @@ describe("AuthStore", () => {
       const networkError = useTestUtils.getFetchError({
         message: "Credential",
         statusCode: "SERVICE_UNAVAILABLE",
-        code: "UNKNOWN_ERROR"
+        code: "UNKNOWN_ERROR",
       });
       fetchMock.mockRejectedValueOnce(networkError);
 
@@ -153,17 +148,14 @@ describe("AuthStore", () => {
       const authStoreResetFnMock = vi.spyOn(authStore, "$reset");
 
       fetchMock.mockResolvedValueOnce({
-        message: "Logout successful"
+        message: "Logout successful",
       });
 
       const responseOk = await authStore.logout();
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/auth/logout",
-        {
-          method: "POST",
-        },
-      );
+      expect(fetchMock).toHaveBeenCalledWith("/api/auth/logout", {
+        method: "POST",
+      });
 
       expect(responseOk).toEqual({
         status: "success",
@@ -181,7 +173,7 @@ describe("AuthStore", () => {
       const serverError = useTestUtils.getFetchError({
         message: "Credential",
         statusCode: "INTERNAL_SERVER_ERROR",
-        code: "SERVER_ERROR"
+        code: "SERVER_ERROR",
       });
       fetchMock.mockRejectedValueOnce(serverError);
 
@@ -199,7 +191,7 @@ describe("AuthStore", () => {
       const timeOutError = useTestUtils.getFetchError({
         message: "Credential",
         statusCode: "REQUEST_TIMEOUT",
-        code: "TIMEOUT"
+        code: "TIMEOUT",
       });
       fetchMock.mockRejectedValueOnce(timeOutError);
 

@@ -90,9 +90,8 @@ const login = async (): Promise<void> => {
   isLoggedInProcessing.value = true;
   const { email, password } = credentials;
 
-  const { data: loginResponse } = await useAsyncData(
-    "login",
-    () => authStore.login(email, password)
+  const { data: loginResponse } = await useAsyncData("login", () =>
+    authStore.login(email, password),
   );
 
   if (loginResponse.value?.status === "success") {
@@ -100,7 +99,9 @@ const login = async (): Promise<void> => {
     useUserStore().setCurrentUserIdAndEmail(id, email || "");
     await navigateTo("/dashboard");
   } else {
-    apiResponseError.value = t(`generic_errors.${loginResponse.value?.message}`);
+    apiResponseError.value = t(
+      `generic_errors.${loginResponse.value?.message}`,
+    );
   }
   isLoggedInProcessing.value = false;
 };

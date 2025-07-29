@@ -45,17 +45,17 @@ export default (() => {
     message,
     statusCode,
     code,
-  }:{
+  }: {
     message: string;
-    statusCode: keyof typeof StatusCodes,
-    code?: keyof typeof GenericErrors
-  }): FetchError  => {
+    statusCode: keyof typeof StatusCodes;
+    code?: keyof typeof GenericErrors;
+  }): FetchError => {
     const fetchErrorMock = new FetchError(message);
     fetchErrorMock.statusCode = StatusCodes[statusCode];
     fetchErrorMock.response = {
       _data: {
         code: code ? GenericErrors[code] : GenericErrors.UNKNOWN_ERROR,
-      }
+      },
     } as FetchResponse<unknown>;
     return fetchErrorMock;
   };

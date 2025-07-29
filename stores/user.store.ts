@@ -8,7 +8,7 @@ import {
   wrapServiceCall,
   type ServiceWrapperSuccess,
   type UIResponseOnError,
-  type IEither
+  type IEither,
 } from "~/api";
 
 type User = {
@@ -47,9 +47,7 @@ export const useUserStore = defineStore("user", {
       this.currentUser.email = email;
     },
     setCurrentOtherUserInfo(userInfos: GetProfile): void {
-      const {
-        firstname, lastname, username, created_at
-      } = userInfos!;
+      const { firstname, lastname, username, created_at } = userInfos!;
 
       this.currentUser.username = username ?? "";
       this.currentUser.firstname = firstname ?? "";
@@ -66,14 +64,17 @@ export const useUserStore = defineStore("user", {
           message: GenericErrors.BAD_REQUEST,
         };
       }
-      const fetchPromise = $fetch<GetUserProfileApiRawResponse>("/api/auth/profile", {
-        method: "GET",
-      });
+      const fetchPromise = $fetch<GetUserProfileApiRawResponse>(
+        "/api/auth/profile",
+        {
+          method: "GET",
+        },
+      );
 
       const response: IEither<
-            UIResponseOnError,
-            ServiceWrapperSuccess<GetUserProfileApiRawResponse>
-        > = await wrapServiceCall(fetchPromise);
+        UIResponseOnError,
+        ServiceWrapperSuccess<GetUserProfileApiRawResponse>
+      > = await wrapServiceCall(fetchPromise);
 
       return handleSingleItemResponse<
         GetUserProfileApiRawResponse,
@@ -110,9 +111,9 @@ export const useUserStore = defineStore("user", {
       );
 
       return handleSingleItemResponse<
-      GetProfile,
-      UIApiResponseResult<undefined>
-      >(result,{
+        GetProfile,
+        UIApiResponseResult<undefined>
+      >(result, {
         onError: (errorValue) => {
           return {
             status: "error",
@@ -131,8 +132,7 @@ export const useUserStore = defineStore("user", {
             message: GenericErrors.NOT_FOUND,
           };
         },
-      },
-      );
+      });
     },
   },
 });

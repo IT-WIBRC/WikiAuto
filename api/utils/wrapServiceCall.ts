@@ -2,14 +2,12 @@ import {
   GenericErrors,
   type ApiRouteErrorBody,
   type GenericErrorsKeys,
-  type UIResponseOnError
+  type UIResponseOnError,
 } from "../types/apiResponse";
 import { Either, type IEither } from "./monads";
 import type { FetchError } from "ofetch";
 
-export function isApiRouteErrorBody(
-  data: unknown,
-): data is ApiRouteErrorBody {
+export function isApiRouteErrorBody(data: unknown): data is ApiRouteErrorBody {
   return (
     typeof data === "object" &&
     data !== null &&
@@ -28,10 +26,9 @@ export function isApiFetchError(
   );
 }
 
-function isFetchErrorWithResponse(
-  error: unknown,
-): error is FetchError &
-{ response: { _data?: unknown; statusCode?: number } } {
+function isFetchErrorWithResponse(error: unknown): error is FetchError & {
+  response: { _data?: unknown; statusCode?: number };
+} {
   return (
     error instanceof Error &&
     "response" in error &&
@@ -125,9 +122,7 @@ export async function wrapServiceCall<TData>(
       error: ApiRouteErrorBody | null;
     }
 
-    function hasEmbeddedError(
-      res: unknown,
-    ): res is EmbeddedErrorWrapper {
+    function hasEmbeddedError(res: unknown): res is EmbeddedErrorWrapper {
       return (
         typeof res === "object" &&
         res !== null &&

@@ -8,7 +8,7 @@ import { wrapServiceCall } from "~/api/utils/wrapServiceCall";
 import {
   handleListResponse,
   handleSingleItemResponse,
-  GenericErrors
+  GenericErrors,
 } from "~/api";
 
 type BadgeState = {

@@ -5,15 +5,13 @@ import {
   handleListResponse,
 } from "~/api/utils/serviceResponseUtilities";
 import {
-  GenericErrors, type ResponseOnError, type UIResponseOnError
+  GenericErrors,
+  type ResponseOnError,
+  type UIResponseOnError,
 } from "~/api";
 import type { ServiceWrapperSuccess } from "~/api/utils/wrapServiceCall";
-import {
-  Either, Maybe, type IEither
-} from "~/api/utils/monads";
-import {
-  describe, it, expect, vi, beforeEach
-} from "vitest";
+import { Either, Maybe, type IEither } from "~/api/utils/monads";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 type Item = { id: number; name: string };
 

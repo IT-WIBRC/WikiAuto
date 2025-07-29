@@ -51,19 +51,19 @@ export const useAuthStore = defineStore("auth", {
         method: "POST",
         body: {
           email,
-          password
+          password,
         },
       });
 
       const response: IEither<
-      UIResponseOnError,
-      ServiceWrapperSuccess<LoginApiRawResponse>
+        UIResponseOnError,
+        ServiceWrapperSuccess<LoginApiRawResponse>
       > = await wrapServiceCall(fetchPromise);
 
       return response.fold<UIApiResponseResult<User>>(
         (errorValue: UIResponseOnError) => {
           const uiErrorMessage: string =
-          errorValue.message || GenericErrors.UNKNOWN_ERROR;
+            errorValue.message || GenericErrors.UNKNOWN_ERROR;
           const uiError: UIResponseOnError = {
             status: "error",
             message: uiErrorMessage,
@@ -98,14 +98,14 @@ export const useAuthStore = defineStore("auth", {
       });
 
       const response: IEither<
-      UIResponseOnError,
-      ServiceWrapperSuccess<LogoutApiRawResponse>
+        UIResponseOnError,
+        ServiceWrapperSuccess<LogoutApiRawResponse>
       > = await wrapServiceCall(fetchPromise);
 
       if (response.isLeft()) {
         const errorValue = response._value;
         const uiErrorMessage: string =
-        errorValue.message || GenericErrors.UNKNOWN_ERROR;
+          errorValue.message || GenericErrors.UNKNOWN_ERROR;
         const uiError: UIResponseOnError = {
           status: "error",
           message: uiErrorMessage,
