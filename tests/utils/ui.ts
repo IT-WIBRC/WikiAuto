@@ -4,7 +4,11 @@ import {
   type VueWrapper,
 } from "@vue/test-utils";
 import { createTestingPinia, type TestingPinia } from "@pinia/testing";
-import type { ApiResponseResult, ResponseOnError, ResponseOnSuccess } from "~/shared/types/api/common";
+import type {
+  ApiResponseResult,
+  ResponseOnError,
+  ResponseOnSuccess,
+} from "~/shared/types/api/common";
 import {
   mockSuccess,
   mockError,
@@ -16,7 +20,10 @@ import {
 import type { ToastOptionParam } from "~/types/toast";
 import { FetchError, type FetchResponse } from "ofetch";
 import { StatusCodes } from "http-status-codes";
-import { GenericErrors, type GenericErrorsKeys } from "~/shared/types/enums/GenericErrors";
+import {
+  GenericErrors,
+  type GenericErrorsKeys,
+} from "~/shared/types/enums/GenericErrors";
 
 export default (() => {
   const mockFetch = (returnValue: Blob) => {
@@ -45,7 +52,7 @@ export default (() => {
     message: string;
     statusCode: keyof typeof StatusCodes;
     code?: GenericErrorsKeys;
-  }
+  };
 
   const getFetchError = ({
     message,

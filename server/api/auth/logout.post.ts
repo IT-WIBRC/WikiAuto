@@ -15,7 +15,10 @@ async function handleLogout(event: H3Event): Promise<LogoutResponse> {
 
     if (error) {
       let errorResponse: ResponseOnError;
-      if (error.message.includes("Invalid JWT") || error.message.includes("expired token")) {
+      if (
+        error.message.includes("Invalid JWT") ||
+        error.message.includes("expired token")
+      ) {
         event.node.res.statusCode = StatusCodes.UNAUTHORIZED;
         errorResponse = {
           status: "error",
@@ -38,13 +41,14 @@ async function handleLogout(event: H3Event): Promise<LogoutResponse> {
       status: "success",
     };
     return successResponse;
-  } catch (_: unknown) {
+  } catch (_error: unknown) {
     event.node.res.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
     const errorResponse: ResponseOnError = {
       status: "error",
       code: GenericErrors.SERVER_ERROR,
       hint: "An unexpected server error occurred.",
     };
+    console.warn(_error);
     return errorResponse;
   }
 }
