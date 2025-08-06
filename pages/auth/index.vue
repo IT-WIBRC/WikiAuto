@@ -100,7 +100,7 @@ const login = async (): Promise<void> => {
     await navigateTo("/dashboard");
   } else {
     apiResponseError.value = t(
-      `generic_errors.${loginResponse.value?.message}`,
+      `generic_errors.${loginResponse.value?.code}`,
     );
   }
   isLoggedInProcessing.value = false;

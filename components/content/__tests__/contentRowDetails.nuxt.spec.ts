@@ -22,7 +22,7 @@ import {
   ModalStatusUpdate,
 } from "#components";
 import type { VueWrapper } from "@vue/test-utils";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { getPiniaInstance, getMockContentList } = testUtils;
 

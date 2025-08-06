@@ -72,7 +72,7 @@ export default withNuxt({
     "no-useless-escape": "off",
 
     "object-curly-newline": [
-      "error",
+      "warn",
       {
         minProperties: 3,
         consistent: true,

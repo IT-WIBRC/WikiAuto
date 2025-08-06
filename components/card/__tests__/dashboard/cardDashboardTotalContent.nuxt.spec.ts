@@ -9,7 +9,7 @@ import {
 } from "#components";
 import { useContentStore } from "~/stores/content.store";
 import { realtimeObserver } from "~/api/realtime/realtimeObserver";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { getPiniaInstance } = testUtils;
 

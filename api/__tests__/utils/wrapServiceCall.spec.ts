@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { wrapServiceCall, GenericErrors } from "~/api";
 import type { IEither } from "~/api/utils/monads";
-import useTestUtils from "~/tests/utils";
+import useTestUtils from "~/tests/utils/ui";
 
 function expectRight<T>(
   either: IEither<unknown, T>,

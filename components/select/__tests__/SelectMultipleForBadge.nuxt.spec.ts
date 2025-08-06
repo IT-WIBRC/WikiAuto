@@ -20,7 +20,7 @@ import {
   BadgeCreate,
 } from "#components";
 import { BadgeToOptionForList } from "~/components/select/type";
-import useUnitTestUtils from "~/tests/utils";
+import useUnitTestUtils from "~/tests/utils/ui";
 
 describe("SelectMultipleForBadge", () => {
   const pinia = useUnitTestUtils.getPiniaInstance({ stubActions: true });

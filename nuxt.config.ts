@@ -53,8 +53,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      databaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      databaseClientKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+      databaseUrl: process.env.NUXT_PUBLIC_DATABASE_URL,
+      databaseClientKey: process.env.NUXT_PUBLIC_DATABASE_CLIENT_KEY,
     },
   },
 });

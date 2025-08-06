@@ -10,7 +10,7 @@ import {
 } from "#components";
 
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { toastAssertions } = testUtils;
 const mockUseToast = getMockUseToastInstance();

@@ -7,7 +7,7 @@
     "paths": {
       "~/*": ["./*"],
       "@/*": ["./*"],
-      "#components": ["./.nuxt/components.d.ts"] // Make `#components` available inside unit tests files
+      "#components": ["./.nuxt/components.d.ts"]
     }
   },
   "exclude": [

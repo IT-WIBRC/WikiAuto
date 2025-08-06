@@ -16,7 +16,7 @@ import CardDashboardTotalBadge from "~/components/card/dashboard/TotalBadge.vue"
 import { useUserStore } from "~/stores/user.store";
 
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { toastAssertions, getPiniaInstance } = testUtils;
 

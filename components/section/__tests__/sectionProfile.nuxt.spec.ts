@@ -9,7 +9,7 @@ import {
 } from "#components";
 import { useUserStore } from "~/stores/user.store";
 import { nextTick } from "vue";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 import { GenericErrors } from "~/api";
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
 

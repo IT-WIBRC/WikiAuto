@@ -4,6 +4,8 @@ import type {
   PostgrestResponse as SupabasePostgrestResponse,
   PostgrestSingleResponse as SupabasePostgrestSingleResponse,
   SupabaseClient as ConcreteSupabaseClient,
+  User, Session,
+  WeakPassword,
 } from "@supabase/supabase-js";
 import type { Tables } from "./database.types";
 
@@ -44,3 +46,40 @@ type ProfileDataInfo = Required<GetProfile>;
 export type EditProfileInfoPayload = {
   user_id: ProfileDataInfo["user_id"];
 } & Partial<Omit<ProfileDataInfo, "user_id" | "email">>;
+
+export type DBUser = User;
+export type DBSession = Session;
+
+/**
+ * Represents the result of a password validation check, indicating the reasons why a password might be considered weak.
+ */
+export type PasswordValidationError = WeakPassword;
+
+export interface AuthProviderError {
+  name: string;
+  status: number;
+  message: string;
+  code?: string;
+  __isAuthError: true;
+}
+
+export interface AuthenticationSuccess {
+  data: {
+    user: DBUser;
+    session: DBSession;
+    passwordValidation?: PasswordValidationError;
+  };
+  error: null;
+}
+
+export interface AuthenticationFailure {
+  data: {
+    user: null;
+    session: null;
+    passwordValidation?: null;
+  };
+  error: AuthProviderError;
+}
+
+export type PasswordAuthenticationResult =
+AuthenticationSuccess | AuthenticationFailure;

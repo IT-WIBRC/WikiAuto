@@ -25,7 +25,7 @@ import ContentRowDetails from "~/components/content/rowDetails.vue";
 import BaseNoData from "~/components/base/no-data.vue";
 import { nextTick } from "vue";
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { toastAssertions, getPiniaInstance, getMockContentList } = testUtils;
 

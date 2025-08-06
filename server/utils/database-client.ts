@@ -1,4 +1,4 @@
-import type { DatabaseClientInterface } from "../types/data-access";
+import type { DatabaseClientInterface } from "~/shared/types/data-access";
 import { createClient } from "@supabase/supabase-js";
 
 let databaseClientInstance: null | DatabaseClientInterface;

@@ -1,8 +1,9 @@
+import type {
+  ApiResponseResult, ApiRouteErrorBody, ResponseOnError, ResponseOnSuccess
+} from "~/shared/types/api/common";
 import {
   GenericErrors,
-  type ApiRouteErrorBody,
   type GenericErrorsKeys,
-  type UIResponseOnError,
 } from "../types/apiResponse";
 import { Either, type IEither } from "./monads";
 import type { FetchError } from "ofetch";
@@ -38,8 +39,10 @@ function isFetchErrorWithResponse(error: unknown): error is FetchError & {
   );
 }
 
-function mapErrorToResponseOnError(error: unknown): UIResponseOnError {
+function mapErrorToResponseOnError(error: unknown): ResponseOnError {
+  // TODO: Remove unnecessary error handling
   let errorCode: GenericErrorsKeys = GenericErrors.SERVER_ERROR;
+  let errorMessage = "An unexpected error occurred.";
 
   if (isFetchErrorWithResponse(error)) {
     const fetchError = error;
@@ -48,31 +51,37 @@ function mapErrorToResponseOnError(error: unknown): UIResponseOnError {
 
     if (isApiRouteErrorBody(errorData)) {
       errorCode = errorData.code || GenericErrors.UNKNOWN_ERROR;
-    } else {
       switch (statusCode) {
         case 400:
           errorCode = GenericErrors.BAD_REQUEST;
+          errorMessage = errorData?.hint || "Bad request.";
           break;
         case 401:
           errorCode = GenericErrors.UNAUTHORIZED;
+          errorMessage = errorData?.hint || "Unauthorized user";
           break;
         case 403:
           errorCode = GenericErrors.FORBIDDEN;
+          errorMessage = errorData?.hint || "Bad request.";
           break;
         case 404:
           errorCode = GenericErrors.NOT_FOUND;
+          errorMessage = errorData?.hint || "User is not found";
           break;
         case 409:
           errorCode = GenericErrors.CONFLICT;
+          errorMessage = errorData?.hint || "Information Conflict";
           break;
         case 429:
           errorCode = GenericErrors.RATE_LIMIT_EXCEEDED;
+          errorMessage = errorData?.hint || "To much request made. Limit reached";
           break;
         case 500:
         case 502:
         case 503:
         case 504:
           errorCode = GenericErrors.SERVER_ERROR;
+          errorMessage = errorData?.hint || errorMessage;
           break;
         default:
           errorCode = GenericErrors.UNKNOWN_ERROR;
@@ -85,6 +94,7 @@ function mapErrorToResponseOnError(error: unknown): UIResponseOnError {
       error.message.includes("Failed to fetch"))
   ) {
     errorCode = GenericErrors.NETWORK_ERROR;
+    errorMessage = "Network error occurred. Please check your connection.";
   } else if (error instanceof DOMException && error.name === "AbortError") {
     errorCode = GenericErrors.NETWORK_ERROR;
   } else if (
@@ -92,6 +102,7 @@ function mapErrorToResponseOnError(error: unknown): UIResponseOnError {
     (error.message.includes("timeout") || error.message.includes("timed out"))
   ) {
     errorCode = GenericErrors.TIMEOUT;
+    errorMessage = "The request timed out. Please try again later.";
   } else if (error instanceof Error) {
     console.error(
       "Caught an unexpected error type in mapErrorToResponseOnError:",
@@ -99,51 +110,31 @@ function mapErrorToResponseOnError(error: unknown): UIResponseOnError {
       error,
     );
     errorCode = GenericErrors.UNKNOWN_ERROR;
+    errorMessage = error.message || "An unexpected error occurred.";
   }
 
   return {
     status: "error",
-    message: errorCode,
+    code: errorCode,
+    hint: errorMessage
   };
 }
 
-export type ServiceWrapperSuccess<TData> = {
-  status: "success";
-  data: TData;
-};
-
 export async function wrapServiceCall<TData>(
-  fetchPromise: Promise<TData>,
-): Promise<IEither<UIResponseOnError, ServiceWrapperSuccess<TData>>> {
+  fetchPromise: Promise<ApiResponseResult<TData>>,
+): Promise<IEither<ResponseOnError, ResponseOnSuccess<TData>>> {
   try {
     const result = await fetchPromise;
 
-    interface EmbeddedErrorWrapper {
-      error: ApiRouteErrorBody | null;
-    }
-
-    function hasEmbeddedError(res: unknown): res is EmbeddedErrorWrapper {
-      return (
-        typeof res === "object" &&
-        res !== null &&
-        "error" in res &&
-        typeof (res as EmbeddedErrorWrapper).error === "object" &&
-        (res as EmbeddedErrorWrapper).error !== null
-      );
-    }
-
-    if (hasEmbeddedError(result)) {
-      const embeddedError = result.error;
+    if (result.status === "success") {
+      return Either.right(result);
+    } else {
       return Either.left({
         status: "error",
-        message: embeddedError?.code || GenericErrors.UNKNOWN_ERROR,
+        hint: result.hint,
+        code: result.code
       });
     }
-
-    return Either.right({
-      status: "success",
-      data: result,
-    });
   } catch (error: unknown) {
     return Either.left(mapErrorToResponseOnError(error));
   }

@@ -5,7 +5,7 @@ import type {
   SingleResult,
   EditProfileInfoPayload,
   GetProfile,
-} from "../types/data-access";
+} from "~/shared/types/data-access";
 
 const loginUser = async (
   emailAddress: string,

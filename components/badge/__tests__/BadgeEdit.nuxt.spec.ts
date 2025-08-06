@@ -19,7 +19,7 @@ import {
   BadgeEdit,
 } from "#components";
 import { useBadgeStore } from "~/stores/badge.store";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
 
 const { getPiniaInstance, toastAssertions, getMockBadges, flushPromises } =

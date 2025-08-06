@@ -1,4 +1,4 @@
-import type { Tables } from "../../server/types/database.types";
+import type { Tables } from "../../shared/types/database.types";
 
 export type GetProfile = Tables<"profile">;
 

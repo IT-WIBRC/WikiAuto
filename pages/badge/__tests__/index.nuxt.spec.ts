@@ -22,7 +22,7 @@ import BadgeEdit from "~/components/badge/edit.vue";
 import { nextTick } from "vue";
 
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { toastAssertions, getPiniaInstance } = testUtils;
 

@@ -4,7 +4,7 @@ import {
   type VueWrapper,
 } from "@vue/test-utils";
 import { createTestingPinia, type TestingPinia } from "@pinia/testing";
-
+import type { ApiResponseResult, ResponseOnError, ResponseOnSuccess } from "~/shared/types/api/common";
 import {
   mockSuccess,
   mockError,
@@ -16,7 +16,7 @@ import {
 import type { ToastOptionParam } from "~/types/toast";
 import { FetchError, type FetchResponse } from "ofetch";
 import { StatusCodes } from "http-status-codes";
-import { GenericErrors } from "~/api";
+import { GenericErrors, type GenericErrorsKeys } from "~/shared/types/enums/GenericErrors";
 
 export default (() => {
   const mockFetch = (returnValue: Blob) => {
@@ -41,23 +41,50 @@ export default (() => {
     vi.spyOn(window, "innerWidth", "get").mockReturnValueOnce(width);
   };
 
+  type FetchErrorMockType = {
+    message: string;
+    statusCode: keyof typeof StatusCodes;
+    code?: GenericErrorsKeys;
+  }
+
   const getFetchError = ({
     message,
     statusCode,
     code,
-  }: {
-    message: string;
-    statusCode: keyof typeof StatusCodes;
-    code?: keyof typeof GenericErrors;
-  }): FetchError => {
+  }: FetchErrorMockType): FetchError<unknown> => {
     const fetchErrorMock = new FetchError(message);
-    fetchErrorMock.statusCode = StatusCodes[statusCode];
+    const codeInNumber = StatusCodes[statusCode];
+    fetchErrorMock.statusCode = codeInNumber;
+    fetchErrorMock.status = codeInNumber;
     fetchErrorMock.response = {
       _data: {
         code: code ? GenericErrors[code] : GenericErrors.UNKNOWN_ERROR,
       },
     } as FetchResponse<unknown>;
     return fetchErrorMock;
+  };
+
+  const expectApiError = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    response: ApiResponseResult<any>,
+    expectedCode: GenericErrorsKeys,
+    expectedHint: string,
+  ) => {
+    expect(response.status).toBe("error");
+
+    const errorResponse = response as ResponseOnError;
+
+    expect(errorResponse.code).toBe(expectedCode);
+    expect(errorResponse.hint).toBe(expectedHint);
+  };
+
+  const expectApiSuccess = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    response: ApiResponseResult<any>,
+    expectedData: unknown,
+  ) => {
+    expect(response.status).toBe("success");
+    expect((response as ResponseOnSuccess<unknown>).data).toBe(expectedData);
   };
 
   const createFile = ({
@@ -251,5 +278,7 @@ export default (() => {
     getMockContentList,
     toastAssertions,
     getFetchError,
+    expectApiError,
+    expectApiSuccess,
   };
 })();

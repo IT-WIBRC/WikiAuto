@@ -8,7 +8,7 @@ import {
   SkeletonDashboardCard,
 } from "#components";
 import { realtimeObserver } from "~/api/realtime/realtimeObserver";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { getPiniaInstance } = testUtils;
 

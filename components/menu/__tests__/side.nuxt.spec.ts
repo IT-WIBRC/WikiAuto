@@ -11,7 +11,7 @@ import {
 import { createTestingPinia } from "@pinia/testing";
 import { useAuthStore } from "~/stores/auth.store";
 import { getMockUseToastInstance } from "~/tests/mocks/mockUseToast";
-import testUtils from "~/tests/utils";
+import testUtils from "~/tests/utils/ui";
 
 const { toastAssertions, getPiniaInstance } = testUtils;
 
