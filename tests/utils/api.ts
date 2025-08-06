@@ -4,14 +4,12 @@ import type { StatusCodes } from "http-status-codes";
 import type { IncomingMessage } from "http";
 
 type EventParams = {
-    statusCode: StatusCodes;
-    method: "POST" | "GET" | "PUT";
-    path?: string;
+  statusCode: StatusCodes;
+  method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE";
+  path?: string;
 };
 
-export const createMockEvent = (
-  params: EventParams
-): MockH3EventComplete => {
+export const createMockEvent = (params: EventParams): MockH3EventComplete => {
   return {
     node: {
       req: {} as IncomingMessage,
@@ -32,6 +30,6 @@ export const createMockEvent = (
     headers: {},
     query: {},
     params: {},
-    body: null
+    body: null,
   } as unknown as MockH3EventComplete;
 };

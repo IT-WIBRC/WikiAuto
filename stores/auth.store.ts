@@ -1,22 +1,17 @@
 import { defineStore } from "pinia";
-import {
-  GenericErrors,
-  isObjectOfData,
-  wrapServiceCall,
-  type IEither,
-} from "~/api";
-import type { Session, User } from "@supabase/auth-js";
+import { isObjectOfData, wrapServiceCall, type IEither } from "~/api";
+import type { DBSession, DBUser } from "~/shared/types/data-access";
 import { $fetch } from "ofetch";
 import type {
-  ApiResponseResult, ResponseOnError, ResponseOnSuccess
+  ApiResponseResult,
+  ResponseOnError,
+  ResponseOnSuccess,
 } from "~/shared/types/api/common";
-import type {
-  LoginApiRawResponse,
-  LogoutApiRawResponse
-} from "~/shared/types/api/client";
+import type { LogoutApiResponse } from "~/shared/types/api/client";
+import { GenericErrors } from "~/shared/types/enums/GenericErrors";
 
 type AuthState = {
-  session: Session | null;
+  session: DBSession | null;
 };
 
 export const useAuthStore = defineStore("auth", {
@@ -29,61 +24,66 @@ export const useAuthStore = defineStore("auth", {
     },
   },
   actions: {
-    setSession(session: Session | null) {
+    setSession(session: DBSession | null) {
       this.session = session;
     },
     async login(
       email: string,
       password: string,
-    ): Promise<ApiResponseResult<User>> {
-      const fetchPromise = $fetch<ApiResponseResult<LoginApiRawResponse>>(
-        "/api/auth/login", {
-          method: "POST",
-          body: {
-            email,
-            password,
-          },
+    ): Promise<ApiResponseResult<DBUser>> {
+      try {
+        const { data, error } = await useApiClient().auth.signInWithPassword({
+          email,
+          password,
         });
 
-      const response: IEither<
-        ResponseOnError,
-        ResponseOnSuccess<LoginApiRawResponse>
-      > = await wrapServiceCall(fetchPromise);
-
-      return response.fold(
-        (errorValue) => errorValue,
-        (successWrapper) => {
-          const apiData = successWrapper.data;
-
-          const isUserTypeValid = isObjectOfData<User>(apiData.user);
-          const isSessionTypeValid = isObjectOfData<Session>(apiData.session);
-
-          if (isUserTypeValid && isSessionTypeValid) {
-            this.setSession(apiData.session);
-            return {
-              status: "success",
-              data: apiData.user,
-            };
-          }
-
+        if (error) {
           const uiError: ResponseOnError = {
             status: "error",
-            code: GenericErrors.SERVER_ERROR,
+            code: GenericErrors.VALIDATION_ERROR,
+            hint: error.message,
           };
           return uiError;
-        },
-      );
+        }
+
+        const isUserTypeValid = isObjectOfData<DBUser>(data.user);
+        const isSessionTypeValid = isObjectOfData<DBSession>(data.session);
+
+        if (isUserTypeValid && isSessionTypeValid) {
+          this.setSession(data.session);
+          return {
+            status: "success",
+            data: data.user,
+          };
+        }
+
+        const uiError: ResponseOnError = {
+          status: "error",
+          code: GenericErrors.SERVER_ERROR,
+          hint: "An unexpected error occurred. Please try again.",
+        };
+        return uiError;
+      } catch (error: unknown) {
+        const uiError: ResponseOnError = {
+          status: "error",
+          code: GenericErrors.SERVER_ERROR,
+          hint: (error as Error).message,
+        };
+        return uiError;
+      }
     },
     async logout(): Promise<ApiResponseResult> {
-      const fetchPromise = $fetch<ApiResponseResult<LogoutApiRawResponse>>(
-        "/api/auth/logout", {
+      const fetchPromise = $fetch<ApiResponseResult<LogoutApiResponse>>(
+        "/api/auth/logout",
+        {
           method: "POST",
           timeout: 3000,
-        });
+        },
+      );
 
       const response: IEither<
         ResponseOnError,
-        ResponseOnSuccess<LogoutApiRawResponse>
+        ResponseOnSuccess<LogoutApiResponse>
       > = await wrapServiceCall(fetchPromise);
 
       if (response.isLeft()) {

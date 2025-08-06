@@ -10,6 +10,7 @@ export interface MockSupabaseAuth {
   signUp: Mock;
   getUser: Mock;
   setSession: Mock;
+  getSession: Mock;
 }
 
 export interface MockSupabaseClientInstance {
@@ -102,6 +103,14 @@ export const mockSupabaseAuth: MockSupabaseAuth = {
     Promise.resolve({
       data: {
         user: null,
+        session: null,
+      },
+      error: null,
+    }),
+  ),
+  getSession: vi.fn(() =>
+    Promise.resolve({
+      data: {
         session: null,
       },
       error: null,

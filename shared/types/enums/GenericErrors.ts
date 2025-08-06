@@ -13,6 +13,7 @@ export const GenericErrors = {
   TIMEOUT: "TIMEOUT",
   NO_DATA_FOUND: "NO_DATA_FOUND",
   UPLOAD_FAILED_NO_PATH: "UPLOAD_FAILED_NO_PATH",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
 } as const;
 
 export type GenericErrorsKeys = keyof typeof GenericErrors;

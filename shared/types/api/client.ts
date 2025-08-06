@@ -1,8 +1,7 @@
-import type { LoginPayloadData } from "./server";
+import type { LoginDTO } from "./server";
 
 type CustomNonNullable<T extends Record<string, unknown>> = {
-    [K in keyof T]: NonNullable<T[K]>;
+  [K in keyof T]: NonNullable<T[K]>;
 };
 
-export type LoginApiRawResponse = CustomNonNullable<LoginPayloadData>;
-export type LogoutApiRawResponse = CustomNonNullable<LoginPayloadData>;
+export type LogoutApiResponse = CustomNonNullable<LoginDTO>;

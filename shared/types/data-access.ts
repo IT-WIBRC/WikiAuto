@@ -4,8 +4,10 @@ import type {
   PostgrestResponse as SupabasePostgrestResponse,
   PostgrestSingleResponse as SupabasePostgrestSingleResponse,
   SupabaseClient as ConcreteSupabaseClient,
-  User, Session,
+  User,
+  Session,
   WeakPassword,
+  UserResponse as UserResponseSupabase,
 } from "@supabase/supabase-js";
 import type { Tables } from "./database.types";
 
@@ -39,13 +41,7 @@ export type SingleResult<T> = SupabasePostgrestSingleResponse<T>;
  */
 export type DatabaseClientInterface = ConcreteSupabaseClient;
 
-export type GetProfile = Tables<"profile">;
-
-type ProfileDataInfo = Required<GetProfile>;
-
-export type EditProfileInfoPayload = {
-  user_id: ProfileDataInfo["user_id"];
-} & Partial<Omit<ProfileDataInfo, "user_id" | "email">>;
+export type UserProfileData = Tables<"profile">;
 
 export type DBUser = User;
 export type DBSession = Session;
@@ -82,4 +78,7 @@ export interface AuthenticationFailure {
 }
 
 export type PasswordAuthenticationResult =
-AuthenticationSuccess | AuthenticationFailure;
+  | AuthenticationSuccess
+  | AuthenticationFailure;
+
+export type UserResponse = UserResponseSupabase;

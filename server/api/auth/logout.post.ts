@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 import { defineEventHandler } from "h3";
-import { authService } from "../../services/auth.service";
+import { createAuthService } from "../../services/auth.service";
 import { StatusCodes } from "http-status-codes";
 import { GenericErrors } from "~/shared/types/enums/GenericErrors";
 import type {
@@ -11,7 +11,7 @@ import type { LogoutResponse } from "~/shared/types/api/server";
 
 async function handleLogout(event: H3Event): Promise<LogoutResponse> {
   try {
-    const { error } = await authService.logout();
+    const { error } = await createAuthService(event).logout();
 
     if (error) {
       let errorResponse: ResponseOnError;

@@ -1,15 +1,16 @@
-import { authService } from "~/api/authService";
-import {
-  type UIApiResponseResult,
-  GenericErrors,
-  type GetProfile,
-  type EditProfileInfoPayload,
-  handleSingleItemResponse,
-  wrapServiceCall,
-  type ServiceWrapperSuccess,
-  type UIResponseOnError,
-  type IEither,
-} from "~/api";
+import { handleSingleItemResponse, wrapServiceCall, type IEither } from "~/api";
+import type {
+  ResponseOnError,
+  ResponseOnSuccess,
+} from "~/shared/types/api/common";
+import type {
+  EditUserProfileDTO,
+  EditUserProfileResponse,
+  GetUserProfileDTO,
+  GetUserProfileResponse,
+} from "~/shared/types/api/server";
+import { GenericErrors } from "~/shared/types/enums/GenericErrors";
+import { $fetch } from "ofetch";
 
 type User = {
   id: string;
@@ -19,13 +20,6 @@ type User = {
   lastname?: string;
   created_at?: string;
 };
-
-interface GetUserProfileApiRawResponse {
-  profile: GetProfile;
-  error?: {
-    message: string;
-  } | null;
-}
 
 type State = {
   currentUser: User;
@@ -38,7 +32,7 @@ export const useUserStore = defineStore("user", {
   }),
   getters: {
     isAuthenticated(state): boolean {
-      return !!state.currentUser;
+      return !!state.currentUser.id;
     },
   },
   actions: {
@@ -46,7 +40,7 @@ export const useUserStore = defineStore("user", {
       this.currentUser.id = userId;
       this.currentUser.email = email;
     },
-    setCurrentOtherUserInfo(userInfos: GetProfile): void {
+    setCurrentOtherUserInfo(userInfos: Partial<GetUserProfileDTO>): void {
       const { firstname, lastname, username, created_at } = userInfos!;
 
       this.currentUser.username = username ?? "";
@@ -57,81 +51,64 @@ export const useUserStore = defineStore("user", {
     markProfileAsFetched() {
       this.hasAlreadyFetchUserProfile = true;
     },
-    async getProfile(): Promise<UIApiResponseResult<GetProfile>> {
+    async getProfile(): Promise<GetUserProfileResponse> {
       if (!this.currentUser.id) {
         return {
           status: "error",
-          message: GenericErrors.BAD_REQUEST,
+          code: GenericErrors.BAD_REQUEST,
         };
       }
-      const fetchPromise = $fetch<GetUserProfileApiRawResponse>(
-        "/api/auth/profile",
+      const fetchProfile = $fetch<GetUserProfileResponse>(
+        "/api/users/profile",
         {
           method: "GET",
         },
       );
 
       const response: IEither<
-        UIResponseOnError,
-        ServiceWrapperSuccess<GetUserProfileApiRawResponse>
-      > = await wrapServiceCall(fetchPromise);
+        ResponseOnError,
+        ResponseOnSuccess<GetUserProfileDTO>
+      > = await wrapServiceCall(fetchProfile);
 
       return handleSingleItemResponse<
-        GetUserProfileApiRawResponse,
-        UIApiResponseResult<GetProfile>
+        GetUserProfileDTO,
+        GetUserProfileResponse
       >(response, {
-        onError: (errorValue) => {
-          return {
-            status: "error",
-            message: errorValue,
-          };
-        },
+        onError: (errorOnError) => errorOnError,
         onFound: (successValue) => {
-          this.setCurrentOtherUserInfo(successValue.profile);
+          this.setCurrentOtherUserInfo(successValue);
           this.markProfileAsFetched();
 
           return {
             status: "success",
-            data: successValue.profile,
+            data: successValue,
           };
         },
-        onNotFound: () => {
-          return {
-            status: "error",
-            message: GenericErrors.NOT_FOUND,
-          };
-        },
+        onNotFound: (notFoundError) => notFoundError,
       });
     },
     async updateInfo(
-      infoToEdit: EditProfileInfoPayload,
-    ): Promise<UIApiResponseResult<undefined>> {
-      const result = await wrapServiceCall(
-        authService.editUserInfo(infoToEdit),
-      );
+      infoToEdit: EditUserProfileDTO,
+    ): Promise<EditUserProfileResponse<undefined>> {
+      const updateUser = $fetch<EditUserProfileResponse>("/api/users/profile", {
+        method: "PATCH",
+        body: infoToEdit,
+      });
+
+      const result = await wrapServiceCall(updateUser);
 
       return handleSingleItemResponse<
-        GetProfile,
-        UIApiResponseResult<undefined>
+        EditUserProfileDTO,
+        EditUserProfileResponse<undefined>
       >(result, {
-        onError: (errorValue) => {
-          return {
-            status: "error",
-            message: errorValue,
-          };
-        },
+        onError: (errorOnError) => errorOnError,
         onFound: (updatedUser) => {
           this.setCurrentOtherUserInfo(updatedUser);
           return {
             status: "success",
           };
         },
-        onNotFound: () => {
-          return {
-            status: "error",
-            message: GenericErrors.NOT_FOUND,
-          };
-        },
+        onNotFound: (notFoundError) => notFoundError,
       });
     },
   },

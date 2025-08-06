@@ -1,12 +1,15 @@
 import type {
-  ApiResponseResult, ApiRouteErrorBody, ResponseOnError, ResponseOnSuccess
+  ApiResponseResult,
+  ApiRouteErrorBody,
+  ResponseOnError,
+  ResponseOnSuccess,
 } from "~/shared/types/api/common";
+import { Either, type IEither } from "./monads";
+import type { FetchError } from "ofetch";
 import {
   GenericErrors,
   type GenericErrorsKeys,
-} from "../types/apiResponse";
-import { Either, type IEither } from "./monads";
-import type { FetchError } from "ofetch";
+} from "~/shared/types/enums/GenericErrors";
 
 export function isApiRouteErrorBody(data: unknown): data is ApiRouteErrorBody {
   return (
@@ -66,7 +69,8 @@ function mapErrorToResponseOnError(error: unknown): ResponseOnError {
           break;
         case 404:
           errorCode = GenericErrors.NOT_FOUND;
-          errorMessage = errorData?.hint || "User is not found";
+          errorMessage =
+            errorData?.hint || "User is not found or could not be retrieved.";
           break;
         case 409:
           errorCode = GenericErrors.CONFLICT;
@@ -74,7 +78,8 @@ function mapErrorToResponseOnError(error: unknown): ResponseOnError {
           break;
         case 429:
           errorCode = GenericErrors.RATE_LIMIT_EXCEEDED;
-          errorMessage = errorData?.hint || "To much request made. Limit reached";
+          errorMessage =
+            errorData?.hint || "To much request made. Limit reached";
           break;
         case 500:
         case 502:
@@ -116,7 +121,7 @@ function mapErrorToResponseOnError(error: unknown): ResponseOnError {
   return {
     status: "error",
     code: errorCode,
-    hint: errorMessage
+    hint: errorMessage,
   };
 }
 
@@ -132,7 +137,7 @@ export async function wrapServiceCall<TData>(
       return Either.left({
         status: "error",
         hint: result.hint,
-        code: result.code
+        code: result.code,
       });
     }
   } catch (error: unknown) {

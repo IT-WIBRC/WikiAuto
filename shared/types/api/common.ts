@@ -2,13 +2,14 @@ import type { GenericErrorsKeys } from "../enums/GenericErrors";
 
 export type AvailableApiStatus = "success" | "error";
 
-interface ResponseOnSuccessWithNoData {
+export interface ResponseOnSuccessWithNoData {
   status: Extract<AvailableApiStatus, "success">;
-};
+}
 
-interface ResponseOnSuccessWithData<T> extends ResponseOnSuccessWithNoData {
+export interface ResponseOnSuccessWithData<T>
+  extends ResponseOnSuccessWithNoData {
   data: T;
-};
+}
 
 export type ResponseOnSuccess<T = undefined> = T extends undefined
   ? ResponseOnSuccessWithNoData

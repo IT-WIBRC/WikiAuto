@@ -127,18 +127,20 @@ const areChangesSaveInProgress = shallowRef(false);
 const save = async (): Promise<void> => {
   areChangesSaveInProgress.value = true;
 
-  const editionRequest = await userStore.updateInfo({
-    lastname: profile.lastname,
-    firstname: profile.firstname,
-    username: profile.username,
-    user_id: currentUser.value?.id ?? "",
-  });
+  const { data: editionRequest } = useAsyncData("update-profile", () =>
+    userStore.updateInfo({
+      lastname: profile.lastname,
+      firstname: profile.firstname,
+      username: profile.username,
+      user_id: currentUser.value?.id ?? "",
+    }),
+  );
 
   const toast = useToast();
-  if (editionRequest.status === "success") {
+  if (editionRequest.value?.status === "success") {
     toast.success(t("success"));
   } else {
-    toast.error(t(`generic_errors.${editionRequest.message}`));
+    toast.error(t(`generic_errors.${editionRequest.value?.code}`));
   }
 
   profile.firstname = currentUser.value?.firstname ?? "";

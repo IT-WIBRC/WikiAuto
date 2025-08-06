@@ -1,37 +1,69 @@
-import type { DatabaseClientInterface } from "~/shared/types/data-access";
-import { createClient } from "@supabase/supabase-js";
+import type { H3Event } from "h3";
+import { getHeader, setHeader } from "h3";
+import { createServerClient } from "@supabase/ssr";
+import type { Database } from "~/shared/types/database.types";
 
-let databaseClientInstance: null | DatabaseClientInterface;
-export const useDatabaseClient = (): DatabaseClientInterface => {
-  if (databaseClientInstance) {
-    return databaseClientInstance;
-  }
-
+export function useRequestClient(event: H3Event) {
   const config = useRuntimeConfig();
-  const clientKey: string = config.public.databaseClientKey as string;
-  const databaseUrl: string = config.public.databaseUrl as string;
+  const supabaseUrl = config.public.supabaseUrl;
+  const supabaseKey = config.public.supabaseKey;
 
-  if (!databaseUrl) {
+  if (!supabaseUrl) {
     throw new Error(
-      "Database URL (NUXT_PUBLIC_DATABASE_URL) is not configured in runtimeConfig.",
-    );
-  }
-  if (!clientKey) {
-    throw new Error(
-      "Database Client Key (NUXT_PUBLIC_DATABASE_CLIENT_KEY) is not configured in runtimeConfig.",
+      "Supabase URL is missing in runtime config. Please check your .env file.",
     );
   }
 
-  databaseClientInstance = createClient(databaseUrl, clientKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
+  if (!supabaseKey) {
+    throw new Error(
+      "Supabase Key is missing in runtime config. Please check your .env file.",
+    );
+  }
+
+  const parseCookies = (
+    cookieString: string | undefined,
+  ): Record<string, string> => {
+    if (!cookieString) return {};
+    return Object.fromEntries(
+      cookieString
+        .split(";")
+        .map((cookie) => cookie.trim().split("="))
+        .filter((cookie) => cookie.length === 2)
+        .map(([name, value]) => [name, decodeURIComponent(value)]),
+    );
+  };
+
+  return createServerClient<Database>(
+    supabaseUrl as string,
+    supabaseKey as string,
+    {
+      cookies: {
+        getAll: () => {
+          const cookieString = getHeader(event, "cookie");
+          const parsedCookies = parseCookies(cookieString);
+          return Object.entries(parsedCookies).map(([name, value]) => ({
+            name,
+            value,
+          }));
+        },
+        setAll: (cookiesToSet) => {
+          const serializedCookies = cookiesToSet.map((c) => {
+            const parts = [`${c.name}=${encodeURIComponent(c.value)}`];
+            const options = c.options;
+
+            if (options.domain) parts.push(`Domain=${options.domain}`);
+            if (options.expires) parts.push(`Expires=${options.expires}`);
+            if (options.httpOnly) parts.push("HttpOnly");
+            if (options.maxAge) parts.push(`Max-Age=${options.maxAge}`);
+            if (options.path) parts.push(`Path=${options.path}`);
+            if (options.sameSite) parts.push(`SameSite=${options.sameSite}`);
+            if (options.secure) parts.push("Secure");
+
+            return parts.join("; ");
+          });
+          setHeader(event, "Set-Cookie", serializedCookies);
+        },
+      },
     },
-  });
-  return databaseClientInstance;
-};
-
-export const _clearDatabaseClientInstanceForTesting = (): void => {
-  databaseClientInstance = null;
-};
+  );
+}

@@ -1,24 +1,37 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "~/shared/types/database.types";
+import type { DatabaseClientInterface } from "~/shared/types/data-access";
+import { createClient } from "@supabase/supabase-js";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
+let databaseClientInstance: null | DatabaseClientInterface;
+export const useDatabaseClient = (): DatabaseClientInterface => {
+  if (databaseClientInstance) {
+    return databaseClientInstance;
+  }
 
-export default function useSupabase(): SupabaseClient<Database> {
-  if (!supabaseInstance) {
-    const config = useRuntimeConfig();
-    if (!config.public.supabaseUrl || !config.public.supabaseKey) {
-      throw new Error("Supabase URL or Key is missing in runtime config.");
-    }
-    supabaseInstance = createClient<Database>(
-      config.public.supabaseUrl,
-      config.public.supabaseKey,
+  const config = useRuntimeConfig();
+  const clientKey: string = config.public.databaseClientKey as string;
+  const databaseUrl: string = config.public.databaseUrl as string;
+
+  if (!databaseUrl) {
+    throw new Error(
+      "Database URL (NUXT_PUBLIC_DATABASE_URL) is not configured in runtimeConfig.",
     );
   }
-  return supabaseInstance;
-}
+  if (!clientKey) {
+    throw new Error(
+      "Database Client Key (NUXT_PUBLIC_DATABASE_CLIENT_KEY) is not configured in runtimeConfig.",
+    );
+  }
 
-if (import.meta.test) {
-  exports.__resetSupabaseInstance = () => {
-    supabaseInstance = undefined;
-  };
-}
+  databaseClientInstance = createClient(databaseUrl, clientKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
+  return databaseClientInstance;
+};
+
+export const _clearDatabaseClientInstanceForTesting = (): void => {
+  databaseClientInstance = null;
+};

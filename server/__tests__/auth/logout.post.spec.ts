@@ -1,14 +1,26 @@
-import {
-  describe, it, expect, vi, beforeEach, afterEach, type MockedFunction,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { StatusCodes } from "http-status-codes";
 import { GenericErrors } from "~/shared/types/enums/GenericErrors";
 import logoutPostHandler from "~/server/api/auth/logout.post";
-import { authService } from "~/server/services/auth.service";
 import type { LogoutResponse } from "~/shared/types/api/server";
 import type { PasswordAuthenticationResult } from "~/shared/types/data-access";
 import type { MockH3EventComplete } from "~/tests/types/test-utils";
 import { createMockEvent } from "~/tests/utils/api";
+
+const { mockAuthLogout, mockCreateAuthService } = vi.hoisted(() => {
+  const mockAuthLogout = vi.fn();
+  const mockCreateAuthService = vi.fn(() => ({
+    logout: mockAuthLogout,
+  }));
+  return {
+    mockAuthLogout,
+    mockCreateAuthService,
+  };
+});
+
+vi.mock("~/server/services/auth.service", () => ({
+  createAuthService: mockCreateAuthService,
+}));
 
 vi.mock("h3", async (importOriginal) => {
   const mod = await importOriginal<typeof import("h3")>();
@@ -20,30 +32,21 @@ vi.mock("h3", async (importOriginal) => {
   };
 });
 
-vi.mock("~/server/services/auth.service", () => ({
-  authService: {
-    logout: vi.fn(),
-  },
-}));
-
 type AuthServiceLogoutResult = {
-    error: PasswordAuthenticationResult["error"];
+  error: PasswordAuthenticationResult["error"];
 };
 
 describe("POST /api/auth/logout", () => {
   let mockEvent: MockH3EventComplete;
-  let mockAuthLogout: MockedFunction<typeof authService.logout>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    mockAuthLogout = vi.mocked(authService.logout);
-
     mockEvent = createMockEvent({
       path: "/api/auth/logout",
       statusCode: StatusCodes.OK,
       method: "POST",
     });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -60,6 +63,7 @@ describe("POST /api/auth/logout", () => {
   it("should return 200 OK on successful logout", async () => {
     const response = await callHandler({ error: null });
 
+    expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
     expect(mockAuthLogout).toHaveBeenCalledTimes(1);
     expect(mockEvent.node.res.statusCode).toBe(StatusCodes.OK);
     expect(response).toEqual({
@@ -72,11 +76,12 @@ describe("POST /api/auth/logout", () => {
       error: {
         message: "Invalid JWT",
         name: "",
-        status: 0,
+        status: 401,
         __isAuthError: true,
       },
     });
 
+    expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
     expect(mockAuthLogout).toHaveBeenCalledTimes(1);
     expect(mockEvent.node.res.statusCode).toBe(StatusCodes.UNAUTHORIZED);
     expect(response).toEqual({
@@ -91,11 +96,12 @@ describe("POST /api/auth/logout", () => {
       error: {
         message: "Something went wrong",
         name: "",
-        status: 0,
+        status: 500,
         __isAuthError: true,
       },
     });
 
+    expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
     expect(mockAuthLogout).toHaveBeenCalledTimes(1);
     expect(mockEvent.node.res.statusCode).toBe(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -112,6 +118,7 @@ describe("POST /api/auth/logout", () => {
 
     const response = await logoutPostHandler(mockEvent);
 
+    expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
     expect(mockAuthLogout).toHaveBeenCalledTimes(1);
     expect(mockEvent.node.res.statusCode).toBe(
       StatusCodes.INTERNAL_SERVER_ERROR,
