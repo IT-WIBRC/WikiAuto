@@ -2,7 +2,7 @@ import type { DatabaseClientInterface } from "~/shared/types/data-access";
 import { createClient } from "@supabase/supabase-js";
 
 let databaseClientInstance: null | DatabaseClientInterface;
-export const useDatabaseClient = (): DatabaseClientInterface => {
+export default function useDatabaseClient(): DatabaseClientInterface {
   if (databaseClientInstance) {
     return databaseClientInstance;
   }
@@ -30,8 +30,4 @@ export const useDatabaseClient = (): DatabaseClientInterface => {
     },
   });
   return databaseClientInstance;
-};
-
-export const _clearDatabaseClientInstanceForTesting = (): void => {
-  databaseClientInstance = null;
-};
+}

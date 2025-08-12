@@ -7,17 +7,32 @@ export default defineNuxtConfig({
     {
       path: "~/components",
       extensions: ["vue"],
-      ignore: ["**/*.spec.*", "**/__tests__/**"],
+      ignore: ["**/*.spec.*", "**/__tests__/**", "**/tests/**"],
     },
   ],
   modules: [
     "@nuxtjs/i18n",
-    "@nuxt/test-utils/module",
     "@pinia/nuxt",
-    "@nuxtjs/i18n",
     "@nuxt/eslint",
     "@vee-validate/nuxt",
+    "@nuxtjs/supabase",
+    "@nuxt/test-utils/module",
   ],
+  supabase: {
+    cookieOptions: {
+      maxAge: 60 * 60 * 24,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+    types: "./shared/types/database.types.ts",
+    url: process.env.NUXT_PUBLIC_DATABASE_URL,
+    key: process.env.NUXT_PUBLIC_DATABASE_CLIENT_KEY,
+    redirectOptions: {
+      login: "/auth",
+      callback: "/confirm",
+      exclude: ["/"],
+    },
+  },
   i18n: {
     vueI18n: "./i18n.config.ts",
     detectBrowserLanguage: {

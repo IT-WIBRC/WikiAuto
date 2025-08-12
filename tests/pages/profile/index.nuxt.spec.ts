@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import type { VueWrapper } from "@vue/test-utils";
 import SectionProfile from "~/components/section/Profile.vue";
-import ProfilePage from "../index.vue";
+import ProfilePage from "~/pages/profile/index.vue";
 
 describe("ProfilePage", () => {
   let profilePageWrapper: VueWrapper;

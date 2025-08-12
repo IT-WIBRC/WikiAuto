@@ -15,7 +15,7 @@ const { mockSignInWithPassword, fetchMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock("~/composables/api-client", () => ({
+vi.mock("~/shared/utils/api-client", () => ({
   useApiClient: vi.fn(() => ({
     auth: {
       signInWithPassword: mockSignInWithPassword,

@@ -4,24 +4,21 @@ import { GenericErrors } from "~/shared/types/enums/GenericErrors";
 import profilePatchHandler from "~/server/api/users/profile.patch";
 import type { MockH3EventComplete } from "~/tests/types/test-utils";
 import { createMockEvent } from "~/tests/utils/api";
-import type { EditUserProfileDTO } from "~/shared/types/api/server";
-import type { UserProfileData } from "~/shared/types/data-access";
+import type {
+  EditUserProfileDTO,
+  GetUserProfileDTO,
+} from "~/shared/types/api/server";
+import type { DBUser } from "~/shared/types/data-access";
 
-const { mockReadBody } = vi.hoisted(() => {
-  const mockReadBody = vi.fn();
-  return { mockReadBody };
-});
-
-const { mockGetUser, mockUpdateProfileInformation, mockCreateAuthService } =
+const { mockReadBody, mockUpdateProfileInformation, mockCreateAuthService } =
   vi.hoisted(() => {
-    const mockGetUser = vi.fn();
+    const mockReadBody = vi.fn();
     const mockUpdateProfileInformation = vi.fn();
-    const mockCreateAuthService = vi.fn(() => ({
-      getUser: mockGetUser,
+    const mockCreateAuthService = vi.fn(async () => ({
       updateProfileInformation: mockUpdateProfileInformation,
     }));
     return {
-      mockGetUser,
+      mockReadBody,
       mockUpdateProfileInformation,
       mockCreateAuthService,
     };
@@ -42,7 +39,18 @@ vi.mock("h3", async (importOriginal) => {
 
 describe("PATCH /api/profile", () => {
   let mockEvent: MockH3EventComplete;
-  const mockUserId = "user-123";
+  const mockUser: DBUser = {
+    id: "user-123",
+    email: "test@example.com",
+    user_metadata: {
+      username: "testuser",
+      firstname: "Test",
+      lastname: "User",
+    },
+    created_at: "2023-01-01T00:00:00Z",
+    app_metadata: {},
+    aud: "",
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,11 +59,8 @@ describe("PATCH /api/profile", () => {
       statusCode: StatusCodes.OK,
       method: "PATCH",
     });
+    mockEvent.context.auth = { user: mockUser };
     vi.spyOn(console, "error").mockImplementation(() => {});
-    mockGetUser.mockResolvedValue({
-      data: { user: { id: mockUserId } },
-      error: null,
-    });
   });
 
   afterEach(() => {
@@ -63,17 +68,18 @@ describe("PATCH /api/profile", () => {
   });
 
   it("should return a 200 OK with the updated profile data on a successful full update", async () => {
-    const mockPayload: EditUserProfileDTO = {
+    const mockPayload: GetUserProfileDTO = {
       username: "newusername",
       firstname: "New",
       lastname: "User",
-      user_id: "user-123",
+    } as GetUserProfileDTO;
+    const mockUpdatedProfile: GetUserProfileDTO = {
+      email: "test@example.com",
+      username: "newusername",
+      firstname: "New",
+      lastname: "User",
       created_at: "2023-01-01T00:00:00Z",
     };
-    const mockUpdatedProfile: UserProfileData = {
-      ...mockPayload,
-      email: "test@example.com",
-    } as UserProfileData;
     mockReadBody.mockResolvedValueOnce(mockPayload);
     mockUpdateProfileInformation.mockResolvedValueOnce({
       data: mockUpdatedProfile,
@@ -83,13 +89,10 @@ describe("PATCH /api/profile", () => {
     const response = await profilePatchHandler(mockEvent);
 
     expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
-    expect(mockGetUser).toHaveBeenCalledTimes(1);
     expect(mockReadBody).toHaveBeenCalledWith(mockEvent);
     expect(mockUpdateProfileInformation).toHaveBeenCalledWith({
-      user_id: mockUserId,
-      username: mockPayload.username,
-      firstname: mockPayload.firstname,
-      lastname: mockPayload.lastname,
+      user_id: mockUser.id,
+      ...mockPayload,
     });
     expect(mockEvent.node.res.statusCode).toBe(StatusCodes.OK);
     expect(response).toEqual({
@@ -99,12 +102,15 @@ describe("PATCH /api/profile", () => {
   });
 
   it("should return a 200 OK on a successful partial update", async () => {
-    const mockPartialPayload = { username: "partialupdate" };
-    const mockUpdatedProfile = {
+    const mockPartialPayload: Partial<EditUserProfileDTO> = {
       username: "partialupdate",
-      firstname: "Original",
-      lastname: "User",
+    };
+    const mockUpdatedProfile: GetUserProfileDTO = {
       email: "test@example.com",
+      username: "partialupdate",
+      firstname: "Test",
+      lastname: "User",
+      created_at: "2023-01-01T00:00:00Z",
     };
     mockReadBody.mockResolvedValueOnce(mockPartialPayload);
     mockUpdateProfileInformation.mockResolvedValueOnce({
@@ -115,10 +121,8 @@ describe("PATCH /api/profile", () => {
     const response = await profilePatchHandler(mockEvent);
 
     expect(mockUpdateProfileInformation).toHaveBeenCalledWith({
-      user_id: mockUserId,
-      username: mockPartialPayload.username,
-      firstname: undefined,
-      lastname: undefined,
+      user_id: mockUser.id,
+      ...mockPartialPayload,
     });
     expect(mockEvent.node.res.statusCode).toBe(StatusCodes.OK);
     expect(response).toEqual({
@@ -127,31 +131,11 @@ describe("PATCH /api/profile", () => {
     });
   });
 
-  it("should return a 401 UNAUTHORIZED error if no user is authenticated", async () => {
-    mockGetUser.mockResolvedValueOnce({
-      data: { user: null },
-      error: null,
-    });
-
-    const response = await profilePatchHandler(mockEvent);
-
-    expect(mockCreateAuthService).toHaveBeenCalledWith(mockEvent);
-    expect(mockGetUser).toHaveBeenCalledTimes(1);
-    expect(mockUpdateProfileInformation).not.toHaveBeenCalled();
-    expect(mockEvent.node.res.statusCode).toBe(StatusCodes.UNAUTHORIZED);
-    expect(response).toEqual({
-      status: "error",
-      code: GenericErrors.UNAUTHORIZED,
-      hint: "Authentication required.",
-    });
-  });
-
   it("should return a 400 BAD_REQUEST error if the payload is invalid", async () => {
     mockReadBody.mockResolvedValueOnce(null);
 
     const response = await profilePatchHandler(mockEvent);
 
-    expect(mockGetUser).toHaveBeenCalledTimes(1);
     expect(mockReadBody).toHaveBeenCalledWith(mockEvent);
     expect(mockUpdateProfileInformation).not.toHaveBeenCalled();
     expect(mockEvent.node.res.statusCode).toBe(StatusCodes.BAD_REQUEST);
@@ -163,7 +147,11 @@ describe("PATCH /api/profile", () => {
   });
 
   it("should return a 500 INTERNAL_SERVER_ERROR if the profile update fails", async () => {
-    const mockPayload = { username: "newusername" };
+    const mockPayload: GetUserProfileDTO = {
+      username: "newusername",
+      firstname: "New",
+      lastname: "User",
+    } as GetUserProfileDTO;
     const mockDbError = {
       message: "Database write failed",
       status: 500,
@@ -176,7 +164,6 @@ describe("PATCH /api/profile", () => {
 
     const response = await profilePatchHandler(mockEvent);
 
-    expect(mockGetUser).toHaveBeenCalledTimes(1);
     expect(mockUpdateProfileInformation).toHaveBeenCalledTimes(1);
     expect(mockEvent.node.res.statusCode).toBe(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -189,11 +176,10 @@ describe("PATCH /api/profile", () => {
   });
 
   it("should return a 500 INTERNAL_SERVER_ERROR for an unexpected exception", async () => {
-    mockGetUser.mockRejectedValueOnce(new Error("Network Error"));
+    mockReadBody.mockRejectedValueOnce(new Error("Network Error"));
 
     const response = await profilePatchHandler(mockEvent);
 
-    expect(mockGetUser).toHaveBeenCalledTimes(1);
     expect(mockUpdateProfileInformation).not.toHaveBeenCalled();
     expect(mockEvent.node.res.statusCode).toBe(
       StatusCodes.INTERNAL_SERVER_ERROR,

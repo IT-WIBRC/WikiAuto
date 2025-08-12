@@ -7,13 +7,13 @@ import {
 import { createAuthService } from "../auth.service";
 import type { H3Event } from "h3";
 
-const { mockUseRequestClient } = vi.hoisted(() => {
-  const mockUseRequestClient = vi.fn();
-  return { mockUseRequestClient };
+const { mockUseServerClient } = vi.hoisted(() => {
+  const mockUseServerClient = vi.fn();
+  return { mockUseServerClient };
 });
 
-vi.mock("../../utils/database-client", () => ({
-  useRequestClient: mockUseRequestClient,
+vi.mock("~/shared/utils/api-client", () => ({
+  useServerClient: mockUseServerClient,
 }));
 
 describe("createAuthService", () => {
@@ -25,7 +25,7 @@ describe("createAuthService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseRequestClient.mockReturnValue(mockSupabaseClientInstance);
+    mockUseServerClient.mockReturnValue(mockSupabaseClientInstance);
     vi.spyOn(mockSupabaseClientInstance, "from").mockReturnValue(
       mockSupabaseQueryBuilder,
     );
@@ -44,15 +44,15 @@ describe("createAuthService", () => {
     vi.clearAllMocks();
   });
 
-  it("should create and return a service instance with all methods", () => {
-    const authService = createAuthService(mockEvent);
+  it("should create and return a service instance with all methods", async () => {
+    const authService = await createAuthService(mockEvent);
 
     expect(authService).toBeDefined();
     expect(authService.logout).toBeInstanceOf(Function);
     expect(authService.getUser).toBeInstanceOf(Function);
     expect(authService.fetchUserProfileById).toBeInstanceOf(Function);
     expect(authService.updateProfileInformation).toBeInstanceOf(Function);
-    expect(mockUseRequestClient).toHaveBeenCalledWith(mockEvent);
+    expect(mockUseServerClient).toHaveBeenCalledWith(mockEvent);
   });
 
   describe("logout", () => {
@@ -62,11 +62,11 @@ describe("createAuthService", () => {
         error: null,
       };
       mockSupabaseAuth.signOut.mockResolvedValueOnce(mockAuthResult);
-      const authService = createAuthService(mockEvent);
+      const authService = await createAuthService(mockEvent);
 
       const result = await authService.logout();
 
-      expect(mockUseRequestClient).toHaveBeenCalledTimes(1);
+      expect(mockUseServerClient).toHaveBeenCalledTimes(1);
       expect(mockSupabaseAuth.signOut).toHaveBeenCalledTimes(1);
       expect(mockSupabaseAuth.signOut).toHaveBeenCalledWith({
         scope: "global",
@@ -83,11 +83,11 @@ describe("createAuthService", () => {
         error: null,
       };
       mockSupabaseAuth.getUser.mockResolvedValueOnce(mockUserResult);
-      const authService = createAuthService(mockEvent);
+      const authService = await createAuthService(mockEvent);
 
       const result = await authService.getUser();
 
-      expect(mockUseRequestClient).toHaveBeenCalledTimes(1);
+      expect(mockUseServerClient).toHaveBeenCalledTimes(1);
       expect(mockSupabaseAuth.getUser).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockUserResult);
     });
@@ -98,11 +98,11 @@ describe("createAuthService", () => {
         error: { message: "Invalid user token" },
       };
       mockSupabaseAuth.getUser.mockResolvedValueOnce(mockErrorResult);
-      const authService = createAuthService(mockEvent);
+      const authService = await createAuthService(mockEvent);
 
       const result = await authService.getUser();
 
-      expect(mockUseRequestClient).toHaveBeenCalledTimes(1);
+      expect(mockUseServerClient).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockErrorResult);
       expect(result.error).not.toBeNull();
     });
@@ -117,11 +117,11 @@ describe("createAuthService", () => {
         error: null,
       };
       mockSupabaseQueryBuilder.single.mockResolvedValueOnce(mockQueryResult);
-      const authService = createAuthService(mockEvent);
+      const authService = await createAuthService(mockEvent);
 
       const result = await authService.fetchUserProfileById(mockUserId);
 
-      expect(mockUseRequestClient).toHaveBeenCalledTimes(1);
+      expect(mockUseServerClient).toHaveBeenCalledTimes(1);
       expect(mockSupabaseClientInstance.from).toHaveBeenCalledWith("profile");
       expect(mockSupabaseQueryBuilder.select).toHaveBeenCalledWith(
         "email, username, lastname, firstname, created_at",
@@ -152,12 +152,12 @@ describe("createAuthService", () => {
         error: null,
       };
       mockSupabaseQueryBuilder.single.mockResolvedValueOnce(mockUpdateResult);
-      const authService = createAuthService(mockEvent);
+      const authService = await createAuthService(mockEvent);
 
       const result =
         await authService.updateProfileInformation(mockProfileData);
 
-      expect(mockUseRequestClient).toHaveBeenCalledTimes(1);
+      expect(mockUseServerClient).toHaveBeenCalledTimes(1);
       expect(mockSupabaseClientInstance.from).toHaveBeenCalledWith("profile");
       expect(mockSupabaseQueryBuilder.update).toHaveBeenCalledWith({
         username: mockProfileData.username,

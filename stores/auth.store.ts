@@ -9,6 +9,7 @@ import type {
 } from "~/shared/types/api/common";
 import type { LogoutApiResponse } from "~/shared/types/api/client";
 import { GenericErrors } from "~/shared/types/enums/GenericErrors";
+import { useApiClient } from "~/shared/utils/api-client";
 
 type AuthState = {
   session: DBSession | null;

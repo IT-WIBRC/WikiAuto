@@ -11,7 +11,7 @@ import {
 import type { VueWrapper } from "@vue/test-utils";
 import { flushPromises } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import ContentList from "../index.vue";
+import ContentList from "~/pages/content/index.vue";
 import { useContentStore } from "~/stores/content.store";
 import IconBlankContent from "~/components/icon/BlankContent.vue";
 import DataTable, { type DataItem } from "~/components/DataTable.vue";

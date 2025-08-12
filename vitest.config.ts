@@ -4,10 +4,14 @@ export default defineVitestConfig({
   test: {
     environment: "nuxt",
     globals: true,
-    include: ["**/*.spec.ts", "**/*.test.ts", "**/*.nuxt.spec.ts"],
+    include: [
+      "**/{__tests__,tests}/**/*.{test,spec}.ts",
+      "**/*.{test,spec}.ts",
+    ],
     setupFiles: ["dotenv/config", "./vitest.setup.ts"],
     environmentOptions: {
       nuxt: {
+        domEnvironment: "jsdom",
         mock: {
           intersectionObserver: true,
         },
@@ -34,6 +38,7 @@ export default defineVitestConfig({
         "**/__mocks__/**",
         "**/tests/**",
         "**/.nuxt/**",
+        "**/.output/**",
         "**/__tests__/**",
         "**/*.spec.ts",
         "**/cypress/**",

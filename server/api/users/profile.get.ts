@@ -1,5 +1,4 @@
-import type { H3Event } from "h3";
-import { defineEventHandler } from "h3";
+import { defineEventHandler, type H3Event } from "h3";
 import { StatusCodes } from "http-status-codes";
 import { GenericErrors } from "~/shared/types/enums/GenericErrors";
 import type {
@@ -16,21 +15,8 @@ async function handleProfileGet(
   event: H3Event,
 ): Promise<GetUserProfileResponse> {
   try {
-    const authService = createAuthService(event);
-
-    const {
-      data: { user },
-    } = await authService.getUser();
-
-    if (!user) {
-      event.node.res.statusCode = StatusCodes.UNAUTHORIZED;
-      const errorResponse: ResponseOnError = {
-        status: "error",
-        code: GenericErrors.UNAUTHORIZED,
-        hint: "Authentication required.",
-      };
-      return errorResponse;
-    }
+    const authService = await createAuthService(event);
+    const user = event.context.auth.user;
 
     const { data, error } = await authService.fetchUserProfileById(user.id);
 

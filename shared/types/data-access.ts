@@ -39,7 +39,7 @@ export type SingleResult<T> = SupabasePostgrestSingleResponse<T>;
  * Interface for the database client, providing methods for authentication and data access.
  * This interface abstracts the Supabase client to allow for easier testing and mocking.
  */
-export type DatabaseClientInterface = ConcreteSupabaseClient;
+export type DatabaseClientInterface<T> = ConcreteSupabaseClient<T>;
 
 export type UserProfileData = Tables<"profile">;
 

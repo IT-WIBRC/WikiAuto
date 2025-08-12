@@ -25,13 +25,9 @@ import type { GetProfile, EditProfileInfoPayload } from "./types/profile";
 
 import { badgeService } from "./badgeService";
 import { contentService } from "./contentService";
-import { authService } from "./authService";
 import { imageService } from "./imageService";
 
-import {
-  wrapServiceCall,
-  type ServiceWrapperSuccess,
-} from "./utils/wrapServiceCall";
+import { wrapServiceCall } from "./utils/wrapServiceCall";
 import {
   processEitherResult,
   isArrayOfData,
@@ -76,12 +72,10 @@ export {
   //Services,
   badgeService,
   contentService,
-  authService,
   imageService,
 
   //Utils
   wrapServiceCall,
-  type ServiceWrapperSuccess,
   processEitherResult,
   handleListResponse,
   handleSingleItemResponse,

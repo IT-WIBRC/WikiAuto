@@ -136,7 +136,7 @@ describe("User Store", () => {
           firstname: "Test",
           lastname: "User",
           username: "testuser",
-        };
+        } as GetUserProfileDTO;
         const mockApiResponse: GetUserProfileResponse = {
           status: "success",
           data: mockUserProfile,
@@ -193,7 +193,8 @@ describe("User Store", () => {
         const mockUpdatedUser: GetUserProfileDTO = {
           ...mockPayload,
           firstname: "Original",
-        };
+          email: "",
+        } as GetUserProfileDTO;
         const mockResponse: EditUserProfileResponse<undefined> = {
           status: "success",
         };

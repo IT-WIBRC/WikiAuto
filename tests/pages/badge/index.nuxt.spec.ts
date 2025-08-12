@@ -11,7 +11,7 @@ import {
 import type { VueWrapper } from "@vue/test-utils";
 import { flushPromises } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import BadgeList from "../index.vue";
+import BadgeList from "~/pages/badge/index.vue";
 import { useBadgeStore } from "~/stores/badge.store";
 import IconBadge from "~/components/icon/badge.vue";
 import BaseNoData from "~/components/base/no-data.vue";

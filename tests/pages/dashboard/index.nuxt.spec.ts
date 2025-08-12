@@ -9,7 +9,7 @@ import {
 } from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
-import Dashboard from "../index.vue";
+import Dashboard from "~/pages/dashboard/index.vue";
 import CardDashboardTotalContent from "~/components/card/dashboard/TotalContent.vue";
 import CardDashboardTotalValidatedContent from "~/components/card/dashboard/TotalValidatedContent.vue";
 import CardDashboardTotalBadge from "~/components/card/dashboard/TotalBadge.vue";

@@ -17,21 +17,8 @@ async function handleProfileUpdate(
   event: H3Event,
 ): Promise<EditUserProfileResponse> {
   try {
-    const authService = createAuthService(event);
-
-    const {
-      data: { user },
-    } = await authService.getUser();
-
-    if (!user) {
-      event.node.res.statusCode = StatusCodes.UNAUTHORIZED;
-      const errorResponse: ResponseOnError = {
-        status: "error",
-        code: GenericErrors.UNAUTHORIZED,
-        hint: "Authentication required.",
-      };
-      return errorResponse;
-    }
+    const authService = await createAuthService(event);
+    const user = event.context.auth.user;
 
     const body = await readBody<EditUserProfileDTO>(event);
 

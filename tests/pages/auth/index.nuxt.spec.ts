@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
-import AuthPage from "../index.vue";
+import AuthPage from "~/pages/auth/index.vue";
 import InputEmail from "~/components/input/email.vue";
 import InputPassword from "~/components/input/password.vue";
 import AlertError from "~/components/alert/error.vue";

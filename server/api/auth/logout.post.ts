@@ -11,7 +11,8 @@ import type { LogoutResponse } from "~/shared/types/api/server";
 
 async function handleLogout(event: H3Event): Promise<LogoutResponse> {
   try {
-    const { error } = await createAuthService(event).logout();
+    const authService = await createAuthService(event);
+    const { error } = await authService.logout();
 
     if (error) {
       let errorResponse: ResponseOnError;

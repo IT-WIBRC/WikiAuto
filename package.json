@@ -40,14 +40,15 @@
     "nuxt": "^3.14.159",
     "vue": "latest",
     "vue-router": "latest",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "@nuxtjs/supabase": "^1.4.3"
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.2",
     "@nuxt/schema": "^3.17.5",
     "@nuxt/test-utils": "^3.14.4",
-    "@nuxtjs/supabase": "^1.4.3",
     "@pinia/testing": "^0.1.7",
+    "@types/bun": "latest",
     "@vitest/coverage-v8": "^2.1.6",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",
@@ -60,8 +61,7 @@
     "supabase": "^2.20.12",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.6",
-    "@types/bun": "latest"
+    "vitest": "^2.1.6"
   },
   "lint-staged": {
     "*.{json,ts,vue,mjs,cjs,json}": [

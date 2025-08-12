@@ -1,4 +1,4 @@
-import { useRequestClient } from "../utils/database-client";
+import { useServerClient } from "~/shared/utils/api-client";
 import type {
   AuthenticationResult,
   SingleResult,
@@ -11,8 +11,8 @@ import type {
   GetUserProfileDTO,
 } from "~/shared/types/api/server";
 
-export function createAuthService(event: H3Event) {
-  const client = useRequestClient(event);
+export async function createAuthService(event: H3Event) {
+  const client = await useServerClient(event);
 
   return {
     async logout(): Promise<AuthenticationResult> {

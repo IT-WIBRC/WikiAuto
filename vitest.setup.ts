@@ -150,9 +150,3 @@ export const mockSupabaseClientInstance: MockSupabaseClientInstance = {
   storage: mockSupabaseStorage,
   functions: mockSupabaseFunctions,
 };
-
-vi.mock("@supabase/supabase-js", () => {
-  return {
-    createClient: vi.fn(() => mockSupabaseClientInstance),
-  };
-});
